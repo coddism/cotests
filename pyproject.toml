@@ -1,0 +1,29 @@
+[project]
+name = "cotests"
+version = "0.0.1"
+authors = [
+  {name="iSergium"},
+]
+description = "Tests for python"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["python", "tests", "benchmark"]
+#classifiers = [
+#    "Programming Language :: Python :: 3",
+#    "Operating System :: OS Independent",
+#]
+license = {text = "apache2.0"}
+
+[project.urls]
+Homepage = "https://github.com/coddism/cotests"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+#[tool.setuptools]
+#packages = ["cotests"]
+
+#[tool.setuptools.packages.find]
+#where=["src"]
+#exclude = ["tests"]
