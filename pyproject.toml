@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [
   {name="iSergium"},
 ]
-description = "Tests for python"
+description = "Tests & benchs for python"
 readme = "README.md"
 requires-python = ">=3.7"
 keywords = ["python", "tests", "benchmark"]
@@ -24,6 +24,6 @@ build-backend = "setuptools.build_meta"
 #[tool.setuptools]
 #packages = ["cotests"]
 
-#[tool.setuptools.packages.find]
+[tool.setuptools.packages.find]
 #where=["src"]
-#exclude = ["tests"]
+exclude = ["tests"]

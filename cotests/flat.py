@@ -23,7 +23,7 @@ def bench_batch(
 
     def bf(f: Callable, *args, **kwargs):
         fn = f.__name__
-        print(f'{fn}.. ', end='')
+        print(f'{fn}.', end='', flush=True)
         try:
             if iterations == 1:
                 bench_start = perf_counter()
@@ -37,6 +37,7 @@ def bench_batch(
                     bs0 = perf_counter()
                     f(*args, **kwargs)
                     benches.append(perf_counter() - bs0)
+                    print('.', end='', flush=True)
                 # s = perf_counter() - bench_start
                 s = sum(benches)
                 mx, mn, avg = max(benches), min(benches), s / iterations
