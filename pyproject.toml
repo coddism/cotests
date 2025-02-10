@@ -25,5 +25,4 @@ build-backend = "setuptools.build_meta"
 #packages = ["cotests"]
 
 [tool.setuptools.packages.find]
-#where=["src"]
 exclude = ["tests"]

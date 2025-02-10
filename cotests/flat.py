@@ -67,17 +67,13 @@ def print_test_results(
 
     row_format += f'| %-{max_fn_len}s |'
     lens.append(max_fn_len)
-    print('+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
 
+    print('+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
     if headers:
-        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate(headers)) + ' | ' + 'f'.center(max_fn_len) + ' |')
+        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f'))) + ' |')
 
     for item in exp:
-        printed_item = []
-        for i, i_sec in enumerate(item[1:]):
-            printed_item.append(i_sec / multi[i])
-        printed_item.append(item[0])
-        print(row_format % tuple(printed_item))
+        print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0]))
 
 
 def bench_batch(
