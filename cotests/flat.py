@@ -2,6 +2,7 @@ import inspect
 from math import log10
 from time import perf_counter
 from typing import Callable, List, Tuple, Optional
+from .progress_bar import ProgressBarPrinter
 
 
 def bench(func):
@@ -21,6 +22,8 @@ METRIX = (
     (.1**12, 'ps'),
     (.1**15, 'fs'),
 )
+__PROGRESS_BAR_LEN = 50
+
 
 def __float_len(x: float) -> int:
     return int(log10(x)) + 1
@@ -68,7 +71,7 @@ def print_test_results(
     row_format += f'| %-{max_fn_len}s |'
     lens.append(max_fn_len)
 
-    print('+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
+    print('\n+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
     if headers:
         print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f'))) + ' |')
 
@@ -97,13 +100,10 @@ def bench_batch(
                 exp.append((fn, s))
             else:
                 benches = []
-                # bench_start = perf_counter()
-                for _ in range(iterations):
+                for _ in ProgressBarPrinter(iterations, __PROGRESS_BAR_LEN):
                     bs0 = perf_counter()
                     f(*args, **kwargs)
                     benches.append(perf_counter() - bs0)
-                    print('.', end='', flush=True)
-                # s = perf_counter() - bench_start
                 s = sum(benches)
                 mx, mn, avg = max(benches), min(benches), s / iterations
                 exp.append((fn, s, mx, mn, avg))
@@ -138,3 +138,6 @@ def bench_batch(
         exp,
         headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
     )
+
+
+__all__ = (bench, bench_batch)
