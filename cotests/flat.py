@@ -3,6 +3,7 @@ from math import log10
 from time import perf_counter
 from typing import Callable, List, Tuple, Optional
 from .progress_bar import ProgressBarPrinter
+from .utils import get_sec_metrix, format_sec_metrix
 
 
 def bench(func):
@@ -13,15 +14,6 @@ def bench(func):
     return wrapper
 
 
-METRIX = (
-    (60, 'min'),
-    (1, 'sec'),
-    (.1**3, 'ms'),
-    (.1**6, 'µs'),
-    (.1**9, 'ns'),
-    (.1**12, 'ps'),
-    (.1**15, 'fs'),
-)
 __PROGRESS_BAR_LEN = 50
 
 
@@ -56,12 +48,7 @@ def print_test_results(
     lens = []
 
     for min_s, max_s in minmax:
-        for deci, metr in METRIX:
-            if min_s > deci:
-                prefix = metr
-                break
-        else:
-            deci, prefix = METRIX[-1]
+        deci, prefix = get_sec_metrix(min_s)
 
         max_s_len = __float_len(max_s / deci) + 4
         row_format += f'| %{max_s_len}.3f {prefix} '
@@ -87,6 +74,7 @@ def bench_batch(
     if len(funcs) == 0:
         print('Nothing to test')
         return
+    f_start = perf_counter()
     exp = []
 
     def bf(f: Callable, *args, **kwargs):
@@ -138,6 +126,8 @@ def bench_batch(
         exp,
         headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
     )
+
+    print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')
 
 
 __all__ = (bench, bench_batch)
