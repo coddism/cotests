@@ -1,7 +1,7 @@
 import inspect
 from math import log10
 from time import perf_counter
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Optional
 
 
 def bench(func):
@@ -26,11 +26,18 @@ def __float_len(x: float) -> int:
     return int(log10(x)) + 1
 
 
-def print_test_results(exp: List[Tuple[str, float]]):
+def print_test_results(
+        exp: List[Tuple[str, float]],
+        *,
+        headers: Optional[Tuple] = None,
+):
     iter_ = exp.__iter__()
     first = next(iter_)
     max_fn_len = len(first[0])
     minmax = [[m,m] for m in first[1:]]
+
+    if headers:
+        assert len(headers) + 1 == len(first)
 
     for i in iter_:
         if len(i[0]) > max_fn_len:
@@ -43,6 +50,8 @@ def print_test_results(exp: List[Tuple[str, float]]):
 
     multi = []
     row_format = ''
+    lens = []
+
     for min_s, max_s in minmax:
         for deci, metr in METRIX:
             if min_s > deci:
@@ -54,9 +63,14 @@ def print_test_results(exp: List[Tuple[str, float]]):
         max_s_len = __float_len(max_s / deci) + 4
         row_format += f'| %{max_s_len}.3f {prefix} '
         multi.append(deci)
+        lens.append(max_s_len + len(prefix) + 1)
 
     row_format += f'| %-{max_fn_len}s |'
-    # print(row_format)
+    lens.append(max_fn_len)
+    print('+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
+
+    if headers:
+        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate(headers)) + ' | ' + 'f'.center(max_fn_len) + ' |')
 
     for item in exp:
         printed_item = []
@@ -124,4 +138,7 @@ def bench_batch(
         else:
             print('unknown')
 
-    print_test_results(exp)
+    print_test_results(
+        exp,
+        headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
+    )
