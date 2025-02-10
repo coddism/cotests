@@ -29,26 +29,41 @@ def __float_len(x: float) -> int:
 def print_test_results(exp: List[Tuple[str, float]]):
     iter_ = exp.__iter__()
     first = next(iter_)
-    max_s, min_s, max_fn_len = first[1], first[1], len(first[0])
-    for func_name, sec in iter_:
-        if sec < min_s: min_s = sec
-        if sec > max_s: max_s = sec
-        if len(func_name) > max_fn_len:
-            max_fn_len = len(func_name)
+    max_fn_len = len(first[0])
+    minmax = [[m,m] for m in first[1:]]
 
+    for i in iter_:
+        if len(i[0]) > max_fn_len:
+            max_fn_len = len(i[0])
+        for im, sec in enumerate(i[1:]):
+            if minmax[im][0] > sec:
+                minmax[im][0] = sec
+            elif minmax[im][1] < sec:
+                minmax[im][1] = sec
 
-    for deci, metr in METRIX:
-        if max_s > deci and min_s > deci:
-            prefix = metr
-            break
-    else:
-        deci, prefix = METRIX[-1]
+    multi = []
+    row_format = ''
+    for min_s, max_s in minmax:
+        for deci, metr in METRIX:
+            if min_s > deci:
+                prefix = metr
+                break
+        else:
+            deci, prefix = METRIX[-1]
 
-    max_s_len = __float_len(max_s / deci) + 4
-    row_format = f'| %{max_s_len}.3f {prefix} | %-{max_fn_len}s | '
+        max_s_len = __float_len(max_s / deci) + 4
+        row_format += f'| %{max_s_len}.3f {prefix} '
+        multi.append(deci)
 
-    for func_name, sec in exp:
-        print(row_format % (sec / deci, func_name))
+    row_format += f'| %-{max_fn_len}s |'
+    # print(row_format)
+
+    for item in exp:
+        printed_item = []
+        for i, i_sec in enumerate(item[1:]):
+            printed_item.append(i_sec / multi[i])
+        printed_item.append(item[0])
+        print(row_format % tuple(printed_item))
 
 
 def bench_batch(
@@ -109,12 +124,4 @@ def bench_batch(
         else:
             print('unknown')
 
-    if iterations == 1:
-        print_test_results(exp)
-        # for func_name, sec in exp:
-        #     print('| %.3f sec | %-20s | ' % (sec, func_name))
-    else:
-        for func_name, sec_full, sec_min, sec_max, sec_avg in exp:
-            print('| %.3f sec | %.3f sec | %.3f sec | %.3f sec | %-20s | ' % (
-                sec_full, sec_min, sec_max, sec_avg, func_name
-            ))
+    print_test_results(exp)
