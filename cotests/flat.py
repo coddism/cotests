@@ -1,6 +1,7 @@
 import inspect
+from math import log10
 from time import perf_counter
-from typing import Callable
+from typing import Callable, List, Tuple
 
 
 def bench(func):
@@ -9,6 +10,45 @@ def bench(func):
         func(*args, **kwargs)
         return perf_counter() - bench_start
     return wrapper
+
+
+METRIX = (
+    (60, 'min'),
+    (1, 'sec'),
+    (.1**3, 'ms'),
+    (.1**6, 'µs'),
+    (.1**9, 'ns'),
+    (.1**12, 'ps'),
+    (.1**15, 'fs'),
+)
+
+def __float_len(x: float) -> int:
+    return int(log10(x)) + 1
+
+
+def print_test_results(exp: List[Tuple[str, float]]):
+    iter_ = exp.__iter__()
+    first = next(iter_)
+    max_s, min_s, max_fn_len = first[1], first[1], len(first[0])
+    for func_name, sec in iter_:
+        if sec < min_s: min_s = sec
+        if sec > max_s: max_s = sec
+        if len(func_name) > max_fn_len:
+            max_fn_len = len(func_name)
+
+
+    for deci, metr in METRIX:
+        if max_s > deci and min_s > deci:
+            prefix = metr
+            break
+    else:
+        deci, prefix = METRIX[-1]
+
+    max_s_len = __float_len(max_s / deci) + 4
+    row_format = f'| %{max_s_len}.3f {prefix} | %-{max_fn_len}s | '
+
+    for func_name, sec in exp:
+        print(row_format % (sec / deci, func_name))
 
 
 def bench_batch(
@@ -70,8 +110,9 @@ def bench_batch(
             print('unknown')
 
     if iterations == 1:
-        for func_name, sec in exp:
-            print('| %.3f sec | %-20s | ' % (sec, func_name))
+        print_test_results(exp)
+        # for func_name, sec in exp:
+        #     print('| %.3f sec | %-20s | ' % (sec, func_name))
     else:
         for func_name, sec_full, sec_min, sec_max, sec_avg in exp:
             print('| %.3f sec | %.3f sec | %.3f sec | %.3f sec | %-20s | ' % (
