@@ -5,15 +5,19 @@ from typing import Callable, Optional, Tuple, Dict, Any, Iterable, List
 from .progress_bar import ProgressBarPrinter
 from .utils import format_sec_metrix, print_test_results
 
-TestTuple = Tuple[Callable, Optional[Tuple[Any]], Optional[Dict[str, Any]]]
+
+TestFunction = Callable
+TestArgs = Tuple[Any]
+TestKwargs = Dict[str, Any]
+TestTuple = Tuple[TestFunction, Optional[TestArgs], Optional[TestKwargs]]
 
 
 class Tester:
     PROGRESS_BAR_LEN = 50
 
     def __init__(self,
-                 global_args: Optional[Tuple[Any]] = None,
-                 global_kwargs: Optional[Dict[str, Any]] = None
+                 global_args: Optional[TestArgs] = None,
+                 global_kwargs: Optional[TestKwargs] = None,
                  ):
         self.__tests: List[TestTuple] = []
         self.__global_args = global_args
@@ -40,9 +44,9 @@ class Tester:
                 raise ValueError(f'Unknown function: {func_item}')
 
     def add_test(self,
-                 fn: Callable,
-                 args: Optional[Tuple[Any]] = None,
-                 kwargs: Optional[Dict[str, Any]] = None
+                 fn: TestFunction,
+                 args: Optional[TestArgs] = None,
+                 kwargs: Optional[TestKwargs] = None,
                  ):
         if self.__global_args and args:
             raise Exception('args conflict')
@@ -53,8 +57,29 @@ class Tester:
             (fn, args, kwargs)
         )
 
-    # def __run_single_test(self, test: TestTuple):
-    #     f, args, kwargs = test
+    @staticmethod
+    def __run_single_test(fn: TestFunction,
+                          args: Optional[TestArgs] = None,
+                          kwargs: Optional[TestKwargs] = None,
+                          ) -> float:
+        bench_start = perf_counter()
+        fn(*args, **kwargs)
+        return perf_counter() - bench_start
+
+    @classmethod
+    def __run_multiple_tests(cls,
+                             fn: TestFunction,
+                             args: Optional[TestArgs] = None,
+                             kwargs: Optional[TestKwargs] = None,
+                             *,
+                             iterations: int
+                             ) -> Tuple[float, float, float, float]:
+        benches = [cls.__run_single_test(fn, args, kwargs)
+                for _ in ProgressBarPrinter(iterations, cls.PROGRESS_BAR_LEN)]
+        s = sum(benches)
+        mx, mn, avg = max(benches), min(benches), s / iterations
+        return s, mx, mn, avg
+
 
     def run_tests(self, iterations: int = 1):
         if not self.__tests:
@@ -70,19 +95,14 @@ class Tester:
             print(f'{fun_name}:', end='', flush=True)
             try:
                 if iterations == 1:
-                    bench_start = perf_counter()
-                    f(*args, **kwargs)
-                    s = perf_counter() - bench_start
+                    s = self.__run_single_test(f, args, kwargs)
                     exp.append((fun_name, s))
                 else:
-                    benches = []
-                    for _ in ProgressBarPrinter(iterations, self.PROGRESS_BAR_LEN):
-                        bs0 = perf_counter()
-                        f(*args, **kwargs)
-                        benches.append(perf_counter() - bs0)
-                    s = sum(benches)
-                    mx, mn, avg = max(benches), min(benches), s / iterations
-                    exp.append((fun_name, s, mx, mn, avg))
+                    s = self.__run_multiple_tests(
+                        f, args, kwargs,
+                        iterations=iterations
+                    )
+                    exp.append((fun_name, *s))
             except Exception as e:
                 print(f'error: {e}')
             else:
