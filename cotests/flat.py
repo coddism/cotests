@@ -20,6 +20,7 @@ def bench_batch(
         iterations: int = 1,
         with_args: Optional[Tuple] = None,
         with_kwargs: Optional[Dict] = None,
+        raise_exceptions: bool = False,
 ):
     assert iterations >= 1
     if len(funcs) == 0:
@@ -28,7 +29,7 @@ def bench_batch(
 
     tester = Tester(with_args, with_kwargs)
     tester.add_tests(funcs)
-    tester.run_tests(iterations)
+    tester.run_tests(iterations, raise_exceptions)
 
 
 __all__ = (bench, bench_batch)

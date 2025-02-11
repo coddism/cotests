@@ -17,8 +17,7 @@ def get_sec_metrix(sec: float) -> Tuple[float, str]:
     for deci, metr in __METRIX:
         if sec > deci:
             return deci, metr
-    else:
-        return __METRIX[-1]
+    return __METRIX[-1]
 
 
 def format_sec_metrix(sec: float) -> str:

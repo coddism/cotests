@@ -9,7 +9,7 @@ from .utils import format_sec_metrix, print_test_results
 TestFunction = Callable
 TestArgs = Tuple[Any]
 TestKwargs = Dict[str, Any]
-TestTuple = Tuple[TestFunction, Optional[TestArgs], Optional[TestKwargs]]
+TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
 
 class Tester:
@@ -50,11 +50,15 @@ class Tester:
                  ):
         if self.__global_args and args:
             raise Exception('args conflict')
+        fa = self.__global_args or args or ()
+
         if self.__global_kwargs and kwargs:
-            raise Exception('kwargs conflict')
+            fkw = {**self.__global_kwargs, **kwargs}
+        else:
+            fkw = self.__global_kwargs or kwargs or {}
 
         self.__tests.append(
-            (fn, args, kwargs)
+            (fn, fa, fkw)
         )
 
     @staticmethod
@@ -81,15 +85,16 @@ class Tester:
         return s, mx, mn, avg
 
 
-    def run_tests(self, iterations: int = 1):
+    def run_tests(self,
+                  iterations: int = 1,
+                  raise_exceptions: bool = False,
+                  ):
         if not self.__tests:
             raise Exception('Tests not found')
         f_start = perf_counter()
         exp = []
         for test in self.__tests:
-            f = test[0]
-            args = self.__global_args or test[1] or ()
-            kwargs = self.__global_kwargs or test[2] or {}
+            f, args, kwargs = test
 
             fun_name = f.__name__
             print(f'{fun_name}:', end='', flush=True)
@@ -97,16 +102,20 @@ class Tester:
                 if iterations == 1:
                     s = self.__run_single_test(f, args, kwargs)
                     exp.append((fun_name, s))
+                    t_sec = s
                 else:
                     s = self.__run_multiple_tests(
                         f, args, kwargs,
                         iterations=iterations
                     )
                     exp.append((fun_name, *s))
+                    t_sec = s[0]
             except Exception as e:
+                if raise_exceptions:
+                    raise
                 print(f'error: {e}')
             else:
-                print('ok')
+                print(f'ok - {format_sec_metrix(t_sec)}')
 
         print_test_results(
             exp,
