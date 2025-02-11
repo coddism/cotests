@@ -1,9 +1,9 @@
 import inspect
-from math import log10
 from time import perf_counter
 from typing import Callable, List, Tuple, Optional, Dict
+
 from .progress_bar import ProgressBarPrinter
-from .utils import get_sec_metrix, format_sec_metrix
+from .utils import format_sec_metrix, print_test_results
 
 
 def bench(func):
@@ -15,59 +15,6 @@ def bench(func):
 
 
 __PROGRESS_BAR_LEN = 50
-
-
-def __float_len(x: float) -> int:
-    return int(log10(x)) + 1
-
-
-def print_test_results(
-        exp: List[Tuple[str, float]],
-        *,
-        headers: Optional[Tuple] = None,
-):
-    if not exp:
-        print('No results.')
-        return
-
-    iter_ = exp.__iter__()
-    first = next(iter_)
-    max_fn_len = len(first[0])
-    minmax = [[m,m] for m in first[1:]]
-
-    if headers:
-        assert len(headers) + 1 == len(first)
-
-    for i in iter_:
-        if len(i[0]) > max_fn_len:
-            max_fn_len = len(i[0])
-        for im, sec in enumerate(i[1:]):
-            if minmax[im][0] > sec:
-                minmax[im][0] = sec
-            elif minmax[im][1] < sec:
-                minmax[im][1] = sec
-
-    multi = []
-    row_format = ''
-    lens = []
-
-    for min_s, max_s in minmax:
-        deci, prefix = get_sec_metrix(min_s)
-
-        max_s_len = __float_len(max_s / deci) + 4
-        row_format += f'| %{max_s_len}.3f {prefix} '
-        multi.append(deci)
-        lens.append(max_s_len + len(prefix) + 1)
-
-    row_format += f'| %-{max_fn_len}s |'
-    lens.append(max_fn_len)
-
-    print('\n+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
-    if headers:
-        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f'))) + ' |')
-
-    for item in exp:
-        print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0]))
 
 
 def bench_batch(
