@@ -71,9 +71,12 @@ def print_test_results(
     row_format += f'| %-{max_fn_len}s |'
     lens.append(max_fn_len)
 
-    print('\n+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+')
+    fr = '+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+'
+    print('\n' + fr)
     if headers:
         print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f'))) + ' |')
 
     for item in exp:
         print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0]))
+
+    print(fr)
