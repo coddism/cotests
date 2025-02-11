@@ -42,8 +42,10 @@ if __name__ == '__main__':
         raise FileNotFoundError
 
     bench_batch(
-        (bench_json, (args.path_file,)),
-        (bench_json_rb, (args.path_file,)),
-        (bench_orjson, (args.path_file,)),
-        iterations=10
+        bench_json,
+        bench_json_rb,
+        bench_orjson,
+        iterations=3,
+        with_args=(args.path_file,),
+        # with_kwargs={'file_path': args.path_file},
     )

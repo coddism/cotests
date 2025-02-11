@@ -1,7 +1,7 @@
 import inspect
 from math import log10
 from time import perf_counter
-from typing import Callable, List, Tuple, Optional
+from typing import Callable, List, Tuple, Optional, Dict
 from .progress_bar import ProgressBarPrinter
 from .utils import get_sec_metrix, format_sec_metrix
 
@@ -26,6 +26,10 @@ def print_test_results(
         *,
         headers: Optional[Tuple] = None,
 ):
+    if not exp:
+        print('No results.')
+        return
+
     iter_ = exp.__iter__()
     first = next(iter_)
     max_fn_len = len(first[0])
@@ -69,6 +73,8 @@ def print_test_results(
 def bench_batch(
         *funcs,
         iterations: int = 1,
+        with_args: Optional[Tuple] = None,
+        with_kwargs: Optional[Dict] = None,
 ):
     assert iterations >= 1
     if len(funcs) == 0:
@@ -78,14 +84,14 @@ def bench_batch(
     exp = []
 
     def bf(f: Callable, *args, **kwargs):
-        fn = f.__name__
-        print(f'{fn}.', end='', flush=True)
+        fun_name = f.__name__
+        print(f'{fun_name}.', end='', flush=True)
         try:
             if iterations == 1:
                 bench_start = perf_counter()
                 f(*args, **kwargs)
                 s = perf_counter() - bench_start
-                exp.append((fn, s))
+                exp.append((fun_name, s))
             else:
                 benches = []
                 for _ in ProgressBarPrinter(iterations, __PROGRESS_BAR_LEN):
@@ -94,17 +100,30 @@ def bench_batch(
                     benches.append(perf_counter() - bs0)
                 s = sum(benches)
                 mx, mn, avg = max(benches), min(benches), s / iterations
-                exp.append((fn, s, mx, mn, avg))
+                exp.append((fun_name, s, mx, mn, avg))
         except Exception as e:
             print(f'error: {e}')
         else:
             print('ok')
 
+    to_run: List[Tuple] = []
+    def add_test(fn, args = None, kwargs = None):
+        if args and with_args:
+            raise Exception('args conflict')
+        if kwargs and with_kwargs:
+            raise Exception('kwargs conflict')
+
+        to_run.append((
+            fn,
+            args or with_args or (),
+            kwargs or with_kwargs or {},
+        ))
+
     for func_item in funcs:
         if inspect.isfunction(func_item):
-            bf(func_item)
+            add_test(func_item)
         elif isinstance(func_item, tuple):
-            ff = [None, None, None]
+            ff = [None, (), {}]
             for fi in func_item:
                 if inspect.isfunction(fi):
                     ff[0] = fi
@@ -115,12 +134,12 @@ def bench_batch(
                 else:
                     raise ValueError
             assert ff[0] is not None
-            bf(ff[0],
-               *(ff[1] or ()),
-               **(ff[2] or {})
-               )
+            add_test(*ff)
         else:
-            print('unknown')
+            raise ValueError(f'Unknown function: {func_item}')
+
+    for f0, f1, f2 in to_run:
+        bf(f0, *f1, **f2)
 
     print_test_results(
         exp,
