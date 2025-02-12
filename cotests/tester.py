@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 from time import perf_counter
 from typing import Callable, Optional, Tuple, Dict, Any, Iterable, List
@@ -12,8 +13,10 @@ TestKwargs = Dict[str, Any]
 TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
 
+PROGRESS_BAR_LEN = 50
+
+
 class Tester:
-    PROGRESS_BAR_LEN = 50
 
     def __init__(self,
                  global_args: Optional[TestArgs] = None,
@@ -22,6 +25,8 @@ class Tester:
         self.__tests: List[TestTuple] = []
         self.__global_args = global_args
         self.__global_kwargs = global_kwargs
+
+        self.__async = False
 
     def add_tests(self, functions: Iterable):
         for func_item in functions:
@@ -48,6 +53,14 @@ class Tester:
                  args: Optional[TestArgs] = None,
                  kwargs: Optional[TestKwargs] = None,
                  ):
+        assert inspect.isfunction(fn)
+        # print(inspect.iscoroutine(fn))
+        # print(inspect.isawaitable(fn))
+        # print(inspect.iscoroutinefunction(fn))
+        if inspect.iscoroutinefunction(fn):
+            self.__async = True
+            # raise RuntimeError('You need to use async tester')
+
         if self.__global_args and args:
             raise Exception('args conflict')
         fa = self.__global_args or args or ()
@@ -61,65 +74,98 @@ class Tester:
             (fn, fa, fkw)
         )
 
-    @staticmethod
-    def __run_single_test(fn: TestFunction,
-                          args: Optional[TestArgs] = None,
-                          kwargs: Optional[TestKwargs] = None,
-                          ) -> float:
-        bench_start = perf_counter()
-        fn(*args, **kwargs)
-        return perf_counter() - bench_start
-
-    @classmethod
-    def __run_multiple_tests(cls,
-                             fn: TestFunction,
-                             args: Optional[TestArgs] = None,
-                             kwargs: Optional[TestKwargs] = None,
-                             *,
-                             iterations: int
-                             ) -> Tuple[float, float, float, float]:
-        benches = [cls.__run_single_test(fn, args, kwargs)
-                for _ in ProgressBarPrinter(iterations, cls.PROGRESS_BAR_LEN)]
-        s = sum(benches)
-        mx, mn, avg = max(benches), min(benches), s / iterations
-        return s, mx, mn, avg
-
-
     def run_tests(self,
                   iterations: int = 1,
                   raise_exceptions: bool = False,
                   ):
         if not self.__tests:
             raise Exception('Tests not found')
-        f_start = perf_counter()
-        exp = []
-        for test in self.__tests:
-            f, args, kwargs = test
 
-            fun_name = f.__name__
+        runners_ = [
+            [SingleRunner, MultiRunner],
+            [AsyncSingleRunner, AsyncMultiRunner],
+        ]
+
+        runner = runners_[self.__async][iterations != 1](
+            self.__tests,
+            iterations,
+        )
+        return runner.run(raise_exceptions)
+
+
+class AbstractTestRunner:
+    headers: Tuple[str,...]
+
+    def __init__(self,
+                 tests: List[TestTuple],
+                 iterations: int = 1
+                 ):
+        self.__tests = tests
+        self._iterations = iterations
+
+    def run(self,
+            raise_exceptions: bool = False):
+        exp = []
+        f_start = perf_counter()
+        for test in self.__tests:
+            fun_name = test[0].__name__
             print(f'{fun_name}:', end='', flush=True)
             try:
-                if iterations == 1:
-                    s = self.__run_single_test(f, args, kwargs)
-                    exp.append((fun_name, s))
-                    t_sec = s
-                else:
-                    s = self.__run_multiple_tests(
-                        f, args, kwargs,
-                        iterations=iterations
-                    )
-                    exp.append((fun_name, *s))
-                    t_sec = s[0]
+                s = self._run(test)
+                exp.append((fun_name, *s))
             except Exception as e:
                 if raise_exceptions:
                     raise
                 print(f'error: {e}')
             else:
-                print(f'ok - {format_sec_metrix(t_sec)}')
+                print(f'ok - {format_sec_metrix(s[0])}')
 
         print_test_results(
             exp,
-            headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
+            headers=self.headers
         )
-
         print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')
+
+    @staticmethod
+    def _run_single(test: TestTuple) -> float:
+        bench_start = perf_counter()
+        test[0](*test[1], **test[2])
+        return perf_counter() - bench_start
+
+    def _run(self, test: TestTuple) -> Tuple[float, ...]:
+        raise NotImplementedError
+
+
+class SingleRunner(AbstractTestRunner):
+    headers = ('time',)
+
+    def _run(self, test: TestTuple) -> Tuple[float, ...]:
+        t = self._run_single(test)
+        return (t,)
+
+class MultiRunner(AbstractTestRunner):
+    headers = ('full', 'max', 'min', 'avg')
+
+    def _run(self, test: TestTuple) -> Tuple[float, ...]:
+        benches = [self._run_single(test)
+                for _ in ProgressBarPrinter(
+                self._iterations, PROGRESS_BAR_LEN
+            )]
+        s = sum(benches)
+        mx, mn, avg = max(benches), min(benches), s / self._iterations
+        return s, mx, mn, avg
+
+
+class __AsyncRunner:
+    @staticmethod
+    def _run_single(test: TestTuple) -> float:
+        bench_start = perf_counter()
+        asyncio.run(test[0](*test[1], **test[2]))
+        return perf_counter() - bench_start
+
+
+class AsyncSingleRunner(__AsyncRunner, SingleRunner):
+    ...
+
+class AsyncMultiRunner(__AsyncRunner, MultiRunner):
+    ...
