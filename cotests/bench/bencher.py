@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 from time import perf_counter
 from typing import (Callable, Optional, Tuple, Dict, Any,
@@ -31,7 +32,7 @@ class Bencher:
         c.run_tests(iterations, raise_exceptions)
         # return c
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *_, **kwargs):
         # print('INIT')
         self.__tests: List[TestCase] = []
         self.__global_args = kwargs.get('with_args', ())
@@ -61,11 +62,13 @@ class Bencher:
             self.__tests.append(
                 CoroutineTestCase(test)
             )
+            self.__has_coroutines = True
         elif inspect.iscoroutinefunction(test):
             a, k = merge_args()
             self.__tests.append(
                 CoroutineFunctionTestCase(test, *a, **k)
             )
+            self.__has_coroutines = True
         elif inspect.isfunction(test):
             a, k = merge_args()
             self.__tests.append(
@@ -107,23 +110,35 @@ class Bencher:
         if not self.__tests:
             raise Exception('Tests not found')
 
+        if self.__has_coroutines:
+            if iterations != 1:
+                raise NotImplementedError('Multiple for coroutines: coming soon...')
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                ...
+            else:
+                raise RuntimeError('cannot be called from a running event loop')
+
         exp = []
         f_start = perf_counter()
         for test in self.__tests:
             fun_name = test.name
             print(f'{fun_name}:', end='', flush=True)
             try:
-                s = test.run()
-                exp.append((fun_name, s))
+                s = test.run(iterations)
+                exp.append((fun_name, *s))
             except Exception as e:
                 if raise_exceptions:
                     raise
                 print(f'error: {e}')
             else:
-                print(f'ok - {format_sec_metrix(s)}')
+                print(f'ok - {format_sec_metrix(s[0])}')
+
+        headers = ('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
 
         print_test_results(
             exp,
-            # headers=self.headers
+            headers=headers,
         )
         print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')

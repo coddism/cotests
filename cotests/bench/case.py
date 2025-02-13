@@ -1,6 +1,10 @@
 import asyncio
 from time import perf_counter
-from typing import Callable, Coroutine
+from typing import Callable, Coroutine, Tuple
+
+from ..progress_bar import ProgressBarPrinter
+
+PROGRESS_BAR_LEN = 50
 
 
 class TestCase:
@@ -14,10 +18,26 @@ class TestCase:
     def _run(self):
         raise NotImplementedError
 
-    def run(self) -> float:
+    def __run_single(self) -> float:
         bench_start = perf_counter()
         self._run()
         return perf_counter() - bench_start
+
+    def __run_multiple(self, iterations: int) -> Tuple[float,...]:
+        benches = [self.__run_single()
+                for _ in ProgressBarPrinter(
+                    iterations, PROGRESS_BAR_LEN
+                )]
+        s = sum(benches)
+        mx, mn, avg = max(benches), min(benches), s / iterations
+        return s, mx, mn, avg
+
+    def run(self, iterations: int) -> Tuple[float,...]:
+        if iterations == 1:
+            return (self.__run_single(),)
+        else:
+            return self.__run_multiple(iterations)
+
 
 class CoroutineTestCase(TestCase):
     def __init__(self, test: Coroutine):
