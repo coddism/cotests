@@ -1,14 +1,14 @@
 import asyncio
 import inspect
 from time import perf_counter
-from typing import Callable, Optional, Tuple, Dict, Any, Iterable, List
+from typing import Callable, Optional, Tuple, Dict, Any, Iterable, List, Union, Coroutine
 
 from .progress_bar import ProgressBarPrinter
 from .utils import format_sec_metrix, print_test_results
 
 
-TestFunction = Callable
-TestArgs = Tuple[Any]
+TestFunction = Union[Callable, Coroutine]
+TestArgs = Tuple[Any, ...]
 TestKwargs = Dict[str, Any]
 TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
@@ -30,8 +30,19 @@ class Tester:
 
     def add_tests(self, functions: Iterable):
         for func_item in functions:
+            # print(
+            #     inspect.isfunction(func_item),
+            #     inspect.iscoroutine(func_item),
+            #     inspect.isawaitable(func_item),
+            #     inspect.iscoroutinefunction(func_item),
+            # )
             if inspect.isfunction(func_item):
                 self.add_test(func_item)
+            elif inspect.iscoroutine(func_item):
+                self.__async = True
+                self.__tests.append(
+                    (func_item, (), {})
+                )
             elif isinstance(func_item, tuple):
                 ff = [None, (), {}]
                 for fi in func_item:
@@ -46,7 +57,7 @@ class Tester:
                 assert ff[0] is not None
                 self.add_test(*ff)
             else:
-                raise ValueError(f'Unknown function: {func_item}')
+                raise ValueError(f'Unknown test: {func_item}')
 
     def add_test(self,
                  fn: TestFunction,
@@ -80,6 +91,14 @@ class Tester:
                   ):
         if not self.__tests:
             raise Exception('Tests not found')
+
+        if self.__async:
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                ...
+            else:
+                raise RuntimeError('cannot be called from a running event loop')
 
         if iterations == 1:
             runner = SingleRunner(raise_exceptions)
@@ -126,6 +145,8 @@ class AbstractTestRunner:
         bench_start = perf_counter()
         if inspect.iscoroutinefunction(test[0]):
             asyncio.run(test[0](*test[1], **test[2]))
+        elif inspect.iscoroutine(test[0]):
+            asyncio.run(test[0])
         else:
             test[0](*test[1], **test[2])
         return perf_counter() - bench_start
