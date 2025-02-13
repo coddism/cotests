@@ -81,40 +81,35 @@ class Tester:
         if not self.__tests:
             raise Exception('Tests not found')
 
-        runners_ = [
-            [SingleRunner, MultiRunner],
-            [AsyncSingleRunner, AsyncMultiRunner],
-        ]
+        if iterations == 1:
+            runner = SingleRunner(raise_exceptions)
+        else:
+            runner = MultiRunner(raise_exceptions, iterations)
 
-        runner = runners_[self.__async][iterations != 1](
-            self.__tests,
-            iterations,
-        )
-        return runner.run(raise_exceptions)
+        return runner.run(self.__tests)
 
 
 class AbstractTestRunner:
     headers: Tuple[str,...]
 
     def __init__(self,
-                 tests: List[TestTuple],
-                 iterations: int = 1
-                 ):
-        self.__tests = tests
+                 raise_exceptions: bool = False,
+                 iterations: int = 1,):
         self._iterations = iterations
+        self.__raise_exceptions = raise_exceptions
 
     def run(self,
-            raise_exceptions: bool = False):
+            tests: List[TestTuple]):
         exp = []
         f_start = perf_counter()
-        for test in self.__tests:
+        for test in tests:
             fun_name = test[0].__name__
             print(f'{fun_name}:', end='', flush=True)
             try:
                 s = self._run(test)
                 exp.append((fun_name, *s))
             except Exception as e:
-                if raise_exceptions:
+                if self.__raise_exceptions:
                     raise
                 print(f'error: {e}')
             else:
@@ -129,7 +124,10 @@ class AbstractTestRunner:
     @staticmethod
     def _run_single(test: TestTuple) -> float:
         bench_start = perf_counter()
-        test[0](*test[1], **test[2])
+        if inspect.iscoroutinefunction(test[0]):
+            asyncio.run(test[0](*test[1], **test[2]))
+        else:
+            test[0](*test[1], **test[2])
         return perf_counter() - bench_start
 
     def _run(self, test: TestTuple) -> Tuple[float, ...]:
@@ -154,18 +152,3 @@ class MultiRunner(AbstractTestRunner):
         s = sum(benches)
         mx, mn, avg = max(benches), min(benches), s / self._iterations
         return s, mx, mn, avg
-
-
-class __AsyncRunner:
-    @staticmethod
-    def _run_single(test: TestTuple) -> float:
-        bench_start = perf_counter()
-        asyncio.run(test[0](*test[1], **test[2]))
-        return perf_counter() - bench_start
-
-
-class AsyncSingleRunner(__AsyncRunner, SingleRunner):
-    ...
-
-class AsyncMultiRunner(__AsyncRunner, MultiRunner):
-    ...
