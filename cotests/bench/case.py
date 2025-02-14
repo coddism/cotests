@@ -1,12 +1,15 @@
 from time import perf_counter
-from typing import Tuple, List, Iterable
+from typing import Tuple, List, Union
 
 from ..progress_bar import ProgressBarPrinter
 
 PROGRESS_BAR_LEN = 50
+RESULT_TUPLE_SINGLE = Tuple[float]
+RESULT_TUPLE_MULTI = Tuple[float,float,float,float]
+RESULT_TUPLE = Union[RESULT_TUPLE_SINGLE,RESULT_TUPLE_MULTI]
 
 
-def _rm_calc(benches: List[float]) -> Tuple[float, ...]:
+def _rm_calc(benches: List[float]) -> RESULT_TUPLE_MULTI:
     s = sum(benches)
     mx, mn, avg = (
         max(benches),
@@ -38,9 +41,9 @@ class TestCase:
         return [self._run_single()
                 for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)]
 
-    def run(self, iterations: int) -> Iterable[float]:
+    def run(self, iterations: int) -> RESULT_TUPLE:
         if iterations == 1:
-            return [self._run_single()]
+            return (self._run_single(),)
         else:
             return _rm_calc(self._run_multiple(iterations))
 
@@ -62,9 +65,9 @@ class AsyncTestCase(TestCase):
         return [await self._run_single()
                 for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)]
 
-    async def run(self, iterations: int) -> Iterable[float]:
+    async def run(self, iterations: int) -> RESULT_TUPLE:
         if iterations == 1:
-            return [await self._run_single()]
+            return (await self._run_single(),)
         else:
             return _rm_calc(await self._run_multiple(iterations))
 
