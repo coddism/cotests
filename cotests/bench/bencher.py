@@ -29,7 +29,17 @@ class Bencher:
             with_kwargs=with_kwargs,
         )
         c.add_tests(tests)
-        return c.run_tests(iterations, raise_exceptions)
+        t = c.run_tests(iterations, raise_exceptions)
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # print('NewLoop')
+            asyncio.run(t)
+        else:
+            # print('ReturnCoroutine')
+            # raise RuntimeError('cannot be called from a running event loop')
+            return t
 
     def __init__(self, *_, **kwargs):
         # print('INIT')
@@ -38,9 +48,12 @@ class Bencher:
         self.__global_kwargs = kwargs.get('with_kwargs', ())
         self.__has_coroutines = False
 
-    @property
-    def tests(self):
-        return self.__tests
+    # @property
+    # def tests(self):
+    #     return self.__tests
+    # @property
+    # def has_coroutines(self):
+    #     return self.__has_coroutines
 
     def add_test(self, test, *args, **kwargs):
         def merge_args():
@@ -108,16 +121,6 @@ class Bencher:
                   ):
         if not self.__tests:
             raise Exception('Tests not found')
-
-        # if self.__has_coroutines:
-        #     if iterations != 1:
-        #         raise NotImplementedError('Multiple for coroutines: coming soon...')
-        #     try:
-        #         asyncio.get_running_loop()
-        #     except RuntimeError:
-        #         ...
-        #     else:
-        #         raise RuntimeError('cannot be called from a running event loop')
 
         exp = []
         f_start = perf_counter()
