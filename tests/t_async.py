@@ -24,10 +24,17 @@ if __name__ == '__main__':
             test1,
             test2,
             (test2, .12),
-            # iterations=2,
-            raise_exceptions=True,
-            # with_args=(.4,),
+            # iterations=4,
+            # raise_exceptions=True,
+            # with_args=(2.,)
         )
         await bb
+
+        await bench_batch(
+            test0,
+            test2,
+            iterations=4,
+            with_args=(.1,)
+        )
     asyncio.run(main())
     # main()

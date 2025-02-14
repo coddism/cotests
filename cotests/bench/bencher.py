@@ -23,6 +23,7 @@ class Bencher:
         with_kwargs: Optional[TestKwargs] = None,
         raise_exceptions: bool = False,
     ):
+        print('\n', '-'*14, 'Start Bencher', '-'*14)
         c = super().__new__(cls)
         c.__init__(
             with_args=with_args,
@@ -126,9 +127,11 @@ class Bencher:
         f_start = perf_counter()
         for test in self.__tests:
             fun_name = test.name
-            print(f'{fun_name}:', end='', flush=True)
+            print(f' * {fun_name}:', end='', flush=True)
             try:
-                s = await test.run(iterations)
+                s = test.run(iterations)
+                if inspect.iscoroutine(s):
+                    s = await s
                 exp.append((fun_name, *s))
             except Exception as e:
                 if raise_exceptions:
@@ -138,10 +141,8 @@ class Bencher:
                 # print(f'ok')
                 print(f'ok - {format_sec_metrix(s[0])}')
 
-        headers = ('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
-
         print_test_results(
             exp,
-            headers=headers,
+            headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg'),
         )
         print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')
