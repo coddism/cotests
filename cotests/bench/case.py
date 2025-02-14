@@ -37,15 +37,18 @@ class TestCase:
         self._run()
         return perf_counter() - bench_start
 
-    def _run_multiple(self, iterations: int) -> List[float]:
-        return [self._run_single()
-                for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)]
+    def run_single(self) -> RESULT_TUPLE_SINGLE:
+        return (self._run_single(),)
 
-    def run(self, iterations: int) -> RESULT_TUPLE:
+    def run_multiple(self, iterations: int) -> RESULT_TUPLE_MULTI:
+        return _rm_calc([self._run_single()
+                for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
+
+    def run(self, iterations: int):
         if iterations == 1:
-            return (self._run_single(),)
+            return self.run_single()
         else:
-            return _rm_calc(self._run_multiple(iterations))
+            return self.run_multiple(iterations)
 
     async def run_async(self, iterations: int):
         raise NotImplementedError
@@ -61,15 +64,18 @@ class AsyncTestCase(TestCase):
         await self._run()
         return perf_counter() - bench_start
 
-    async def _run_multiple(self, iterations: int) -> List[float]:
-        return [await self._run_single()
-                for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)]
+    async def run_single(self) -> RESULT_TUPLE_SINGLE:
+        return (await self._run_single(),)
 
-    async def run(self, iterations: int) -> RESULT_TUPLE:
+    async def run_multiple(self, iterations: int) -> RESULT_TUPLE_MULTI:
+        return _rm_calc([await self._run_single()
+                for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
+
+    async def run(self, iterations: int):
         if iterations == 1:
-            return (await self._run_single(),)
+            return await self.run_single()
         else:
-            return _rm_calc(await self._run_multiple(iterations))
+            return await self.run_multiple(iterations)
 
     def _run(self):
         return self._f

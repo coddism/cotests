@@ -117,11 +117,12 @@ class Bencher:
                   ):
         if not self.__tests:
             raise Exception('Tests not found')
+        single_run = iterations == 1
 
         def print_res(rexp: list):
             print_test_results(
                 rexp,
-                headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg'),
+                headers=('time',) if single_run else ('full', 'max', 'min', 'avg'),
             )
 
         if self.__has_coroutines:

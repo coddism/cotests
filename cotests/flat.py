@@ -12,9 +12,6 @@ def bench(func):
     return wrapper
 
 
-__PROGRESS_BAR_LEN = 50
-
-
 def bench_batch(
         *funcs,
         iterations: int = 1,
