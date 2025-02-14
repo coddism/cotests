@@ -40,6 +40,7 @@ def bench_batch(
     )
     # print(b)
     # print(b.tests)
+    return b
 
 
 __all__ = (bench, bench_batch)

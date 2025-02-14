@@ -29,8 +29,7 @@ class Bencher:
             with_kwargs=with_kwargs,
         )
         c.add_tests(tests)
-        c.run_tests(iterations, raise_exceptions)
-        # return c
+        return c.run_tests(iterations, raise_exceptions)
 
     def __init__(self, *_, **kwargs):
         # print('INIT')
@@ -103,22 +102,22 @@ class Bencher:
             #     inspect.iscoroutinefunction(test),
             # )
 
-    def run_tests(self,
+    async def run_tests(self,
                   iterations: int = 1,
                   raise_exceptions: bool = False,
                   ):
         if not self.__tests:
             raise Exception('Tests not found')
 
-        if self.__has_coroutines:
-            if iterations != 1:
-                raise NotImplementedError('Multiple for coroutines: coming soon...')
-            try:
-                asyncio.get_running_loop()
-            except RuntimeError:
-                ...
-            else:
-                raise RuntimeError('cannot be called from a running event loop')
+        # if self.__has_coroutines:
+        #     if iterations != 1:
+        #         raise NotImplementedError('Multiple for coroutines: coming soon...')
+        #     try:
+        #         asyncio.get_running_loop()
+        #     except RuntimeError:
+        #         ...
+        #     else:
+        #         raise RuntimeError('cannot be called from a running event loop')
 
         exp = []
         f_start = perf_counter()
@@ -126,13 +125,14 @@ class Bencher:
             fun_name = test.name
             print(f'{fun_name}:', end='', flush=True)
             try:
-                s = test.run(iterations)
+                s = await test.run(iterations)
                 exp.append((fun_name, *s))
             except Exception as e:
                 if raise_exceptions:
                     raise
                 print(f'error: {e}')
             else:
+                # print(f'ok')
                 print(f'ok - {format_sec_metrix(s[0])}')
 
         headers = ('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')

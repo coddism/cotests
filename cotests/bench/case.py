@@ -18,9 +18,9 @@ class TestCase:
     def _run(self):
         raise NotImplementedError
 
-    def __run_single(self) -> float:
+    async def __run_single(self) -> float:
         bench_start = perf_counter()
-        self._run()
+        await self._run()
         return perf_counter() - bench_start
 
     def __run_multiple(self, iterations: int) -> Tuple[float,...]:
@@ -32,9 +32,9 @@ class TestCase:
         mx, mn, avg = max(benches), min(benches), s / iterations
         return s, mx, mn, avg
 
-    def run(self, iterations: int) -> Tuple[float,...]:
+    async def run(self, iterations: int) -> Tuple[float,...]:
         if iterations == 1:
-            return (self.__run_single(),)
+            return (await self.__run_single(),)
         else:
             return self.__run_multiple(iterations)
 
@@ -43,13 +43,13 @@ class CoroutineTestCase(TestCase):
     def __init__(self, test: Coroutine):
         super().__init__(test)
     def _run(self):
-        asyncio.run(self._f)
+        return self._f
 
 class CoroutineFunctionTestCase(TestCase):
     def __init__(self, test: Callable, *args, **kwargs):
         super().__init__(test(*args, **kwargs))
     def _run(self):
-        asyncio.run(self._f)
+        return self._f
 
 class FunctionTestCase(TestCase):
     def __init__(self, test: Callable, *args, **kwargs):
@@ -57,5 +57,5 @@ class FunctionTestCase(TestCase):
         # self._f = test
         self.__args = args
         self.__kwargs = kwargs
-    def _run(self):
+    async def _run(self):
       self._f(*self.__args, **self.__kwargs)
