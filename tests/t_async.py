@@ -24,9 +24,7 @@ if __name__ == '__main__':
             test1,
             test2,
             (test2, .12),
-            # iterations=4,
             # raise_exceptions=True,
-            # with_args=(2.,)
         )
         await bb
 

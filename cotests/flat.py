@@ -1,7 +1,6 @@
 from time import perf_counter
 from typing import Tuple, Optional, Dict
 
-from .tester import Tester
 from .bench.bencher import Bencher
 
 
@@ -38,8 +37,6 @@ def bench_batch(
         with_kwargs=with_kwargs,
         raise_exceptions=raise_exceptions,
     )
-    # print(b)
-    # print(b.tests)
     return b
 
 
