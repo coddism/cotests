@@ -31,16 +31,18 @@ class Bencher:
         )
         c.add_tests(tests)
         t = c.run_tests(iterations, raise_exceptions)
-
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            # print('NewLoop')
-            asyncio.run(t)
-        else:
-            # print('ReturnCoroutine')
-            # raise RuntimeError('cannot be called from a running event loop')
-            return t
+        if inspect.iscoroutine(t):
+            # try to run
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                # print('Run in new loop')
+                asyncio.run(t)
+            else:
+                # print('Cannot run. Return coroutine')
+                return t
+        # else:
+        #     print('No coroutines')
 
     def __init__(self, *_, **kwargs):
         # print('INIT')
@@ -48,13 +50,6 @@ class Bencher:
         self.__global_args = kwargs.get('with_args', ())
         self.__global_kwargs = kwargs.get('with_kwargs', ())
         self.__has_coroutines = False
-
-    # @property
-    # def tests(self):
-    #     return self.__tests
-    # @property
-    # def has_coroutines(self):
-    #     return self.__has_coroutines
 
     def add_test(self, test, *args, **kwargs):
         def merge_args():
@@ -116,33 +111,64 @@ class Bencher:
             #     inspect.iscoroutinefunction(test),
             # )
 
-    async def run_tests(self,
+    def run_tests(self,
                   iterations: int = 1,
                   raise_exceptions: bool = False,
                   ):
         if not self.__tests:
             raise Exception('Tests not found')
 
-        exp = []
-        f_start = perf_counter()
-        for test in self.__tests:
-            fun_name = test.name
-            print(f' * {fun_name}:', end='', flush=True)
-            try:
-                s = test.run(iterations)
-                if inspect.iscoroutine(s):
-                    s = await s
-                exp.append((fun_name, *s))
-            except Exception as e:
-                if raise_exceptions:
-                    raise
-                print(f'error: {e}')
-            else:
-                # print(f'ok')
-                print(f'ok - {format_sec_metrix(s[0])}')
+        async def gena():
+            for test in self.__tests:
+                fun_name = test.name
+                print(f' * {fun_name}:', end='', flush=True)
+                try:
+                    s = test.run(iterations)
+                    if inspect.iscoroutine(s):
+                        s = await s
+                except Exception as e:
+                    if raise_exceptions:
+                        raise
+                    print(f'error: {e}')
+                else:
+                    # print(f'ok')
+                    print(f'ok - {format_sec_metrix(s[0])}')
+                    yield (fun_name, *s)
 
-        print_test_results(
-            exp,
-            headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg'),
-        )
-        print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')
+        def gena0():
+            for test in self.__tests:
+                fun_name = test.name
+                print(f' * {fun_name}:', end='', flush=True)
+                try:
+                    s = test.run(iterations)
+                except Exception as e:
+                    if raise_exceptions:
+                        raise
+                    print(f'error: {e}')
+                else:
+                    # print(f'ok')
+                    print(f'ok - {format_sec_metrix(s[0])}')
+                    yield (fun_name, *s)
+
+        def print_res(rexp: list):
+            print_test_results(
+                rexp,
+                headers=('time',) if iterations == 1 else ('full', 'max', 'min', 'avg'),
+            )
+
+        def do_sync():
+            f_start = perf_counter()
+            exp = [x for x in gena0()]
+            print_res(exp)
+            print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')
+
+        async def do_async():
+            f_start = perf_counter()
+            exp = [x async for x in gena()]
+            print_res(exp)
+            print(f'Full time: {format_sec_metrix(perf_counter() - f_start)}')
+
+        if self.__has_coroutines:
+            return do_async()
+        else:
+            do_sync()

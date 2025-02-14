@@ -30,14 +30,13 @@ def bench_batch(
     # tester = Tester(with_args, with_kwargs)
     # tester.add_tests(funcs)
     # tester.run_tests(iterations, raise_exceptions)
-    b = Bencher(
+    return Bencher(
         *funcs,
         iterations=iterations,
         with_args=with_args,
         with_kwargs=with_kwargs,
         raise_exceptions=raise_exceptions,
     )
-    return b
 
 
 __all__ = (bench, bench_batch)

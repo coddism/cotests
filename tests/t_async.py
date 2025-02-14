@@ -16,23 +16,26 @@ def test2(sleep_time: float = .03):
 if __name__ == '__main__':
     print("START!")
 
-    async def main():
-        bb = bench_batch(
-            test0(.05),
-            test0,
-            (test0, (.15,)),
-            test1,
-            test2,
-            (test2, .12),
-            # raise_exceptions=True,
-        )
-        await bb
+    fun_async = (
+        test0(.05),
+        test0,
+        (test0, (.15,)),
+        test1,
+    )
+    fun_sync = (
+        test2,
+        (test2, .12),
+    )
+    fun_full = (*fun_async, *fun_sync)
 
-        await bench_batch(
-            test0,
-            test2,
-            iterations=4,
-            with_args=(.1,)
-        )
+    print(' ---------------ONLY SYNC-------------------')
+    bench_batch(*fun_sync)
+
+    print(' ---------------ASYNC W\T LOOP--------------')
+    bench_batch(*fun_async)
+
+    async def main():
+        print(' ---------------ASYNC WiTH LOOP-------------')
+        await bench_batch(*fun_full)
+
     asyncio.run(main())
-    # main()
