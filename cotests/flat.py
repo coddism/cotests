@@ -1,7 +1,7 @@
 from time import perf_counter
 from typing import Tuple, Optional, Dict
 
-from .tester import Tester
+from .bench.bencher import Bencher
 
 
 def bench(func):
@@ -10,9 +10,6 @@ def bench(func):
         func(*args, **kwargs)
         return perf_counter() - bench_start
     return wrapper
-
-
-__PROGRESS_BAR_LEN = 50
 
 
 def bench_batch(
@@ -27,9 +24,16 @@ def bench_batch(
         print('Nothing to test')
         return
 
-    tester = Tester(with_args, with_kwargs)
-    tester.add_tests(funcs)
-    tester.run_tests(iterations, raise_exceptions)
+    # tester = Tester(with_args, with_kwargs)
+    # tester.add_tests(funcs)
+    # tester.run_tests(iterations, raise_exceptions)
+    return Bencher(
+        *funcs,
+        iterations=iterations,
+        with_args=with_args,
+        with_kwargs=with_kwargs,
+        raise_exceptions=raise_exceptions,
+    )
 
 
 __all__ = (bench, bench_batch)
