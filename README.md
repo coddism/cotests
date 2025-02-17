@@ -15,10 +15,10 @@
     # args
     :param funcs: all functions for test or benchmark
     # kwargs
-    :param iterations: count of iterations for all functions
-    :param with_args: arguments for each function
-    :param with_kwargs: keyword arguments for each function (can merge with own keyword arguments)
-    :param raise_exceptions: set True if you want to stop `bench_batch()` by exception
+    :param int iterations: count of iterations for all functions
+    :param Optional[Tuple] with_args: arguments for each function
+    :param Optional[Dict] with_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :return: None | Awaitable
 
 ## Examples
