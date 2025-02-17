@@ -217,7 +217,7 @@ if __name__ == '__main__':
     bench_batch(
         bench_json,
         bench_orjson,
-        iterations=10,
+        iterations=50,
         with_args=(args.path_file,),
         # or you can use:
         # with_kwargs={'file_path': args.path_file},
@@ -232,15 +232,16 @@ python -m tests.t_json /path/to/large-file.json
 Output:
 ```
  -------------- Start Bencher --------------
- * bench_json:..........ok - 4.202 sec
- * bench_orjson:..........ok - 2.212 sec
+ * bench_json:..................................................ok - 11.745 sec
+ * bench_orjson:..................................................ok - 7.983 sec
 
-+-----------------------------------------------------------------+
-|    full   |    max     |    min     |    avg     |      f       |
-| 4.202 sec | 442.286 ms | 405.153 ms | 420.238 ms | bench_json   |
-| 2.212 sec | 233.752 ms | 200.718 ms | 221.202 ms | bench_orjson |
-+-----------------------------------------------------------------+
-Full time: 6.418 sec
++--------------------------------------------------------------------------+
+|    full    |    max     |    min     |    avg     |      f       |   %   |
+| 11.745 sec | 254.484 ms | 220.911 ms | 234.896 ms | bench_json   | 147.1 |
+|  7.983 sec | 182.397 ms | 152.058 ms | 159.662 ms | bench_orjson | 100.0 |
++--------------------------------------------------------------------------+
+Full time: 19.733 sec
+
 ```
 
 ### async
