@@ -13,7 +13,9 @@ keywords = ["python", "tests", "benchmark"]
 #    "Operating System :: OS Independent",
 #]
 license = {text = "apache2.0"}
-dependencies = [
+
+[project.optional-dependencies]
+dev = [
     "typing_extensions; python_version<'3.11'",
 ]
 

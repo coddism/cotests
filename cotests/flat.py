@@ -1,7 +1,10 @@
 from time import perf_counter
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, TYPE_CHECKING
 
-from .bench.bencher import Bencher, InTest
+from .bench.bencher import Bencher
+
+if TYPE_CHECKING:
+    from .bench.bencher import InTest
 
 
 def bench(func):
@@ -13,7 +16,7 @@ def bench(func):
 
 
 def bench_batch(
-        *funcs: InTest,
+        *funcs: 'InTest',
         iterations: int = 1,
         with_args: Optional[Tuple] = None,
         with_kwargs: Optional[Dict] = None,
