@@ -2,7 +2,7 @@ import asyncio
 import inspect
 from time import perf_counter
 from typing import (Callable, Optional, Tuple, Dict, Any,
-                    Iterable, List, Union, Coroutine)
+                    Iterable, List, Union, Coroutine, Awaitable)
 
 from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
 from ..utils import print_test_results, format_sec_metrix
@@ -22,7 +22,7 @@ class Bencher:
         with_args: Optional[TestArgs] = None,
         with_kwargs: Optional[TestKwargs] = None,
         raise_exceptions: bool = False,
-    ):
+    ) -> Union[None, Awaitable[None]]:
         print('\n', '-'*14, 'Start Bencher', '-'*14)
         c = super().__new__(cls)
         c.__init__(

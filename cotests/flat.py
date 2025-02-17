@@ -19,6 +19,14 @@ def bench_batch(
         with_kwargs: Optional[Dict] = None,
         raise_exceptions: bool = False,
 ):
+    """
+    :param funcs: all functions for test/benchmark
+    :param iterations: count of iterations for all functions
+    :param with_args: arguments for each function
+    :param with_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param raise_exceptions: set True if you want to stop `bench_batch()` by exception
+    :return: None | Awaitable
+    """
     assert iterations >= 1
     if len(funcs) == 0:
         print('Nothing to test')

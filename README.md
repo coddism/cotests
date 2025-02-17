@@ -8,6 +8,19 @@
 * Can run sync functions, coroutines and coroutinefunctions
 * Convenient conversion between min, sec, ms, µs, etc.
 
+## DOX
+
+### bench_batch()
+    
+    # args
+    :param funcs: all functions for test or benchmark
+    # kwargs
+    :param iterations: count of iterations for all functions
+    :param with_args: arguments for each function
+    :param with_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param raise_exceptions: set True if you want to stop `bench_batch()` by exception
+    :return: None | Awaitable
+
 ## Examples
 
 ### Simple
@@ -34,7 +47,7 @@ bench_batch(
 )
 ```
 
-Results:
+Output:
 ```
  -------------- Start Bencher --------------
  * test_0:ok - 3.300 µs
@@ -145,7 +158,7 @@ Run:
 python -m tests.t_json /path/to/large-file.json
 ```
 
-Results:
+Output:
 ```
  -------------- Start Bencher --------------
  * bench_json:..........ok - 4.202 sec

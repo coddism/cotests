@@ -23,6 +23,10 @@ def bench_orjson(file_path: str):
     with open(file_path, 'rb') as f:
         orjson.loads(*f)
 
+def bench_orjson2(file_path: str):
+    with open(file_path, 'rb') as f:
+        orjson.loads(f.read())
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -36,8 +40,19 @@ if __name__ == '__main__':
         bench_json,
         bench_json_rb,
         bench_orjson,
-        iterations=3,
+        bench_orjson2,
+        iterations=50,
         with_args=(args.path_file,),
         # with_kwargs={'file_path': args.path_file},
         raise_exceptions=True,
     )
+
+"""
++-------------------------------------------------------------------+
+|    full    |    max     |    min     |    avg     |       f       |
+| 11.600 sec | 242.746 ms | 214.939 ms | 231.993 ms | bench_json    |
+| 11.425 sec | 238.720 ms | 214.494 ms | 228.491 ms | bench_json_rb |
+|  7.924 sec | 162.412 ms | 154.662 ms | 158.485 ms | bench_orjson  |
+|  7.431 sec | 155.457 ms | 143.811 ms | 148.624 ms | bench_orjson2 |
++-------------------------------------------------------------------+
+"""
