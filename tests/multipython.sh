@@ -1,7 +1,7 @@
 #pwd
 cd ..
 
-PYTHON_PACKAGES=("python3.7" "python3.8" "python3.9" "python3.10" "python3.11" "python3.12" "python3.13" "python3.14")
+mapfile -t PYTHON_PACKAGES < <(ls -v /usr/bin/python3.* | grep '.*\(.[0-9]\+\)$')
 
 for p in "${PYTHON_PACKAGES[@]}"; do
   if ! "$p" -V &> /dev/null
