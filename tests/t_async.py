@@ -5,45 +5,38 @@ from cotests import bench_batch
 
 async def test0(sleep_time: float = .02):
     await asyncio.sleep(sleep_time)
-async def test1():
-    await test0(.01)
-    # return test0(.01)
-def test2(sleep_time: float = .03):
+def test1(sleep_time: float = .03):
     time.sleep(sleep_time)
 
 
 if __name__ == '__main__':
-    print("START!")
-
     fun_async = (
         test0,
-        (test0, (.15,)),
-        test1,
+        (test0, (.15,)),  # set custom args
     )
     fun_sync = (
-        test2,
-        (test2, .12),
+        test1,
+        (test1, .12),  # set custom args without tuple
     )
-    fun_full = (*fun_async, *fun_sync)
 
     print(' ---------------ONLY SYNC-------------------')
-    bench_batch(
-        *fun_sync,
-        (test2, .12, 45)
-    )
-    bench_batch(
-        *fun_sync,
-        iterations=3
-    )
+    bench_batch(*fun_sync)
 
     print(' ---------------ASYNC W\T LOOP--------------')
-    bench_batch(*fun_async, test0(.05))
     bench_batch(
-        *fun_full,
-        iterations=2,
+        *fun_async,  # coroutinefunctions can reuse
+        test0(.05),  # coroutine with reuse - error
+        iterations=2
     )
 
     async def main():
-        print(' ---------------ASYNC WiTH LOOP-------------')
-        await bench_batch(*fun_full)
+        print(' ---------------ASYNC WITH LOOP-------------')
+        # if `bench_batch()` with coroutines run in running loop, you need to use `await`
+        await bench_batch(
+            *fun_async,
+            *fun_sync,
+            test0(.05),  # coroutine without reuse - ok
+        )
+        # without coroutines = without await
+        bench_batch(*fun_sync)
     asyncio.run(main())

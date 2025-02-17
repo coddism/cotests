@@ -1,7 +1,10 @@
 from time import perf_counter
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, TYPE_CHECKING
 
 from .bench.bencher import Bencher
+
+if TYPE_CHECKING:
+    from .bench.bencher import InTest
 
 
 def bench(func):
@@ -13,12 +16,20 @@ def bench(func):
 
 
 def bench_batch(
-        *funcs,
+        *funcs: 'InTest',
         iterations: int = 1,
         with_args: Optional[Tuple] = None,
         with_kwargs: Optional[Dict] = None,
         raise_exceptions: bool = False,
 ):
+    """
+    :param funcs: all functions for test/benchmark
+    :param int iterations: count of iterations for all functions
+    :param Optional[Tuple] with_args: arguments for each function
+    :param Optional[Dict] with_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
+    :return: None | Awaitable
+    """
     assert iterations >= 1
     if len(funcs) == 0:
         print('Nothing to test')

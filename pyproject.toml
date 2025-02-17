@@ -1,6 +1,6 @@
 [project]
 name = "cotests"
-version = "0.0.1"
+version = "0.1"
 authors = [
   {name="iSergium"},
 ]
@@ -14,15 +14,17 @@ keywords = ["python", "tests", "benchmark"]
 #]
 license = {text = "apache2.0"}
 
+[project.optional-dependencies]
+dev = [
+    "typing_extensions; python_version<'3.11'",
+]
+
 [project.urls]
 Homepage = "https://github.com/coddism/cotests"
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
-
-#[tool.setuptools]
-#packages = ["cotests"]
 
 [tool.setuptools.packages.find]
 exclude = ["tests"]
