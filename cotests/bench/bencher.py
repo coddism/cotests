@@ -29,17 +29,17 @@ class Bencher:
             cls,
             *tests: 'InTest',
             iterations: int = 1,
-            with_args: Optional['TestArgs'] = None,
-            with_kwargs: Optional['TestKwargs'] = None,
+            global_args: Optional['TestArgs'] = None,
+            global_kwargs: Optional['TestKwargs'] = None,
             raise_exceptions: bool = False,
     ) -> Union[None, Awaitable[None]]:
         print('\n', '-' * 14, 'Start Bencher', '-' * 14)
-        if not isinstance(with_args, (List, Tuple, Set)):
+        if not isinstance(global_args, (List, Tuple, Set)):
             print('Better to use for args: list, tuple, set')
         c = super().__new__(cls)
         c.__init__(
-            with_args=with_args,
-            with_kwargs=with_kwargs,
+            global_args=global_args,
+            global_kwargs=global_kwargs,
         )
         c.add_tests(tests)
         t = c.run_tests(iterations, raise_exceptions)
@@ -59,8 +59,8 @@ class Bencher:
     def __init__(self, *_, **kwargs):
         # print('INIT')
         self.__tests: List[TestCase] = []
-        self.__global_args = kwargs.get('with_args', ())
-        self.__global_kwargs = kwargs.get('with_kwargs', ())
+        self.__global_args = kwargs.get('global_args', ())
+        self.__global_kwargs = kwargs.get('global_kwargs', {})
         self.__has_coroutines = False
 
     def add_test(self, test: 'InTest', *args, **kwargs):

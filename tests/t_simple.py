@@ -27,20 +27,20 @@ bench_batch(
 # test with args: like test_0(1), test_1(1), etc...
 bench_batch(
     *tests_list,
-    with_args=(1,)
+    global_args=(1,)
 )
 
 # test with kwargs: like test_0(a=1), test_1(a=1), etc...
 bench_batch(
     *tests_list,
-    with_kwargs={'a':1}
+    global_kwargs={'a':1}
 )
 
 # It can be combined: like test_0(1, a=1), test_1(1, a=1), etc...
 bench_batch(
     *tests_list,
-    with_args=(1,),
-    with_kwargs={'a':1}
+    global_args=(1,),
+    global_kwargs={'a':1}
 )
 
 async def atest_0(*args, **kwargs): ...
@@ -59,8 +59,8 @@ bench_batch(
     atest_0(),  # run like coroutine
     atest_1(1, 2, a=1),  # run like coroutine with arguments
     # optional
-    # with_args=(1,2),  # error in this example - args have already been set, but you can use it in other examples
-    with_kwargs={'b':2},  # will be merged to existing kwargs
+    # global_args=(1,2),  # error in this example - args have already been set, but you can use it in other examples
+    global_kwargs={'b':2},  # will be merged to existing kwargs
     raise_exceptions=True,  # raise exceptions, print traceback; default False
     iterations=1,  # count of iterations you want; default 1 = just test
 )

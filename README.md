@@ -16,8 +16,8 @@
     :param funcs: all functions for test or benchmark
     # kwargs
     :param int iterations: count of iterations for all functions
-    :param Optional[Tuple] with_args: arguments for each function
-    :param Optional[Dict] with_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param Optional[Tuple] global_args: arguments for each function
+    :param Optional[Dict] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
     :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :return: None | Awaitable
 
@@ -28,12 +28,9 @@
 ```python
 from cotests import bench_batch
 
-def test_0():
-    ...
-def test_1():
-    ...
-def test_2():
-    ...
+def test_0(): ...
+def test_1(): ...
+def test_2(): ...
 
 # just test
 bench_batch(
@@ -108,20 +105,20 @@ bench_batch(
 # test with args: like test_0(1), test_1(1), etc...
 bench_batch(
     *tests_list,
-    with_args=(1,)
+    global_args=(1,)
 )
 
 # test with kwargs: like test_0(a=1), test_1(a=1), etc...
 bench_batch(
     *tests_list,
-    with_kwargs={'a':1}
+    global_kwargs={'a': 1}
 )
 
 # It can be combined: like test_0(1, a=1), test_1(1, a=1), etc...
 bench_batch(
     *tests_list,
-    with_args=(1,),
-    with_kwargs={'a':1}
+    global_args=(1,),
+    global_kwargs={'a': 1}
 )
 
 async def atest_0(*args, **kwargs): ...
@@ -130,18 +127,18 @@ async def atest_1(*args, **kwargs): ...
 # different ways to set test function & combo kwargs
 bench_batch(
     test_0,  # test_0()
-    (test_1, (1,2,)),  # test_1(1, 2)
+    (test_1, (1, 2,)),  # test_1(1, 2)
     (test_1, 1, 2),  # also test_1(1, 2)
     (test_2, {'a': 1}),  # test_2(a=1)
-    (test_3, (1,2), {'a': 1}),  # test_3(1, 2, a=1)
+    (test_3, (1, 2), {'a': 1}),  # test_3(1, 2, a=1)
     (test_3, 1, 2, {'a': 1}),  # also test_3(1, 2, a=1)
     # async
     atest_0,  # and other options above are available
     atest_0(),  # run like coroutine
     atest_1(1, 2, a=1),  # run like coroutine with arguments
     # optional
-    # with_args=(1,2),  # error in this example - args have already been set, but you can use it in other examples
-    with_kwargs={'b':2},  # will be merged to existing kwargs
+    # global_args=(1, 2),  # error in this example - args have already been set, but you can use it in other examples
+    global_kwargs={'b': 2},  # will be merged to existing kwargs
     raise_exceptions=True,  # raise exceptions, print traceback; default False
     iterations=1,  # count of iterations you want; default 1 = just test
 )
@@ -218,9 +215,9 @@ if __name__ == '__main__':
         bench_json,
         bench_orjson,
         iterations=50,
-        with_args=(args.path_file,),
+        global_args=(args.path_file,),
         # or you can use:
-        # with_kwargs={'file_path': args.path_file},
+        # global_kwargs={'file_path': args.path_file},
     )
 ```
 
