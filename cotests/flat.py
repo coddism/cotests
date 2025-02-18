@@ -4,7 +4,7 @@ from typing import Tuple, Optional, Dict, TYPE_CHECKING
 from .bench.bencher import Bencher
 
 if TYPE_CHECKING:
-    from .bench.bencher import InTest
+    from .bench.bencher import InTest, TestArgs, TestKwargs
 
 
 def bench(func):
@@ -18,8 +18,8 @@ def bench(func):
 def bench_batch(
         *funcs: 'InTest',
         iterations: int = 1,
-        with_args: Optional[Tuple] = None,
-        with_kwargs: Optional[Dict] = None,
+        with_args: Optional['TestArgs'] = None,
+        with_kwargs: Optional['TestKwargs'] = None,
         raise_exceptions: bool = False,
 ):
     """

@@ -2,37 +2,40 @@ import asyncio
 import inspect
 import sys
 from time import perf_counter
-from typing import (Callable, Optional, Tuple, Dict, Any,
+from typing import (Callable, Optional, Tuple, Any, Set, Mapping,
                     Iterable, List, Union, Coroutine, Awaitable, TYPE_CHECKING)
 
 from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
 from ..utils import print_test_results, format_sec_metrix
 
 if TYPE_CHECKING:
-    if sys.version_info[:2] >= (3,11):
+    if sys.version_info[:2] >= (3, 11):
         from typing import Unpack
     else:
         from typing_extensions import Unpack
 
     TestFunction = Union[Callable, Coroutine]
-    InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any,...]]]
+    InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
     InTest = Union[TestFunction, InTestTuple]
-    TestArgs = Tuple[Any, ...]
-    TestKwargs = Dict[str, Any]
+    # TestArgs = Union[Tuple[Any,...], List[Any], Set[Any]]
+    TestArgs = Iterable[Any]
+    TestKwargs = Mapping[str, Any]
     TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
 
 class Bencher:
 
     def __new__(
-        cls,
-        *tests: 'InTest',
-        iterations: int = 1,
-        with_args: Optional['TestArgs'] = None,
-        with_kwargs: Optional['TestKwargs'] = None,
-        raise_exceptions: bool = False,
+            cls,
+            *tests: 'InTest',
+            iterations: int = 1,
+            with_args: Optional['TestArgs'] = None,
+            with_kwargs: Optional['TestKwargs'] = None,
+            raise_exceptions: bool = False,
     ) -> Union[None, Awaitable[None]]:
-        print('\n', '-'*14, 'Start Bencher', '-'*14)
+        print('\n', '-' * 14, 'Start Bencher', '-' * 14)
+        if not isinstance(with_args, (List, Tuple, Set)):
+            print('Better to use for args: list, tuple, set')
         c = super().__new__(cls)
         c.__init__(
             with_args=with_args,
@@ -92,6 +95,7 @@ class Bencher:
                 FunctionTestCase(test, *a, **k)
             )
         elif isinstance(test, tuple):
+            assert len(test) > 0
             f = test[0]
             a_, kw_ = (), {}
             ta_ = []
