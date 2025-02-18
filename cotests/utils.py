@@ -58,6 +58,12 @@ def print_test_results(
     multi = []
     row_format = ''
     lens = []
+    min_full = minmax[0][0]
+    def get_percent(val: float) -> str:
+        d = val / min_full
+        if d < 10:
+            return f'{d * 100:.1f}'
+        return ' 999+'
 
     for min_s, max_s in minmax:
         deci, prefix = get_sec_metrix(min_s)
@@ -67,15 +73,15 @@ def print_test_results(
         multi.append(deci)
         lens.append(max_s_len + len(prefix) + 1)
 
-    row_format += f'| %-{max_fn_len}s |'
-    lens.append(max_fn_len)
+    row_format += f'| %-{max_fn_len}s | %s |'
+    lens.extend([max_fn_len, 5])
 
     fr = '+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+'
     print('\n' + fr)
     if headers:
-        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f'))) + ' |')
+        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
 
     for item in exp:
-        print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0]))
+        print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
 
     print(fr)
