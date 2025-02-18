@@ -1,5 +1,5 @@
 from time import perf_counter
-from typing import Tuple, Optional, Dict, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Iterable
 
 from .bench.bencher import Bencher
 
@@ -21,13 +21,17 @@ def bench_batch(
         iterations: int = 1,
         global_args: Optional['TestArgs'] = None,
         global_kwargs: Optional['TestKwargs'] = None,
+        personal_args: Optional[Iterable['TestArgs']] = None,
+        personal_kwargs: Optional[Iterable['TestKwargs']] = None,
         raise_exceptions: bool = False,
 ):
     """
     :param funcs: all functions for test/benchmark
     :param int iterations: count of iterations for all functions
-    :param Optional[Tuple] global_args: arguments for each function
-    :param Optional[Dict] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param Optional['TestArgs'] global_args: arguments for each function
+    :param Optional['TestKwargs'] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param Optional[Iterable['TestArgs']] personal_args: todo
+    :param Optional[Iterable['TestKwargs']] personal_kwargs: todo
     :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :return: None | Awaitable
     """
@@ -41,6 +45,8 @@ def bench_batch(
         iterations=iterations,
         global_args=global_args,
         global_kwargs=global_kwargs,
+        personal_args=personal_args,
+        personal_kwargs=personal_kwargs,
         raise_exceptions=raise_exceptions,
     )
 

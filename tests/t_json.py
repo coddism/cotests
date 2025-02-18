@@ -43,6 +43,7 @@ if __name__ == '__main__':
         bench_orjson2,
         # iterations=50,
         global_args={args.path_file},
+        personal_args=j_files,
         # global_kwargs={'file_path': args.path_file},
         raise_exceptions=True,
     )

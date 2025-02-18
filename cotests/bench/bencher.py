@@ -31,6 +31,8 @@ class Bencher:
             iterations: int = 1,
             global_args: Optional['TestArgs'] = None,
             global_kwargs: Optional['TestKwargs'] = None,
+            personal_args: Optional[Iterable['TestArgs']] = None,
+            personal_kwargs: Optional[Iterable['TestKwargs']] = None,
             raise_exceptions: bool = False,
     ) -> Union[None, Awaitable[None]]:
         print('\n', '-' * 14, 'Start Bencher', '-' * 14)
@@ -40,6 +42,8 @@ class Bencher:
         c.__init__(
             global_args=global_args,
             global_kwargs=global_kwargs,
+            personal_args=personal_args,
+            personal_kwargs=personal_kwargs,
         )
         c.add_tests(tests)
         t = c.run_tests(iterations, raise_exceptions)
@@ -61,6 +65,10 @@ class Bencher:
         self.__tests: List[TestCase] = []
         self.__global_args = kwargs.get('global_args', ())
         self.__global_kwargs = kwargs.get('global_kwargs', {})
+        self.__personal_args = kwargs.get('personal_args', [])
+        self.__personal_kwargs = kwargs.get('personal_kwargs', [])
+        if self.__personal_args or self.__personal_kwargs:
+            raise NotImplementedError
         self.__has_coroutines = False
 
     def add_test(self, test: 'InTest', *args, **kwargs):
