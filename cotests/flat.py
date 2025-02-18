@@ -12,6 +12,7 @@ def bench(func):
         bench_start = perf_counter()
         func(*args, **kwargs)
         return perf_counter() - bench_start
+
     return wrapper
 
 
