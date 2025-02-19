@@ -26,12 +26,18 @@ def test_11():
 def test_12():
     return row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0])
 
+def xx(a): return a*2
+def xx2(a): return a*2
+def xx3(a): return a*2
+
 
 if __name__ == '__main__':
     function_list = [value for key, value in globals().items()
-                     if key.startswith('test_') and callable(value) and value.__module__ == __name__]
+                     if key.startswith('xx') and callable(value) and value.__module__ == __name__]
 
     bench_batch(
         *function_list,
-        iterations=100000
+        # iterations=100000
+        # global_args=(1,),
+        personal_args=[(4,),(88,),(89,)],
     )
