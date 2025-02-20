@@ -23,6 +23,70 @@ if TYPE_CHECKING:
     TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
 
+class CoTestArgs:
+
+    def __init__(
+            self,
+            # personal
+            pa: Optional[List],
+            pkw: Optional[List],
+            # global
+            ga: Optional,
+            gkw: Optional,
+    ):
+        self.__params: List[Tuple[Any, Any]] = []
+        # have
+        self.ha = bool(pa or ga)
+        self.hkw = bool(pkw or gkw)
+
+        ga = ga or ()
+        gkw = gkw or {}
+
+        if gkw:
+            merge_kw = lambda pk: {**gkw, **pk}
+        else:
+            merge_kw = lambda pk: pk
+
+        if pa:
+            assert not ga, 'Personal & global args conflict'
+            if pkw:
+                assert len(pa) == len(pkw), 'Personal args & kwargs have different length'
+                self.__params = [(a, merge_kw(pkw[i])) for i, a in enumerate(pa)]
+            else:
+                self.__params = [(a, gkw) for a in pa]
+        elif pkw:
+            self.__params = [(ga, merge_kw(k)) for k in pkw]
+        else:
+            self.__params = [(ga, gkw)]
+
+        # self.is_seq = len(self.__params) > 1
+        # for p in self.__params:
+        #     print('  ', p)
+        # print(self.is_seq, self.ha, self.hkw)
+
+    def __merge_kw(self, k1, k2) -> dict:
+        if self.hkw:
+            if k2:
+                return {**k1, **k2}
+            else:
+                return k1
+        else:
+            return k2
+
+    def get(self, args, kwargs):
+        if args:
+            if self.ha:
+                raise ValueError('args conflict')
+            if kwargs:
+                return [(args, self.__merge_kw(p[1], kwargs)) for p in self.__params]
+            else:
+                return [(args, p[1]) for p in self.__params]
+        elif kwargs:
+            return [(p[0], self.__merge_kw(p[1], kwargs)) for p in self.__params]
+        else:
+            return self.__params
+
+
 class Tester:
 
     def __init__(self,
@@ -33,11 +97,14 @@ class Tester:
     ):
         self.__t_tests: List[Tuple] = []
         # self.__tests: List[TestCase] = []
-        self.__global_args = global_args or ()
-        self.__global_kwargs = global_kwargs or {}
-        self.__personal_args = personal_args or []
-        self.__personal_kwargs = personal_kwargs or []
         self.__has_coroutines = False
+
+        self.cta = CoTestArgs(
+            personal_args,
+            personal_kwargs,
+            global_args,
+            global_kwargs,
+        )
 
     @property
     def has_coroutines(self) -> bool:
@@ -51,40 +118,15 @@ class Tester:
 
     def __iter__(self) -> Iterator[Tuple[str, TestCase]]:
         for test in self.__t_tests:
-            if isinstance(test[3], Iterator):
-                for i, a in enumerate(test[3]):
-                    yield (f'{test[1].__name__}:{i}',
-                           test[0](test[1], *test[2], **a))
-            elif isinstance(test[2], Iterator):
-                # todo 2&3
-                for i, a in enumerate(test[2]):
-                    yield (f'{test[1].__name__}:{i}',
-                           test[0](test[1], *a, **test[3]))
-            else:
+            if len(test[2]) == 1:
                 yield (test[1].__name__,
-                       test[0](test[1], *test[2], **test[3]))
+                       test[0](test[1], *test[2][0][0], **test[2][0][1]))
+            else:
+                for i, (a, kw) in enumerate(test[2]):
+                    yield (f'{test[1].__name__}:{i}',
+                           test[0](test[1], *a, **kw))
 
     def add(self, test: 'InTest', *args, **kwargs):
-        def merge_args():
-            if self.__personal_args:
-                if args or self.__global_args:
-                    raise Exception('PA args conflict')
-                fa = self.__personal_args.__iter__()
-            else:
-                if self.__global_args and args:
-                    raise Exception('args conflict')
-                fa = self.__global_args or args or ()
-
-            if self.__global_kwargs and kwargs:
-                fkw = {**self.__global_kwargs, **kwargs}
-            else:
-                fkw = self.__global_kwargs or kwargs or {}
-            if self.__personal_kwargs:
-                bkw = fkw
-                fkw = ({**x, **bkw} for x in self.__personal_kwargs)
-
-            return fa, fkw
-
         if isinstance(test, tuple):
             if args or kwargs:
                 raise Exception('InTest format Error')
@@ -103,18 +145,24 @@ class Tester:
 
             self.add(f, *a_, **kw_)
         else:
-            a, k = merge_args()
             if inspect.iscoroutine(test):
-                if a or k:
-                    raise ValueError('Coroutine with args')
                 tc = CoroutineTestCase
+                self.__has_coroutines = True
             elif inspect.iscoroutinefunction(test):
                 tc = CoroutineFunctionTestCase
+                self.__has_coroutines = True
             elif inspect.isfunction(test):
                 tc = FunctionTestCase
             else:
                 raise ValueError(f'Unknown test: {test}')
-            self.__t_tests.append((tc, test, a, k))
+
+            # add test
+            # print('-------------------\nadd test:', tc)
+            # print('AK', args, kwargs)
+            pa = self.cta.get(args, kwargs)
+            # for p in pa:
+            #     print('  ', p)
+            self.__t_tests.append((tc, test, pa))
 
 
 class Bencher:
@@ -132,8 +180,8 @@ class Bencher:
         print('\n', '-' * 14, 'Start Bencher', '-' * 14)
         if not isinstance(global_args, (List, Tuple, Set)):
             print('Better to use for args: list, tuple, set')
-        if global_args and personal_args:
-            raise Exception('Global & personal args conflict')
+        # if global_args and personal_args:
+        #     raise Exception('Global & personal args conflict')
 
         c = super().__new__(cls)
         c.__init__(

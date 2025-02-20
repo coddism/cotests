@@ -84,6 +84,11 @@ class AsyncTestCase(TestCase):
 
 
 class CoroutineTestCase(AsyncTestCase):
+    def __init__(self, test, *args, **kwargs):
+        if args or kwargs:
+            raise ValueError('Coroutine with args')
+        super().__init__(test, *args, **kwargs)
+
     def _run(self):
         return self._f
 
