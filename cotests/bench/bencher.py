@@ -5,6 +5,7 @@ from typing import (Callable, Optional, Tuple, Any, Set, Mapping, Iterator,
                     Iterable, List, Union, Coroutine, Awaitable, TYPE_CHECKING)
 
 from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
+from .co_test_args import CoTestArgs
 from ..utils import print_test_results, format_sec_metrix
 
 if TYPE_CHECKING:
@@ -22,65 +23,6 @@ if TYPE_CHECKING:
     TestArgs = Iterable[Any]
     TestKwargs = Mapping[str, Any]
     TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
-
-
-class CoTestArgs:
-
-    def __init__(
-            self,
-            # personal
-            pa: Optional[List],
-            pkw: Optional[List],
-            # global
-            ga: Optional,
-            gkw: Optional,
-    ):
-        self.__params: List[Tuple[Any, Any]] = []
-        # have
-        self.ha = bool(pa or ga)
-        self.hkw = bool(pkw or gkw)
-
-        ga = ga or ()
-        gkw = gkw or {}
-
-        if gkw:
-            merge_kw = lambda pk: {**gkw, **pk}
-        else:
-            merge_kw = lambda pk: pk
-
-        if pa:
-            assert not ga, 'Personal & global args conflict'
-            if pkw:
-                assert len(pa) == len(pkw), 'Personal args & kwargs have different length'
-                self.__params = [(a, merge_kw(pkw[i])) for i, a in enumerate(pa)]
-            else:
-                self.__params = [(a, gkw) for a in pa]
-        elif pkw:
-            self.__params = [(ga, merge_kw(k)) for k in pkw]
-        else:
-            self.__params = [(ga, gkw)]
-
-    def __merge_kw(self, k1, k2) -> dict:
-        if self.hkw:
-            if k2:
-                return {**k1, **k2}
-            else:
-                return k1
-        else:
-            return k2
-
-    def get(self, args, kwargs):
-        if args:
-            if self.ha:
-                raise ValueError('args conflict')
-            if kwargs:
-                return [(args, self.__merge_kw(p[1], kwargs)) for p in self.__params]
-            else:
-                return [(args, p[1]) for p in self.__params]
-        elif kwargs:
-            return [(p[0], self.__merge_kw(p[1], kwargs)) for p in self.__params]
-        else:
-            return self.__params
 
 
 class Tester:
@@ -146,7 +88,7 @@ class Tester:
                     if kw_: raise ValueError('TestItem kwargs conflict')
                     kw_ = ti
                 else:
-                    raise ValueError('Unknown type')
+                    raise ValueError(f'Unsupported type for InTest: {type(ti)}')
 
             self.__add(f, *a_, **kw_)
         else:
