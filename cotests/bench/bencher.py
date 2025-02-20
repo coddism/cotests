@@ -9,6 +9,7 @@ from ..utils import print_test_results, format_sec_metrix
 
 if TYPE_CHECKING:
     import sys
+
     if sys.version_info[:2] >= (3, 11):
         from typing import Unpack
     else:
@@ -59,11 +60,6 @@ class CoTestArgs:
         else:
             self.__params = [(ga, gkw)]
 
-        # self.is_seq = len(self.__params) > 1
-        # for p in self.__params:
-        #     print('  ', p)
-        # print(self.is_seq, self.ha, self.hkw)
-
     def __merge_kw(self, k1, k2) -> dict:
         if self.hkw:
             if k2:
@@ -90,21 +86,30 @@ class CoTestArgs:
 class Tester:
 
     def __init__(self,
+                 tests,
                  global_args: Optional['TestArgs'] = None,
                  global_kwargs: Optional['TestKwargs'] = None,
                  personal_args: Optional[Iterable['TestArgs']] = None,
                  personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-    ):
-        self.__t_tests: List[Tuple] = []
-        # self.__tests: List[TestCase] = []
-        self.__has_coroutines = False
-
-        self.cta = CoTestArgs(
+                 ):
+        self.__cta = CoTestArgs(
             personal_args,
             personal_kwargs,
             global_args,
             global_kwargs,
         )
+
+        self.__t_tests: List[Tuple] = []
+        self.__has_coroutines = False
+
+        for test in tests:
+            self.__add(test)
+            # print(
+            #     inspect.isfunction(test),
+            #     inspect.iscoroutine(test),
+            #     inspect.isawaitable(test),
+            #     inspect.iscoroutinefunction(test),
+            # )
 
     @property
     def has_coroutines(self) -> bool:
@@ -126,7 +131,7 @@ class Tester:
                     yield (f'{test[1].__name__}:{i}',
                            test[0](test[1], *a, **kw))
 
-    def add(self, test: 'InTest', *args, **kwargs):
+    def __add(self, test: 'InTest', *args, **kwargs):
         if isinstance(test, tuple):
             if args or kwargs:
                 raise Exception('InTest format Error')
@@ -143,7 +148,7 @@ class Tester:
                 else:
                     raise ValueError('Unknown type')
 
-            self.add(f, *a_, **kw_)
+            self.__add(f, *a_, **kw_)
         else:
             if inspect.iscoroutine(test):
                 tc = CoroutineTestCase
@@ -159,7 +164,7 @@ class Tester:
             # add test
             # print('-------------------\nadd test:', tc)
             # print('AK', args, kwargs)
-            pa = self.cta.get(args, kwargs)
+            pa = self.__cta.get(args, kwargs)
             # for p in pa:
             #     print('  ', p)
             self.__t_tests.append((tc, test, pa))
@@ -178,19 +183,21 @@ class Bencher:
             raise_exceptions: bool = False,
     ) -> Union[None, Awaitable[None]]:
         print('\n', '-' * 14, 'Start Bencher', '-' * 14)
-        if not isinstance(global_args, (List, Tuple, Set)):
+        if global_args and not isinstance(global_args, (List, Tuple, Set)):
             print('Better to use for args: list, tuple, set')
-        # if global_args and personal_args:
-        #     raise Exception('Global & personal args conflict')
 
-        c = super().__new__(cls)
-        c.__init__(
+        t = Tester(
+            tests,
             global_args=global_args,
             global_kwargs=global_kwargs,
             personal_args=personal_args,
             personal_kwargs=personal_kwargs,
         )
-        c.add_tests(tests)
+
+        c = super().__new__(cls)
+        c.__init__(
+            tester=t,
+        )
         t = c.run_tests(iterations, raise_exceptions)
         if inspect.iscoroutine(t):
             # try to run
@@ -207,24 +214,7 @@ class Bencher:
 
     def __init__(self, *_, **kwargs):
         # print('INIT')
-        self.__tester = Tester(
-            *(kwargs.get(x) for x in (
-                'global_args',
-                'global_kwargs',
-                'personal_args',
-                'personal_kwargs',
-            ))
-        )
-
-    def add_tests(self, tests: Iterable['InTest']):
-        for test in tests:
-            self.__tester.add(test)
-            # print(
-            #     inspect.isfunction(test),
-            #     inspect.iscoroutine(test),
-            #     inspect.isawaitable(test),
-            #     inspect.iscoroutinefunction(test),
-            # )
+        self.__tester = kwargs['tester']
 
     def run_tests(self,
                   iterations: int = 1,
