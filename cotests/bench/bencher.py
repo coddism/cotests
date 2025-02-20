@@ -37,8 +37,6 @@ class Tester:
         self.__global_kwargs = global_kwargs or {}
         self.__personal_args = personal_args or []
         self.__personal_kwargs = personal_kwargs or []
-        if self.__personal_kwargs:
-            raise NotImplementedError  # todo
         self.__has_coroutines = False
 
     @property
@@ -53,9 +51,14 @@ class Tester:
 
     def __iter__(self) -> Iterator[Tuple[str, TestCase]]:
         for test in self.__t_tests:
-            if self.__personal_args:
-                for i, a in enumerate(self.__personal_args):
-                    yield (f'{test[1].__name__}.{i}',
+            if isinstance(test[3], Iterator):
+                for i, a in enumerate(test[3]):
+                    yield (f'{test[1].__name__}:{i}',
+                           test[0](test[1], *test[2], **a))
+            elif isinstance(test[2], Iterator):
+                # todo 2&3
+                for i, a in enumerate(test[2]):
+                    yield (f'{test[1].__name__}:{i}',
                            test[0](test[1], *a, **test[3]))
             else:
                 yield (test[1].__name__,
@@ -63,21 +66,28 @@ class Tester:
 
     def add(self, test: 'InTest', *args, **kwargs):
         def merge_args():
-            if self.__global_args and args:
-                raise Exception('args conflict')
-            if self.__personal_args and args:
-                raise Exception('args conflict')
-
-            fa = self.__global_args or args or ()
+            if self.__personal_args:
+                if args or self.__global_args:
+                    raise Exception('PA args conflict')
+                fa = self.__personal_args.__iter__()
+            else:
+                if self.__global_args and args:
+                    raise Exception('args conflict')
+                fa = self.__global_args or args or ()
 
             if self.__global_kwargs and kwargs:
                 fkw = {**self.__global_kwargs, **kwargs}
             else:
                 fkw = self.__global_kwargs or kwargs or {}
+            if self.__personal_kwargs:
+                bkw = fkw
+                fkw = ({**x, **bkw} for x in self.__personal_kwargs)
 
             return fa, fkw
 
         if isinstance(test, tuple):
+            if args or kwargs:
+                raise Exception('InTest format Error')
             assert len(test) > 0
             f = test[0]
             a_, kw_ = (), {}
@@ -122,6 +132,9 @@ class Bencher:
         print('\n', '-' * 14, 'Start Bencher', '-' * 14)
         if not isinstance(global_args, (List, Tuple, Set)):
             print('Better to use for args: list, tuple, set')
+        if global_args and personal_args:
+            raise Exception('Global & personal args conflict')
+
         c = super().__new__(cls)
         c.__init__(
             global_args=global_args,
