@@ -1,5 +1,5 @@
 from time import perf_counter
-from typing import Optional, TYPE_CHECKING, Iterable
+from typing import Optional, TYPE_CHECKING, Sequence
 
 from .bench.bencher import Bencher
 
@@ -21,8 +21,8 @@ def bench_batch(
         iterations: int = 1,
         global_args: Optional['TestArgs'] = None,
         global_kwargs: Optional['TestKwargs'] = None,
-        personal_args: Optional[Iterable['TestArgs']] = None,
-        personal_kwargs: Optional[Iterable['TestKwargs']] = None,
+        personal_args: Optional[Sequence['TestArgs']] = None,
+        personal_kwargs: Optional[Sequence['TestKwargs']] = None,
         raise_exceptions: bool = False,
 ):
     """
