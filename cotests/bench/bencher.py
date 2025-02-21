@@ -4,9 +4,10 @@ from time import perf_counter
 from typing import (Callable, Optional, Tuple, Any, Set, Mapping, Iterator,
                     Iterable, List, Union, Coroutine, Awaitable, TYPE_CHECKING)
 
-from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
+from .case import TestCase, AsyncTestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, rm_calc
 from .co_test_args import CoTestArgs
 from ..utils import print_test_results, format_sec_metrix
+from ..progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
     import sys
@@ -25,6 +26,8 @@ if TYPE_CHECKING:
     TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
 
+PROGRESS_BAR_LEN = 50
+
 class Tester:
 
     def __init__(self,
@@ -33,7 +36,7 @@ class Tester:
                  global_kwargs: Optional['TestKwargs'] = None,
                  personal_args: Optional[Iterable['TestArgs']] = None,
                  personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-                 ):
+    ):
         self.__cta = CoTestArgs(
             personal_args,
             personal_kwargs,
@@ -63,15 +66,13 @@ class Tester:
     def __len__(self):
         return len(self.__t_tests)
 
-    def __iter__(self) -> Iterator[Tuple[str, TestCase]]:
+    def __iter__(self) -> Iterator[Tuple[str, bool, List[TestCase]]]:
         for test in self.__t_tests:
-            if len(test[2]) == 1:
-                yield (test[1].__name__,
-                       test[0](test[1], *test[2][0][0], **test[2][0][1]))
-            else:
-                for i, (a, kw) in enumerate(test[2]):
-                    yield (f'{test[1].__name__}:{i}',
-                           test[0](test[1], *a, **kw))
+            yield (
+                test[1].__name__,
+                issubclass(test[0], AsyncTestCase),
+                [test[0](test[1], *a, **b) for a, b in test[2]]
+            )
 
     def __add(self, test: 'InTest', *args, **kwargs):
         if isinstance(test, tuple):
@@ -156,7 +157,7 @@ class Bencher:
 
     def __init__(self, *_, **kwargs):
         # print('INIT')
-        self.__tester = kwargs['tester']
+        self.__tester: Tester = kwargs['tester']
 
     def run_tests(self,
                   iterations: int = 1,
@@ -176,23 +177,28 @@ class Bencher:
         if self.__tester.has_coroutines:
             async def do_async():
                 a_start = perf_counter()
-
                 exp_ = []
-                for fun_name, test in self.__tester:
-                    # fun_name = test.name
-                    print(f' * {fun_name}:', end='', flush=True)
+                for fun_name_, is_async_, ta_ in self.__tester:
+                    print(f' * {fun_name_}:', end='', flush=True)
                     try:
-                        s = test.run(iterations)
-                        if inspect.iscoroutine(s):
-                            s = await s
-                    except Exception as e:
+                        if iterations == 1:
+                            s_ = (sum([
+                                await t.bench() if is_async_ else t.bench() for t in ta_
+                            ]),)
+                        else:
+                            s_ = []
+                            for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN):
+                                s_.append(sum([
+                                    await t.bench() if is_async_ else t.bench() for t in ta_
+                                ]))
+                            s_ = rm_calc(s_)
+                    except Exception as e_:
                         if raise_exceptions:
                             raise
-                        print(f'error: {e}')
+                        print(f'error: {e_}')
                     else:
-                        # print(f'ok')
-                        print(f'ok - {format_sec_metrix(s[0])}')
-                        exp_.append((fun_name, *s))
+                        print(f'ok - {format_sec_metrix(s_[0])}')
+                        exp_.append((fun_name_, *s_))
 
                 aft = perf_counter() - a_start
                 print_res(exp_)
@@ -200,23 +206,27 @@ class Bencher:
 
             return do_async()
         else:
-            def g_sync():
-                for fun_name, test in self.__tester:
-                    # fun_name = test.name
-                    print(f' * {fun_name}:', end='', flush=True)
-                    try:
-                        s = test.run(iterations)
-                    except Exception as e:
-                        if raise_exceptions:
-                            raise
-                        print(f'error: {e}')
-                    else:
-                        # print(f'ok')
-                        print(f'ok - {format_sec_metrix(s[0])}')
-                        yield (fun_name, *s)
-
             s_start = perf_counter()
-            exp = [x for x in g_sync()]
+            exp = []
+            for fun_name, is_async, ta in self.__tester:
+                assert is_async is False
+                # ta: List[TestCase]
+                print(f' * {fun_name}:', end='', flush=True)
+                try:
+                    if iterations == 1:
+                        s = (sum(t.bench() for t in ta),)
+                    else:
+                        s = rm_calc([sum(t.bench() for t in ta)
+                                     for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
+                except Exception as e:
+                    if raise_exceptions:
+                        raise
+                    print(f'error: {e}')
+                else:
+                    print(f'ok - {format_sec_metrix(s[0])}')
+                    exp.append((fun_name, *s))
+
             sft = perf_counter() - s_start
+            # print(exp)
             print_res(exp)
             print(f'Full time: {format_sec_metrix(sft)}')

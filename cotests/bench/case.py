@@ -9,7 +9,7 @@ RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
 RESULT_TUPLE = Union[RESULT_TUPLE_SINGLE, RESULT_TUPLE_MULTI]
 
 
-def _rm_calc(benches: List[float]) -> RESULT_TUPLE_MULTI:
+def rm_calc(benches: List[float]) -> RESULT_TUPLE_MULTI:
     s = sum(benches)
     mx, mn, avg = (
         max(benches),
@@ -37,12 +37,15 @@ class TestCase:
         self._run()
         return perf_counter() - bench_start
 
+    def bench(self):
+        return self._run_single()
+
     def run_single(self) -> RESULT_TUPLE_SINGLE:
         return (self._run_single(),)
 
     def run_multiple(self, iterations: int) -> RESULT_TUPLE_MULTI:
-        return _rm_calc([self._run_single()
-                         for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
+        return rm_calc([self._run_single()
+                        for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
 
     def run(self, iterations: int):
         if iterations == 1:
@@ -50,12 +53,10 @@ class TestCase:
         else:
             return self.run_multiple(iterations)
 
-    async def run_async(self, iterations: int):
-        raise NotImplementedError
-
 
 class FunctionTestCase(TestCase):
     def _run(self):
+        # print(self._f, self._args, self._kwargs)
         self._f(*self._args, **self._kwargs)
 
 
@@ -70,8 +71,8 @@ class AsyncTestCase(TestCase):
         return (await self._run_single(),)
 
     async def run_multiple(self, iterations: int) -> RESULT_TUPLE_MULTI:
-        return _rm_calc([await self._run_single()
-                         for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
+        return rm_calc([await self._run_single()
+                        for _ in ProgressBarPrinter(iterations, PROGRESS_BAR_LEN)])
 
     async def run(self, iterations: int):
         if iterations == 1:

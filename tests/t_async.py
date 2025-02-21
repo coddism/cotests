@@ -16,7 +16,7 @@ if __name__ == '__main__':
     )
     fun_sync = (
         test1,
-        (test1, .12),  # set custom args without tuple
+        (test1, (.12,)),  # set custom args without tuple
     )
 
     print(' ---------------ONLY SYNC-------------------')
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     bench_batch(
         *fun_async,  # coroutinefunctions can reuse
         test0(.05),  # coroutine with reuse - error
-        iterations=2
+        iterations=2,
     )
 
     async def main():

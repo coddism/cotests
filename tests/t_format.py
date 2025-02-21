@@ -27,8 +27,8 @@ def test_12():
     return row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0])
 
 def xx(a): return a*2
-def xx2(a): return a*2
-def xx3(a): return a*2
+def xx2(a): return a**2
+def xx3(a): return a^2
 
 
 if __name__ == '__main__':

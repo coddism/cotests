@@ -54,17 +54,15 @@ async def atest_1(*args, **kwargs): ...
 bench_batch(
     test_0,  # test_0()
     (test_1, (1, 2,)),  # test_1(1, 2)
-    (test_1, 1, 2),  # also test_1(1, 2)
     (test_2, {'a': 1}),  # test_2(a=1)
     (test_3, (1, 2), {'a': 1}),  # test_3(1, 2, a=1)
-    (test_3, 1, 2, {'a': 1}),  # also test_3(1, 2, a=1)
     # async
     atest_0,  # and other options above are available
     atest_0(),  # run like coroutine
     atest_1(1, 2, a=1),  # run like coroutine with arguments
     # optional
     # global_args=(1,2),  # error in this example - args have already been set, but you can use it in other examples
-    global_kwargs={'b': 2},  # will be merged to existing kwargs
+    # global_kwargs={'b': 2},  # will be merged to existing kwargs
     raise_exceptions=True,  # raise exceptions, print traceback; default False
-    iterations=1,  # count of iterations you want; default 1 = just test
+    # iterations=1,  # count of iterations you want; default 1 = just test
 )
