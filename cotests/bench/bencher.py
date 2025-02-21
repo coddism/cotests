@@ -4,10 +4,9 @@ from time import perf_counter
 from typing import (Callable, Optional, Tuple, Any, Set, Mapping, Iterator,
                     Iterable, List, Union, Coroutine, Awaitable, TYPE_CHECKING)
 
-from .case import TestCase, AsyncTestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, rm_calc
+from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
 from .co_test_args import CoTestArgs
 from ..utils import print_test_results, format_sec_metrix
-from ..progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
     import sys
@@ -25,8 +24,6 @@ if TYPE_CHECKING:
     TestKwargs = Mapping[str, Any]
     TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 
-
-PROGRESS_BAR_LEN = 50
 
 class Tester:
 
@@ -67,8 +64,7 @@ class Tester:
         return len(self.__t_tests)
 
     def __iter__(self) -> Iterator[TestCase]:
-        for test in self.__t_tests:
-            yield test
+        return self.__t_tests.__iter__()
 
     def __add(self, test: 'InTest', *args, **kwargs):
         if isinstance(test, tuple):
@@ -100,14 +96,10 @@ class Tester:
             else:
                 raise ValueError(f'Unknown test: {test}')
 
-            # add test
-            # print('-------------------\nadd test:', tc)
-            # print('AK', args, kwargs)
-            pa = self.__cta.get(args, kwargs)
-            # for p in pa:
-            #     print('  ', p)
-            # self.__t_tests.append((tc, test, pa))
-            self.__t_tests.append(tc(test, params=pa))
+            self.__t_tests.append(tc(
+                test,
+                params=self.__cta.get(args, kwargs)
+            ))
 
 
 class Bencher:

@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     bench_batch(
         *function_list,
-        # iterations=100000
+        iterations=100000,
         # global_args=(1,),
         personal_args=[(4,),(88,),(89,)],
     )

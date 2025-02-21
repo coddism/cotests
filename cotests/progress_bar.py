@@ -6,15 +6,13 @@ class ProgressBarPrinter:
 
     def __init__(self,
                  iterations_count: int,
-                 max_width: int
+                 max_width: int = 50,
                  ):
         self.__ic = iterations_count
         self.__max_width = max_width
 
     def __counter(self) -> Iterator[None]:
         print_every_val = self.__ic / self.__max_width
-        # if print_every_val < 1:
-        #     print_every_val = 1
         pv = .0
         pv_next = 0
 
