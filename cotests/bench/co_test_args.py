@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, Optional, Tuple, List, Sequence, Dict
+from typing import TYPE_CHECKING, Optional, Tuple, Sequence, Dict
 
 if TYPE_CHECKING:
-    from .bencher import TestArgs, TestKwargs
-    ParamsList = List[Tuple['TestArgs', 'TestKwargs']]
+    from .typ import CoArgsList, TestArgs, TestKwargs
 
 
 class CoTestArgs:
@@ -16,7 +15,7 @@ class CoTestArgs:
             ga: Optional['TestArgs'],
             gkw: Optional['TestKwargs'],
     ):
-        self.__params: 'ParamsList' = []
+        self.__params: 'CoArgsList' = []
         # have
         self.ha = bool(pa or ga)
         self.hkw = bool(pkw or gkw)
@@ -56,7 +55,7 @@ class CoTestArgs:
     def get(self,
             args: Tuple,
             kwargs: Dict,
-    ) -> 'ParamsList':
+    ) -> 'CoArgsList':
         if args:
             if self.ha:
                 raise ValueError('args conflict')

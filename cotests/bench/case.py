@@ -9,7 +9,7 @@ RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
 RESULT_TUPLE = Union[RESULT_TUPLE_SINGLE, RESULT_TUPLE_MULTI]
 
 if TYPE_CHECKING:
-    from .co_test_args import ParamsList
+    from .co_test_args import CoArgsList
 
 
 def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
@@ -24,7 +24,7 @@ def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
 
 class TestCase:
     IS_ASYNC = False
-    def __init__(self, test, params: 'ParamsList'):
+    def __init__(self, test, params: 'CoArgsList'):
         self._f = test
         self._params = params
 
@@ -81,7 +81,7 @@ class AsyncTestCase(TestCase):
 
 
 class CoroutineTestCase(AsyncTestCase):
-    def __init__(self, test, params: 'ParamsList'):
+    def __init__(self, test, params: 'CoArgsList'):
         assert params == [((), {})], 'Coroutine with args'
         super().__init__(test, params)
 

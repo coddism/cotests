@@ -1,28 +1,16 @@
 import asyncio
 import inspect
 from time import perf_counter
-from typing import (Callable, Optional, Tuple, Any, Set, Mapping, Iterator,
-                    Iterable, List, Union, Coroutine, Awaitable, TYPE_CHECKING)
+from typing import (Optional, Tuple, Set, Iterator,
+                    Iterable, List, Union, Awaitable, TYPE_CHECKING)
 
-from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
+from .case import CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
 from .co_test_args import CoTestArgs
 from ..utils import print_test_results, format_sec_metrix
 
 if TYPE_CHECKING:
-    import sys
-
-    if sys.version_info[:2] >= (3, 11):
-        from typing import Unpack
-    else:
-        from typing_extensions import Unpack
-
-    TestFunction = Union[Callable, Coroutine]
-    InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
-    InTest = Union[TestFunction, InTestTuple]
-    # TestArgs = Union[Tuple[Any,...], List[Any], Set[Any]]
-    TestArgs = Iterable[Any]
-    TestKwargs = Mapping[str, Any]
-    TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
+    from .case import TestCase
+    from .typ import TestArgs, TestKwargs, InTest
 
 
 class Tester:
@@ -41,7 +29,7 @@ class Tester:
             global_kwargs,
         )
 
-        self.__t_tests: List[TestCase] = []
+        self.__t_tests: List['TestCase'] = []
         self.__has_coroutines = False
 
         for test in tests:
@@ -63,7 +51,7 @@ class Tester:
     def __len__(self):
         return len(self.__t_tests)
 
-    def __iter__(self) -> Iterator[TestCase]:
+    def __iter__(self) -> Iterator['TestCase']:
         return self.__t_tests.__iter__()
 
     def __add(self, test: 'InTest', *args, **kwargs):
@@ -192,7 +180,6 @@ class Bencher:
             exp = []
             for test in self.__tester:
                 assert test.IS_ASYNC is False
-                # ta: List[TestCase]
                 print(f' * {test.name}:', end='', flush=True)
                 try:
                     s = test.run(iterations)
