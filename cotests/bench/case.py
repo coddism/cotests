@@ -1,5 +1,5 @@
 from time import perf_counter
-from typing import Tuple, List, Union
+from typing import TYPE_CHECKING, Tuple, List, Union
 
 from ..progress_bar import ProgressBarPrinter
 
@@ -7,6 +7,9 @@ PROGRESS_BAR_LEN = 50
 RESULT_TUPLE_SINGLE = Tuple[float]
 RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
 RESULT_TUPLE = Union[RESULT_TUPLE_SINGLE, RESULT_TUPLE_MULTI]
+
+if TYPE_CHECKING:
+    from .co_test_args import ParamsList
 
 
 def rm_calc(benches: List[float]) -> RESULT_TUPLE_MULTI:
@@ -20,25 +23,27 @@ def rm_calc(benches: List[float]) -> RESULT_TUPLE_MULTI:
 
 
 class TestCase:
-    def __init__(self, test, *args, **kwargs):
+    IS_ASYNC = False
+    def __init__(self,
+                 test,
+                 params: 'ParamsList',
+                 ):
         self._f = test
-        self._args = args
-        self._kwargs = kwargs
+        self._params = params
 
     @property
     def name(self) -> str:
         return self._f.__name__
 
-    def _run(self):
+    def _run(self, *args, **kwargs):
         raise NotImplementedError
 
     def _run_single(self) -> float:
         bench_start = perf_counter()
-        self._run()
+        # todo sum
+        for p in self._params:
+            self._run(*p[0], **p[1])
         return perf_counter() - bench_start
-
-    def bench(self):
-        return self._run_single()
 
     def run_single(self) -> RESULT_TUPLE_SINGLE:
         return (self._run_single(),)
@@ -55,16 +60,17 @@ class TestCase:
 
 
 class FunctionTestCase(TestCase):
-    def _run(self):
-        # print(self._f, self._args, self._kwargs)
-        self._f(*self._args, **self._kwargs)
+    def _run(self, *args, **kwargs):
+        self._f(*args, **kwargs)
 
 
 class AsyncTestCase(TestCase):
+    IS_ASYNC = True
 
     async def _run_single(self) -> float:
         bench_start = perf_counter()
-        await self._run()
+        for p in self._params:
+            await self._run(*p[0], **p[1])
         return perf_counter() - bench_start
 
     async def run_single(self) -> RESULT_TUPLE_SINGLE:
@@ -80,23 +86,17 @@ class AsyncTestCase(TestCase):
         else:
             return await self.run_multiple(iterations)
 
-    def _run(self):
-        return self._f
-
 
 class CoroutineTestCase(AsyncTestCase):
-    def __init__(self, test, *args, **kwargs):
+    def _run(self, *args, **kwargs):
         if args or kwargs:
-            raise ValueError('Coroutine with args')
-        super().__init__(test, *args, **kwargs)
-
-    def _run(self):
+            raise Exception('Coroutine with args')
         return self._f
 
-    async def _run_multiple(self, *_, **__):
+    async def run_multiple(self, *_, **__):
         raise NotImplementedError('cannot reuse coroutines')
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):
-    def _run(self):
-        return self._f(*self._args, **self._kwargs)
+    def _run(self, *args, **kwargs):
+        return self._f(*args, **kwargs)
