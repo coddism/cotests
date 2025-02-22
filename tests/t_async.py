@@ -16,7 +16,7 @@ if __name__ == '__main__':
     )
     fun_sync = (
         test1,
-        (test1, (.12,)),  # set custom args without tuple
+        (test1, (.12,)),
     )
 
     print(' ---------------ONLY SYNC-------------------')
