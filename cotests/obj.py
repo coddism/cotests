@@ -1,33 +1,36 @@
 import inspect
+from typing import TYPE_CHECKING, Optional, Iterable
 
-from .flat import bench
+from . import bench_batch
+
+if TYPE_CHECKING:
+    from .bench.typ import TestArgs, TestKwargs
 
 
 def _case_predicate(obj):
-    return inspect.ismethod(obj) and obj.__name__.startswith('test_')
+    return ((inspect.ismethod(obj) or inspect.isfunction(obj))
+            and obj.__name__.startswith('test_'))
 
 
-class Case:
+class CoCase:
 
-    def __init__(self):
-        tests = inspect.getmembers(self, _case_predicate)
-        exp = []
-        for (func_name, func) in tests:
-            print(f'{func_name}.. ', end='')
-            try:
-                sec = bench(func)()
-            except Exception as e:
-                print(f'error: {e}')
-            else:
-                exp.append((sec, func_name))
-                print('ok')
-
-        for sec, func_name in exp:
-            print('| %.3f sec | %-20s | ' % (sec, func_name))
-
-    # def __new__(cls, *args, **kwargs):
-    #     instance = super().__new__(cls)
-    #     return instance
-
-    # def __await__(self):
-    #     print('AWAIT')
+    def run_tests(self,
+                  iterations: int = 1,
+                  global_args: Optional['TestArgs'] = None,
+                  global_kwargs: Optional['TestKwargs'] = None,
+                  personal_args: Optional[Iterable['TestArgs']] = None,
+                  personal_kwargs: Optional[Iterable['TestKwargs']] = None,
+                  raise_exceptions: bool = False,
+                  ):
+        tests = (
+            x[1] for x in inspect.getmembers(self, _case_predicate)
+        )
+        bench_batch(
+            *tests,
+            iterations=iterations,
+            global_args=global_args,
+            global_kwargs=global_kwargs,
+            personal_args=personal_args,
+            personal_kwargs=personal_kwargs,
+            raise_exceptions=raise_exceptions,
+        )

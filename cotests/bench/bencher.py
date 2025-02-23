@@ -90,7 +90,7 @@ class Bencher:
             elif inspect.iscoroutinefunction(test):
                 tc = CoroutineFunctionTestCase
                 self.__has_coroutines = True
-            elif inspect.isfunction(test):
+            elif inspect.isfunction(test) or inspect.ismethod(test):
                 tc = FunctionTestCase
             else:
                 raise ValueError(f'Unknown test: {test}')
