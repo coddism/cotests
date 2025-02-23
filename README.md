@@ -164,7 +164,7 @@ bench_batch(
 import asyncio
 import time
 
-from cotests import CoCase
+from cotests import CoCase, bench_batch
 
 
 class TObj(CoCase):
@@ -184,7 +184,19 @@ class TObj(CoCase):
 
 
 TObj().run_tests(
-    iterations=10,
+    iterations=5,
+    global_args=(.1,),
+)
+# or
+bench_batch(
+    TObj(),
+    iterations=5,
+    global_args=(.1,),
+)
+# or
+bench_batch(
+    TObj,
+    iterations=5,
     global_args=(.1,),
 )
 ```

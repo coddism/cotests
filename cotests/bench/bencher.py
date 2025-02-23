@@ -11,6 +11,18 @@ if TYPE_CHECKING:
     from .case import TestCase
     from .typ import TestArgs, TestKwargs, InTest
 
+def _case_predicate(obj):
+    return ((inspect.ismethod(obj) or inspect.isfunction(obj))
+            and obj.__name__.startswith('test_'))
+
+
+class AbstractCoCase:
+
+    def get_tests(self):
+        return (
+            x[1] for x in inspect.getmembers(self, _case_predicate)
+        )
+
 
 class Bencher:
 
@@ -92,6 +104,14 @@ class Bencher:
                 self.__has_coroutines = True
             elif inspect.isfunction(test) or inspect.ismethod(test):
                 tc = FunctionTestCase
+            elif isinstance(test, AbstractCoCase):
+                for test in test.get_tests():
+                    self.__add_test(test, *args, **kwargs)
+                return
+            elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
+                for test in test().get_tests():
+                    self.__add_test(test, *args, **kwargs)
+                return
             else:
                 raise ValueError(f'Unknown test: {test}')
 

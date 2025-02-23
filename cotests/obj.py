@@ -1,18 +1,13 @@
-import inspect
 from typing import TYPE_CHECKING, Optional, Iterable
 
-from . import bench_batch
+from cotests import bench_batch
+from cotests.bench.bencher import AbstractCoCase
 
 if TYPE_CHECKING:
     from .bench.typ import TestArgs, TestKwargs
 
 
-def _case_predicate(obj):
-    return ((inspect.ismethod(obj) or inspect.isfunction(obj))
-            and obj.__name__.startswith('test_'))
-
-
-class CoCase:
+class CoCase(AbstractCoCase):
 
     def run_tests(self,
                   iterations: int = 1,
@@ -22,11 +17,8 @@ class CoCase:
                   personal_kwargs: Optional[Iterable['TestKwargs']] = None,
                   raise_exceptions: bool = False,
                   ):
-        tests = (
-            x[1] for x in inspect.getmembers(self, _case_predicate)
-        )
         bench_batch(
-            *tests,
+            *self.get_tests(),
             iterations=iterations,
             global_args=global_args,
             global_kwargs=global_kwargs,
