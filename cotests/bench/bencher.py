@@ -1,8 +1,7 @@
 import asyncio
 import inspect
 from time import perf_counter
-from typing import (Optional, Tuple, Set, Iterator,
-                    Iterable, List, Union, Awaitable, TYPE_CHECKING)
+from typing import TYPE_CHECKING, Optional, Tuple, Set, Iterable, List, Union, Awaitable
 
 from .case import CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
 from .co_test_args import CoTestArgs
@@ -11,83 +10,6 @@ from ..utils import print_test_results, format_sec_metrix
 if TYPE_CHECKING:
     from .case import TestCase
     from .typ import TestArgs, TestKwargs, InTest
-
-
-class Tester:
-
-    def __init__(self,
-                 tests,
-                 global_args: Optional['TestArgs'] = None,
-                 global_kwargs: Optional['TestKwargs'] = None,
-                 personal_args: Optional[Iterable['TestArgs']] = None,
-                 personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-    ):
-        self.__cta = CoTestArgs(
-            personal_args,
-            personal_kwargs,
-            global_args,
-            global_kwargs,
-        )
-
-        self.__t_tests: List['TestCase'] = []
-        self.__has_coroutines = False
-
-        for test in tests:
-            self.__add(test)
-            # print(
-            #     inspect.isfunction(test),
-            #     inspect.iscoroutine(test),
-            #     inspect.isawaitable(test),
-            #     inspect.iscoroutinefunction(test),
-            # )
-
-    @property
-    def has_coroutines(self) -> bool:
-        return self.__has_coroutines
-
-    def __bool__(self):
-        return len(self.__t_tests) != 0
-
-    def __len__(self):
-        return len(self.__t_tests)
-
-    def __iter__(self) -> Iterator['TestCase']:
-        return self.__t_tests.__iter__()
-
-    def __add(self, test: 'InTest', *args, **kwargs):
-        if isinstance(test, tuple):
-            if args or kwargs:
-                raise Exception('InTest format Error')
-            assert len(test) > 0
-            f = test[0]
-            a_, kw_ = (), {}
-            for ti in test[1:]:
-                if isinstance(ti, tuple):
-                    if a_: raise ValueError('TestItem args conflict')
-                    a_ = ti
-                elif isinstance(ti, dict):
-                    if kw_: raise ValueError('TestItem kwargs conflict')
-                    kw_ = ti
-                else:
-                    raise ValueError(f'Unsupported type for InTest: {type(ti)}')
-
-            self.__add(f, *a_, **kw_)
-        else:
-            if inspect.iscoroutine(test):
-                tc = CoroutineTestCase
-                self.__has_coroutines = True
-            elif inspect.iscoroutinefunction(test):
-                tc = CoroutineFunctionTestCase
-                self.__has_coroutines = True
-            elif inspect.isfunction(test):
-                tc = FunctionTestCase
-            else:
-                raise ValueError(f'Unknown test: {test}')
-
-            self.__t_tests.append(tc(
-                test,
-                params=self.__cta.get(args, kwargs)
-            ))
 
 
 class Bencher:
@@ -106,17 +28,13 @@ class Bencher:
         if global_args and not isinstance(global_args, (List, Tuple, Set)):
             print('Better to use for args: list, tuple, set')
 
-        t = Tester(
-            tests,
+        c = super().__new__(cls)
+        c.__init__(
+            *tests,
             global_args=global_args,
             global_kwargs=global_kwargs,
             personal_args=personal_args,
             personal_kwargs=personal_kwargs,
-        )
-
-        c = super().__new__(cls)
-        c.__init__(
-            tester=t,
         )
         t = c.run_tests(iterations, raise_exceptions)
         if inspect.iscoroutine(t):
@@ -132,15 +50,61 @@ class Bencher:
         # else:
         #     print('No coroutines')
 
-    def __init__(self, *_, **kwargs):
+    def __init__(self, *tests, **kwargs):
         # print('INIT')
-        self.__tester: Tester = kwargs['tester']
+        self.__cta = CoTestArgs(
+            kwargs.get('personal_args'),
+            kwargs.get('personal_kwargs'),
+            kwargs.get('global_args'),
+            kwargs.get('global_kwargs'),
+        )
+
+        self.__tests: List['TestCase'] = []
+        self.__has_coroutines = False
+
+        for test in tests:
+            self.__add_test(test)
+
+    def __add_test(self, test: 'InTest', *args, **kwargs):
+        if isinstance(test, tuple):
+            if args or kwargs:
+                raise Exception('InTest format Error')
+            assert len(test) > 0
+            f = test[0]
+            a_, kw_ = (), {}
+            for ti in test[1:]:
+                if isinstance(ti, tuple):
+                    if a_: raise ValueError('TestItem args conflict')
+                    a_ = ti
+                elif isinstance(ti, dict):
+                    if kw_: raise ValueError('TestItem kwargs conflict')
+                    kw_ = ti
+                else:
+                    raise ValueError(f'Unsupported type for InTest: {type(ti)}')
+
+            self.__add_test(f, *a_, **kw_)
+        else:
+            if inspect.iscoroutine(test):
+                tc = CoroutineTestCase
+                self.__has_coroutines = True
+            elif inspect.iscoroutinefunction(test):
+                tc = CoroutineFunctionTestCase
+                self.__has_coroutines = True
+            elif inspect.isfunction(test):
+                tc = FunctionTestCase
+            else:
+                raise ValueError(f'Unknown test: {test}')
+
+            self.__tests.append(tc(
+                test,
+                params=self.__cta.get(args, kwargs)
+            ))
 
     def run_tests(self,
                   iterations: int = 1,
                   raise_exceptions: bool = False,
                   ):
-        if not self.__tester:
+        if not self.__tests:
             print('Tests not found')
             return
         single_run = iterations == 1
@@ -151,11 +115,11 @@ class Bencher:
                 headers=('time',) if single_run else ('full', 'max', 'min', 'avg'),
             )
 
-        if self.__tester.has_coroutines:
+        if self.__has_coroutines:
             async def do_async():
                 a_start = perf_counter()
                 exp_ = []
-                for test_ in self.__tester:
+                for test_ in self.__tests:
                     print(f' * {test_.name}:', end='', flush=True)
                     try:
                         if test_.IS_ASYNC:
@@ -178,7 +142,7 @@ class Bencher:
         else:
             s_start = perf_counter()
             exp = []
-            for test in self.__tester:
+            for test in self.__tests:
                 assert test.IS_ASYNC is False
                 print(f' * {test.name}:', end='', flush=True)
                 try:
