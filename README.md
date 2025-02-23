@@ -18,6 +18,8 @@
     :param int iterations: count of iterations for all functions
     :param Optional[Iterable] global_args: arguments for each function
     :param Optional[Mapping] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param Optional[Iterable[Iterable]] personal_args: list of arguments for each function
+    :param Optional[Iterable[Mapping]] personal_kwargs: list of keyword arguments for each function
     :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :return: None | Awaitable[None]
 

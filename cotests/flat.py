@@ -30,8 +30,8 @@ def bench_batch(
     :param int iterations: count of iterations for all functions
     :param Optional['TestArgs'] global_args: arguments for each function
     :param Optional['TestKwargs'] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
-    :param Optional[Iterable['TestArgs']] personal_args: todo
-    :param Optional[Iterable['TestKwargs']] personal_kwargs: todo
+    :param Optional[Iterable['TestArgs']] personal_args: list of arguments for each function
+    :param Optional[Iterable['TestKwargs']] personal_kwargs: list of keyword arguments for each function
     :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :return: None | Awaitable
     """
