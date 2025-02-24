@@ -33,5 +33,5 @@ if __name__ == '__main__':
 
     bench_batch(
         *function_list,
-        iterations=100000
+        iterations=100000,
     )

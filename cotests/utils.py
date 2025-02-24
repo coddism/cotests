@@ -1,21 +1,20 @@
 from typing import Tuple, Optional, List
 from math import log10
 
-
 __METRIX = (
     (60, 'min'),
     (1, 'sec'),
-    (.1**3, 'ms'),
-    (.1**6, 'µs'),
-    (.1**9, 'ns'),
-    (.1**12, 'ps'),
-    (.1**15, 'fs'),
+    (.1 ** 3, 'ms'),
+    (.1 ** 6, 'µs'),
+    (.1 ** 9, 'ns'),
+    (.1 ** 12, 'ps'),
+    (.1 ** 15, 'fs'),
 )
 
 
 def get_sec_metrix(sec: float) -> Tuple[float, str]:
     for deci, metr in __METRIX:
-        if sec > deci:
+        if sec >= deci:
             return deci, metr
     return __METRIX[-1]
 
@@ -41,7 +40,7 @@ def print_test_results(
     iter_ = exp.__iter__()
     first = next(iter_)
     max_fn_len = len(first[0])
-    minmax = [[m,m] for m in first[1:]]
+    minmax = [[m, m] for m in first[1:]]
 
     if headers:
         assert len(headers) + 1 == len(first)
@@ -59,6 +58,7 @@ def print_test_results(
     row_format = ''
     lens = []
     min_full = minmax[0][0]
+
     def get_percent(val: float) -> str:
         d = val / min_full
         if d < 10:
@@ -76,7 +76,7 @@ def print_test_results(
     row_format += f'| %-{max_fn_len}s | %s |'
     lens.extend([max_fn_len, 5])
 
-    fr = '+' + '-' * (sum(lens) + len(lens)*3 - 1) + '+'
+    fr = '+' + '-' * (sum(lens) + len(lens) * 3 - 1) + '+'
     print('\n' + fr)
     if headers:
         print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')

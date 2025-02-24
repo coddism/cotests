@@ -1,44 +1,53 @@
 import asyncio
 import inspect
-import sys
 from time import perf_counter
-from typing import (Callable, Optional, Tuple, Dict, Any,
-                    Iterable, List, Union, Coroutine, Awaitable, TYPE_CHECKING)
+from typing import TYPE_CHECKING, Optional, Tuple, Set, Iterable, List, Union, Awaitable
 
-from .case import TestCase, CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
+from .case import CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
+from .co_test_args import CoTestArgs
 from ..utils import print_test_results, format_sec_metrix
 
 if TYPE_CHECKING:
-    if sys.version_info[:2] >= (3,11):
-        from typing import Unpack
-    else:
-        from typing_extensions import Unpack
+    from .case import TestCase
+    from .typ import TestArgs, TestKwargs, InTest
 
-    TestFunction = Union[Callable, Coroutine]
-    InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any,...]]]
-    InTest = Union[TestFunction, InTestTuple]
-    TestArgs = Tuple[Any, ...]
-    TestKwargs = Dict[str, Any]
-    TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
+def _case_predicate(obj):
+    return ((inspect.ismethod(obj) or inspect.isfunction(obj))
+            and obj.__name__.startswith('test_'))
+
+
+class AbstractCoCase:
+
+    def get_tests(self):
+        return (
+            x[1] for x in inspect.getmembers(self, _case_predicate)
+        )
 
 
 class Bencher:
 
     def __new__(
-        cls,
-        *tests: 'InTest',
-        iterations: int = 1,
-        with_args: Optional['TestArgs'] = None,
-        with_kwargs: Optional['TestKwargs'] = None,
-        raise_exceptions: bool = False,
+            cls,
+            *tests: 'InTest',
+            iterations: int = 1,
+            global_args: Optional['TestArgs'] = None,
+            global_kwargs: Optional['TestKwargs'] = None,
+            personal_args: Optional[Iterable['TestArgs']] = None,
+            personal_kwargs: Optional[Iterable['TestKwargs']] = None,
+            raise_exceptions: bool = False,
     ) -> Union[None, Awaitable[None]]:
-        print('\n', '-'*14, 'Start Bencher', '-'*14)
+        print('\n', '-' * 14, 'Start Bencher', '-' * 14)
+        if global_args and not isinstance(global_args, (List, Tuple, Set)):
+            print('Better to use for args: list, tuple, set')
+
         c = super().__new__(cls)
         c.__init__(
-            with_args=with_args,
-            with_kwargs=with_kwargs,
+            *tests,
+            global_args=global_args,
+            global_kwargs=global_kwargs,
+            personal_args=personal_args,
+            personal_kwargs=personal_kwargs,
         )
-        c.add_tests(tests)
         t = c.run_tests(iterations, raise_exceptions)
         if inspect.iscoroutine(t):
             # try to run
@@ -53,79 +62,71 @@ class Bencher:
         # else:
         #     print('No coroutines')
 
-    def __init__(self, *_, **kwargs):
+    def __init__(self, *tests, **kwargs):
         # print('INIT')
-        self.__tests: List[TestCase] = []
-        self.__global_args = kwargs.get('with_args', ())
-        self.__global_kwargs = kwargs.get('with_kwargs', ())
+        self.__cta = CoTestArgs(
+            kwargs.get('personal_args'),
+            kwargs.get('personal_kwargs'),
+            kwargs.get('global_args'),
+            kwargs.get('global_kwargs'),
+        )
+
+        self.__tests: List['TestCase'] = []
         self.__has_coroutines = False
 
-    def add_test(self, test: 'InTest', *args, **kwargs):
-        def merge_args():
-            if self.__global_args and args:
-                raise Exception('args conflict')
-            fa = self.__global_args or args or ()
+        for test in tests:
+            self.__add_test(test)
 
-            if self.__global_kwargs and kwargs:
-                fkw = {**self.__global_kwargs, **kwargs}
-            else:
-                fkw = self.__global_kwargs or kwargs or {}
-
-            return fa, fkw
-
-        if inspect.iscoroutine(test):
+    def __add_test(self, test: 'InTest', *args, **kwargs):
+        if isinstance(test, tuple):
             if args or kwargs:
-                raise ValueError('Coroutine with args')
-            self.__tests.append(
-                CoroutineTestCase(test)
-            )
-            self.__has_coroutines = True
-        elif inspect.iscoroutinefunction(test):
-            a, k = merge_args()
-            self.__tests.append(
-                CoroutineFunctionTestCase(test, *a, **k)
-            )
-            self.__has_coroutines = True
-        elif inspect.isfunction(test):
-            a, k = merge_args()
-            self.__tests.append(
-                FunctionTestCase(test, *a, **k)
-            )
-        elif isinstance(test, tuple):
+                raise Exception('InTest format Error')
+            assert len(test) > 0
             f = test[0]
             a_, kw_ = (), {}
-            ta_ = []
             for ti in test[1:]:
                 if isinstance(ti, tuple):
-                    if a_ or ta_: raise ValueError('TestItem args conflict')
+                    if a_: raise ValueError('TestItem args conflict')
                     a_ = ti
                 elif isinstance(ti, dict):
                     if kw_: raise ValueError('TestItem kwargs conflict')
                     kw_ = ti
                 else:
-                    if a_: raise ValueError('TestItem args conflict')
-                    ta_.append(ti)
+                    raise ValueError(f'Unsupported type for InTest: {type(ti)}')
 
-            self.add_test(f, *a_, *ta_, **kw_)
+            self.__add_test(f, *a_, **kw_)
         else:
-            raise ValueError(f'Unknown test: {test}')
+            if inspect.iscoroutine(test):
+                tc = CoroutineTestCase
+                self.__has_coroutines = True
+            elif inspect.iscoroutinefunction(test):
+                tc = CoroutineFunctionTestCase
+                self.__has_coroutines = True
+            elif inspect.isfunction(test) or inspect.ismethod(test):
+                tc = FunctionTestCase
+            elif isinstance(test, AbstractCoCase):
+                for test in test.get_tests():
+                    self.__add_test(test, *args, **kwargs)
+                return
+            elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
+                for test in test().get_tests():
+                    self.__add_test(test, *args, **kwargs)
+                return
+            else:
+                raise ValueError(f'Unknown test: {test}')
 
-    def add_tests(self, tests: Iterable['InTest']):
-        for test in tests:
-            self.add_test(test)
-            # print(
-            #     inspect.isfunction(test),
-            #     inspect.iscoroutine(test),
-            #     inspect.isawaitable(test),
-            #     inspect.iscoroutinefunction(test),
-            # )
+            self.__tests.append(tc(
+                test,
+                params=self.__cta.get(args, kwargs)
+            ))
 
     def run_tests(self,
                   iterations: int = 1,
                   raise_exceptions: bool = False,
                   ):
         if not self.__tests:
-            raise Exception('Tests not found')
+            print('Tests not found')
+            return
         single_run = iterations == 1
 
         def print_res(rexp: list):
@@ -137,23 +138,21 @@ class Bencher:
         if self.__has_coroutines:
             async def do_async():
                 a_start = perf_counter()
-
                 exp_ = []
-                for test in self.__tests:
-                    fun_name = test.name
-                    print(f' * {fun_name}:', end='', flush=True)
+                for test_ in self.__tests:
+                    print(f' * {test_.name}:', end='', flush=True)
                     try:
-                        s = test.run(iterations)
-                        if inspect.iscoroutine(s):
-                            s = await s
-                    except Exception as e:
+                        if test_.IS_ASYNC:
+                            s_ = await test_.run(iterations)
+                        else:
+                            s_ = test_.run(iterations)
+                    except Exception as e_:
                         if raise_exceptions:
                             raise
-                        print(f'error: {e}')
+                        print(f'error: {e_}')
                     else:
-                        # print(f'ok')
-                        print(f'ok - {format_sec_metrix(s[0])}')
-                        exp_.append((fun_name, *s))
+                        print(f'ok - {format_sec_metrix(s_[0])}')
+                        exp_.append((test_.name, *s_))
 
                 aft = perf_counter() - a_start
                 print_res(exp_)
@@ -161,23 +160,21 @@ class Bencher:
 
             return do_async()
         else:
-            def g_sync():
-                for test in self.__tests:
-                    fun_name = test.name
-                    print(f' * {fun_name}:', end='', flush=True)
-                    try:
-                        s = test.run(iterations)
-                    except Exception as e:
-                        if raise_exceptions:
-                            raise
-                        print(f'error: {e}')
-                    else:
-                        # print(f'ok')
-                        print(f'ok - {format_sec_metrix(s[0])}')
-                        yield (fun_name, *s)
-
             s_start = perf_counter()
-            exp = [x for x in g_sync()]
+            exp = []
+            for test in self.__tests:
+                assert test.IS_ASYNC is False
+                print(f' * {test.name}:', end='', flush=True)
+                try:
+                    s = test.run(iterations)
+                except Exception as e:
+                    if raise_exceptions:
+                        raise
+                    print(f'error: {e}')
+                else:
+                    print(f'ok - {format_sec_metrix(s[0])}')
+                    exp.append((test.name, *s))
+
             sft = perf_counter() - s_start
             print_res(exp)
             print(f'Full time: {format_sec_metrix(sft)}')
