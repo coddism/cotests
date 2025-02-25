@@ -4,7 +4,7 @@ from cotests import bench_batch
 from cotests.bench.bencher import AbstractCoCase
 
 if TYPE_CHECKING:
-    from .bench.typ import TestArgs, TestKwargs
+    from .bench.typ import TestArgs, TestKwargs, PrePostTest
 
 
 class CoCase(AbstractCoCase):
@@ -16,6 +16,8 @@ class CoCase(AbstractCoCase):
                   personal_args: Optional[Iterable['TestArgs']] = None,
                   personal_kwargs: Optional[Iterable['TestKwargs']] = None,
                   raise_exceptions: bool = False,
+                  pre_test: Optional['PrePostTest'] = None,
+                  post_test: Optional['PrePostTest'] = None,
                   ):
         bench_batch(
             *self.get_tests(),
@@ -25,4 +27,6 @@ class CoCase(AbstractCoCase):
             personal_args=personal_args,
             personal_kwargs=personal_kwargs,
             raise_exceptions=raise_exceptions,
+            pre_test=pre_test,
+            post_test=post_test,
         )

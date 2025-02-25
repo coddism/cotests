@@ -21,6 +21,8 @@
     :param Optional[Iterable[Iterable]] personal_args: list of arguments for each function
     :param Optional[Iterable[Mapping]] personal_kwargs: list of keyword arguments for each function
     :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
+    :param Optional[Callable] pre_test: run before each function; is not added to benchmark time
+    :param Optional[Callable] post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
 
 ## Examples
@@ -345,4 +347,55 @@ if __name__ == '__main__':
         # without coroutines = without await
         bench_batch(*fun_sync)
     asyncio.run(main())
+```
+
+### PreTest & PostTest
+
+```python
+import asyncio
+import time
+from cotests import bench_batch
+
+def test_0(): print('T0', end='-')
+def test_1(): print('T1', end='-')
+async def atest_0(): print('T0', end='-')
+async def atest_1(): print('T1', end='-')
+
+async def rba():
+    await asyncio.sleep(.1)
+    print('B', end='~')
+def rb():
+    time.sleep(.1)
+    print('B', end='-')
+def ra():
+    time.sleep(.1)
+    print('A', end=' ')
+
+tests = (test_0, test_1, atest_0, atest_1)
+bench_batch(
+    *tests,
+    pre_test=rb,
+    post_test=ra,
+    iterations=2,
+)
+
+bench_batch(
+    *tests,
+    pre_test=rba,
+    post_test=ra,
+    iterations=2,
+)
+```
+
+Partial output:
+```
+ * test_0:B-T0-A .B-T0-A .ok - 11.790 µs
+ * test_1:B-T1-A .B-T1-A .ok - 12.820 µs
+ * atest_0:B-T0-A .B-T0-A .ok - 285.469 µs
+ * atest_1:B-T1-A .B-T1-A .ok - 33.350 µs
+
+ * test_0:B~T0-.B~T0-.ok - 10.569 µs
+ * test_1:B~T1-.B~T1-.ok - 9.510 µs
+ * atest_0:B~T0-.B~T0-.ok - 13.790 µs
+ * atest_1:B~T1-.B~T1-.ok - 13.100 µs
 ```

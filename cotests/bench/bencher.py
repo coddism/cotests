@@ -3,13 +3,15 @@ import inspect
 from time import perf_counter
 from typing import TYPE_CHECKING, Optional, Tuple, Set, Iterable, List, Union, Awaitable
 
-from .case import CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase
+from .case import (
+    CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
+    TestCaseExt)
 from .co_test_args import CoTestArgs
 from ..utils import print_test_results, format_sec_metrix
 
 if TYPE_CHECKING:
     from .case import TestCase
-    from .typ import TestArgs, TestKwargs, InTest
+    from .typ import TestArgs, TestKwargs, InTest, PrePostTest
 
 def _case_predicate(obj):
     return ((inspect.ismethod(obj) or inspect.isfunction(obj))
@@ -17,7 +19,6 @@ def _case_predicate(obj):
 
 
 class AbstractCoCase:
-
     def get_tests(self):
         return (
             x[1] for x in inspect.getmembers(self, _case_predicate)
@@ -35,6 +36,8 @@ class Bencher:
             personal_args: Optional[Iterable['TestArgs']] = None,
             personal_kwargs: Optional[Iterable['TestKwargs']] = None,
             raise_exceptions: bool = False,
+            pre_test: Optional['PrePostTest'] = None,
+            post_test: Optional['PrePostTest'] = None,
     ) -> Union[None, Awaitable[None]]:
         print('\n', '-' * 14, 'Start Bencher', '-' * 14)
         if global_args and not isinstance(global_args, (List, Tuple, Set)):
@@ -47,6 +50,8 @@ class Bencher:
             global_kwargs=global_kwargs,
             personal_args=personal_args,
             personal_kwargs=personal_kwargs,
+            pre_test=pre_test,
+            post_test=post_test,
         )
         t = c.run_tests(iterations, raise_exceptions)
         if inspect.iscoroutine(t):
@@ -69,6 +74,10 @@ class Bencher:
             kwargs.get('personal_kwargs'),
             kwargs.get('global_args'),
             kwargs.get('global_kwargs'),
+        )
+        self.__tce = TestCaseExt(
+            pre_test=kwargs['pre_test'],
+            post_test=kwargs['post_test'],
         )
 
         self.__tests: List['TestCase'] = []
@@ -103,7 +112,11 @@ class Bencher:
                 tc = CoroutineFunctionTestCase
                 self.__has_coroutines = True
             elif inspect.isfunction(test) or inspect.ismethod(test):
-                tc = FunctionTestCase
+                if self.__tce.is_async:
+                    tc = FunctionTestCaseWithAsyncPrePost
+                    self.__has_coroutines = True
+                else:
+                    tc = FunctionTestCase
             elif isinstance(test, AbstractCoCase):
                 for test in test.get_tests():
                     self.__add_test(test, *args, **kwargs)
@@ -117,7 +130,8 @@ class Bencher:
 
             self.__tests.append(tc(
                 test,
-                params=self.__cta.get(args, kwargs)
+                params=self.__cta.get(args, kwargs),
+                ext=self.__tce,
             ))
 
     def run_tests(self,
