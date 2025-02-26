@@ -1,4 +1,6 @@
-from typing import Tuple, Optional, List
+import asyncio
+import inspect
+from typing import Tuple, Optional, List, Union, Awaitable
 from math import log10
 
 __METRIX = (
@@ -85,3 +87,17 @@ def print_test_results(
         print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
 
     print(fr)
+
+def try_to_run(t) -> Union[None, Awaitable[None]]:
+    if inspect.iscoroutine(t):
+        # try to run
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # print('Run in new loop')
+            asyncio.run(t)
+        else:
+            # print('Cannot run. Return coroutine')
+            return t
+    # else:
+    #     print('No coroutines')

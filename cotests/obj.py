@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Iterable
 
-from cotests import bench_batch
-from cotests.bench.bencher import AbstractCoCase
+from .flat import bench_batch
+from .bench import AbstractCoCase
 
 if TYPE_CHECKING:
     from .bench.typ import TestArgs, TestKwargs, PrePostTest

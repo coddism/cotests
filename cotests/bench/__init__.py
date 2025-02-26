@@ -1,1 +1,1 @@
-from .bencher import Bencher
+from .co_case import AbstractCoCase

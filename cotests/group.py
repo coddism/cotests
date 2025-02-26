@@ -1,90 +1,60 @@
-import asyncio
 import inspect
 from time import perf_counter
-from typing import TYPE_CHECKING, Optional, Tuple, Set, Iterable, List, Union, Awaitable
+from typing import TYPE_CHECKING, Optional, Iterable, List
 
-from .case import (
-    CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
-    TestCaseExt)
-from .co_test_args import CoTestArgs
-from ..utils import print_test_results, format_sec_metrix
+from .bench import AbstractCoCase
+from .bench.case import (
+    CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase,
+    FunctionTestCaseWithAsyncPrePost
+)
+from .bench.case_ext import TestCaseExt
+from .bench.co_test_args import CoTestArgs
+from .utils import format_sec_metrix, print_test_results, try_to_run
 
 if TYPE_CHECKING:
-    from .case import TestCase
-    from .typ import TestArgs, TestKwargs, InTest, PrePostTest
-
-def _case_predicate(obj):
-    return ((inspect.ismethod(obj) or inspect.isfunction(obj))
-            and obj.__name__.startswith('test_'))
+    from .bench.case import TestCase
+    from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
-class AbstractCoCase:
-    def get_tests(self):
-        return (
-            x[1] for x in inspect.getmembers(self, _case_predicate)
-        )
+class CoTestGroup:
+    NAME = ''
 
-
-class Bencher:
-
-    def __new__(
-            cls,
+    def __init__(
+            self,
             *tests: 'InTest',
-            iterations: int = 1,
+            # iterations: int = 1,
+            # raise_exceptions: bool = False,
             global_args: Optional['TestArgs'] = None,
             global_kwargs: Optional['TestKwargs'] = None,
             personal_args: Optional[Iterable['TestArgs']] = None,
             personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-            raise_exceptions: bool = False,
             pre_test: Optional['PrePostTest'] = None,
             post_test: Optional['PrePostTest'] = None,
-    ) -> Union[None, Awaitable[None]]:
-        print('\n', '-' * 14, 'Start Bencher', '-' * 14)
-        if global_args and not isinstance(global_args, (List, Tuple, Set)):
-            print('Better to use for args: list, tuple, set')
+            name: Optional[str] = '',
+    ):
+        if len(tests) == 0:
+            raise ValueError('Empty tests list')
+        self.__tests: List['TestCase'] = []
+        self.__has_coroutines = False
+        self.name = name or self.NAME
 
-        c = super().__new__(cls)
-        c.__init__(
-            *tests,
-            global_args=global_args,
-            global_kwargs=global_kwargs,
-            personal_args=personal_args,
-            personal_kwargs=personal_kwargs,
+        self.__cta = CoTestArgs(
+            personal_args,
+            personal_kwargs,
+            global_args,
+            global_kwargs,
+        )
+        self.__tce = TestCaseExt(
             pre_test=pre_test,
             post_test=post_test,
         )
-        t = c.run_tests(iterations, raise_exceptions)
-        if inspect.iscoroutine(t):
-            # try to run
-            try:
-                asyncio.get_running_loop()
-            except RuntimeError:
-                # print('Run in new loop')
-                asyncio.run(t)
-            else:
-                # print('Cannot run. Return coroutine')
-                return t
-        # else:
-        #     print('No coroutines')
-
-    def __init__(self, *tests, **kwargs):
-        # print('INIT')
-        self.__cta = CoTestArgs(
-            kwargs.get('personal_args'),
-            kwargs.get('personal_kwargs'),
-            kwargs.get('global_args'),
-            kwargs.get('global_kwargs'),
-        )
-        self.__tce = TestCaseExt(
-            pre_test=kwargs['pre_test'],
-            post_test=kwargs['post_test'],
-        )
-
-        self.__tests: List['TestCase'] = []
-        self.__has_coroutines = False
 
         for test in tests:
             self.__add_test(test)
+
+    @property
+    def has_coroutines(self) -> bool:
+        return self.__has_coroutines
 
     def __add_test(self, test: 'InTest', *args, **kwargs):
         if isinstance(test, tuple):
@@ -137,10 +107,11 @@ class Bencher:
     def run_tests(self,
                   iterations: int = 1,
                   raise_exceptions: bool = False,
-                  ):
+                  ) -> 'RunResult':
+        print('\n', '-' * 14, 'Start CoTest', self.name, '-' * 14)
         if not self.__tests:
             print('Tests not found')
-            return
+            return None
         single_run = iterations == 1
 
         def print_res(rexp: list):
@@ -169,7 +140,8 @@ class Bencher:
                         exp_.append((test_.name, *s_))
 
                 aft = perf_counter() - a_start
-                print_res(exp_)
+                if not single_run:
+                    print_res(exp_)
                 print(f'Full time: {format_sec_metrix(aft)}')
 
             return do_async()
@@ -190,5 +162,24 @@ class Bencher:
                     exp.append((test.name, *s))
 
             sft = perf_counter() - s_start
-            print_res(exp)
+            if not single_run:
+                print_res(exp)
             print(f'Full time: {format_sec_metrix(sft)}')
+
+
+def test_groups(*groups: CoTestGroup) -> 'RunResult':
+
+    coro = any(x.has_coroutines for x in groups)
+    if coro:
+        async def run():
+            print('\n', '-' * 14, 'Start CoTests', '-' * 14)
+            for group_ in groups:
+                if group_.has_coroutines:
+                    await group_.run_tests()
+                else:
+                    group_.run_tests()
+        return try_to_run(run())
+    else:
+        print('\n', '-' * 14, 'Start CoTests', '-' * 14)
+        for group in groups:
+            group.run_tests()

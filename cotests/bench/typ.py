@@ -7,10 +7,11 @@ TestKwargs = Mapping[str, Any]
 TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 CoArgsList = List[Tuple['TestArgs', 'TestKwargs']]
 PrePostTest = Callable[[], Union[None, Awaitable[None]]]
+RunResult = Union[None, Awaitable[None]]
 
 if TYPE_CHECKING:
     import sys
-    from .bencher import AbstractCoCase
+    from . import AbstractCoCase
 
     if sys.version_info[:2] >= (3, 11):
         from typing import Unpack
