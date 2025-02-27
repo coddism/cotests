@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Tuple, List, Union, Optional
+from typing import TYPE_CHECKING, Tuple, List, Optional
 
 from .case_ext import TestCaseExt
 from .progress_bar import ProgressBarPrinter
@@ -6,7 +6,6 @@ from .utils import format_sec_metrix, get_level_prefix
 
 RESULT_TUPLE_SINGLE = Tuple[float]
 RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
-RESULT_TUPLE = Union[RESULT_TUPLE_SINGLE, RESULT_TUPLE_MULTI]
 
 if TYPE_CHECKING:
     from .co_test_args import CoArgsList
@@ -22,6 +21,48 @@ def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
     return s, mx, mn, avg
 
 
+def _decorator_factory(asynch: bool, multi: bool = False):
+    if multi:
+        def b_sec(ts: RESULT_TUPLE_MULTI) -> float:
+            return ts[0]
+    else:
+        def b_sec(ts: float) -> float:
+            return ts
+
+    def _decor(func):
+        def wrapper_(self, *args, **kwargs):
+            level = kwargs.get('level', 0)
+            print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+            try:
+                ts = func(self, *args, **kwargs)
+            except Exception as e_:
+                print(f'error: {e_}')
+                raise
+            else:
+                print(f'ok - {format_sec_metrix(b_sec(ts))}')
+                return ts
+        return wrapper_
+
+    def _decora(func):
+        async def wrapper_(self, *args, **kwargs):
+            level = kwargs.get('level', 0)
+            print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+            try:
+                ts = await func(self, *args, **kwargs)
+            except Exception as e_:
+                print(f'error: {e_}')
+                raise
+            else:
+                print(f'ok - {format_sec_metrix(b_sec(ts))}')
+                return ts
+        return wrapper_
+
+    if asynch:
+        return _decora
+    else:
+        return _decor
+
+
 class AbstractTestCase:
     is_async: bool
     name: str
@@ -29,8 +70,6 @@ class AbstractTestCase:
     def run_test(self, *, level: int = 0):
         raise NotImplementedError
     def run_bench(self, iterations: int, *, level: int = 0):
-        raise NotImplementedError
-    def run(self, iterations: int):
         raise NotImplementedError
 
 
@@ -56,41 +95,13 @@ class TestCase(AbstractTestCase):
             for p in self._params
         )
 
-    def run_single(self) -> RESULT_TUPLE_SINGLE:
-        return (self._bench_single(),)
-
-    def run_multiple(self, iterations: int) -> RESULT_TUPLE_MULTI:
-        return _calc_multi_results([self._bench_single()
-                                    for _ in ProgressBarPrinter(iterations)])
-
-    def run(self, iterations: int):
-        print(f' * {self.name}:', end='', flush=True)
-        if iterations == 1:
-            return self.run_single()
-        else:
-            return self.run_multiple(iterations)
-
+    @_decorator_factory(False)
     def run_test(self, *, level: int = 0) -> float:
-        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
-        try:
-            ts = self._bench_single()
-        except Exception as e_:
-            print(f'error: {e_}')
-            raise
-        else:
-            print(f'ok - {format_sec_metrix(ts)}')
-            return ts
+        return self._bench_single()
 
-    def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE:
-        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
-        try:
-            ts = _calc_multi_results([self._bench_single() for _ in ProgressBarPrinter(iterations)])
-        except Exception as e_:
-            print(f'error: {e_}')
-            raise
-        else:
-            print(f'ok - {format_sec_metrix(ts[0])}')
-            return ts
+    @_decorator_factory(False, multi=True)
+    def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
+        return _calc_multi_results([self._bench_single() for _ in ProgressBarPrinter(iterations)])
 
 
 class FunctionTestCase(TestCase):
@@ -109,34 +120,13 @@ class AsyncTestCase(TestCase):
             for p in self._params
         ])
 
-    async def run_single(self) -> RESULT_TUPLE_SINGLE:
-        return (await self._bench_single(),)
-
-    async def run_multiple(self, iterations: int) -> RESULT_TUPLE_MULTI:
-        return _calc_multi_results([await self._bench_single()
-                                    for _ in ProgressBarPrinter(iterations)])
-
+    @_decorator_factory(True)
     async def run_test(self, *, level: int = 0) -> float:
-        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
-        try:
-            ts = await self._bench_single()
-        except Exception as e_:
-            print(f'error: {e_}')
-            raise
-        else:
-            print(f'ok - {format_sec_metrix(ts)}')
-            return ts
+        return await self._bench_single()
 
-    async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE:
-        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
-        try:
-            ts = _calc_multi_results([await self._bench_single() for _ in ProgressBarPrinter(iterations)])
-        except Exception as e_:
-            print(f'error: {e_}')
-            raise
-        else:
-            print(f'ok - {format_sec_metrix(ts[0])}')
-            return ts
+    @_decorator_factory(True, multi=True)
+    async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
+        return _calc_multi_results([await self._bench_single() for _ in ProgressBarPrinter(iterations)])
 
 
 class FunctionTestCaseWithAsyncPrePost(AsyncTestCase):
@@ -153,12 +143,13 @@ class CoroutineTestCase(AsyncTestCase):
         super().__init__(*args, **kwargs)
 
     def _run(self, *_, **__):
-        # todo
         return self._f
 
-    async def run_multiple(self, *_, **__):
-        # todo
-        raise NotImplementedError('cannot reuse coroutines')
+    @_decorator_factory(True, multi=True)
+    async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
+        if iterations > 1:
+            raise NotImplementedError('cannot reuse coroutines')
+        return await super().run_bench(iterations, level=level)
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):
