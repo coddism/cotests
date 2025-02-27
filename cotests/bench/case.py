@@ -21,46 +21,62 @@ def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
     return s, mx, mn, avg
 
 
-def _decorator_factory(asynch: bool, multi: bool = False):
-    if multi:
-        def b_sec(ts: RESULT_TUPLE_MULTI) -> float:
-            return ts[0]
-    else:
-        def b_sec(ts: float) -> float:
-            return ts
+def b_sec_s(ts: float) -> float:
+    return ts
+def b_sec_m(ts: RESULT_TUPLE_MULTI) -> float:
+    return ts[0]
 
-    def _decor(func):
-        def wrapper_(self, *args, **kwargs):
-            level = kwargs.get('level', 0)
-            print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+class __DecoratorFactory:
+    def __init__(self, multi: bool = False):
+        if multi:
+            self.bs = b_sec_m
+        else:
+            self.bs = b_sec_s
+
+    def __call__(self, func):
+        return self.wrapper(self, func)
+
+    @staticmethod
+    def _print_start(cls: 'TestCase', **kwargs):
+        level = kwargs.get('level', 0)
+        print(f'{get_level_prefix(level)} * {cls.name}:', end='', flush=True)
+
+    @staticmethod
+    def wrapper(self: '__DecoratorFactory', func):
+        raise NotImplementedError
+
+
+class SyncDecoratorFactory(__DecoratorFactory):
+    @staticmethod
+    def wrapper(self: '__DecoratorFactory', func):
+        def w(cls: 'TestCase', *args, **kwargs):
+            self._print_start(cls, **kwargs)
             try:
-                ts = func(self, *args, **kwargs)
+                ts = func(cls, *args, **kwargs)
             except Exception as e_:
                 print(f'error: {e_}')
                 raise
             else:
-                print(f'ok - {format_sec_metrix(b_sec(ts))}')
+                print(f'ok - {format_sec_metrix(self.bs(ts))}')
                 return ts
-        return wrapper_
+        return w
 
-    def _decora(func):
-        async def wrapper_(self, *args, **kwargs):
-            level = kwargs.get('level', 0)
-            print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+class AsyncDecoratorFactory(__DecoratorFactory):
+    @staticmethod
+    def wrapper(self: '__DecoratorFactory', func):
+        async def wa(cls: 'TestCase', *args, **kwargs):
+            self._print_start(cls, **kwargs)
             try:
-                ts = await func(self, *args, **kwargs)
+                ts = await func(cls, *args, **kwargs)
             except Exception as e_:
                 print(f'error: {e_}')
                 raise
             else:
-                print(f'ok - {format_sec_metrix(b_sec(ts))}')
+                print(f'ok - {format_sec_metrix(self.bs(ts))}')
                 return ts
-        return wrapper_
+        return wa
 
-    if asynch:
-        return _decora
-    else:
-        return _decor
+# TestCases
 
 
 class AbstractTestCase:
@@ -95,11 +111,11 @@ class TestCase(AbstractTestCase):
             for p in self._params
         )
 
-    @_decorator_factory(False)
+    @SyncDecoratorFactory()
     def run_test(self, *, level: int = 0) -> float:
         return self._bench_single()
 
-    @_decorator_factory(False, multi=True)
+    @SyncDecoratorFactory(True)
     def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
         return _calc_multi_results([self._bench_single() for _ in ProgressBarPrinter(iterations)])
 
@@ -120,11 +136,11 @@ class AsyncTestCase(TestCase):
             for p in self._params
         ])
 
-    @_decorator_factory(True)
+    @AsyncDecoratorFactory()
     async def run_test(self, *, level: int = 0) -> float:
         return await self._bench_single()
 
-    @_decorator_factory(True, multi=True)
+    @AsyncDecoratorFactory(True)
     async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
         return _calc_multi_results([await self._bench_single() for _ in ProgressBarPrinter(iterations)])
 
@@ -145,11 +161,11 @@ class CoroutineTestCase(AsyncTestCase):
     def _run(self, *_, **__):
         return self._f
 
-    @_decorator_factory(True, multi=True)
+    @AsyncDecoratorFactory(True)
     async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
         if iterations > 1:
             raise NotImplementedError('cannot reuse coroutines')
-        return await super().run_bench(iterations, level=level)
+        return await super().run_bench(self, iterations, level=level)
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):
