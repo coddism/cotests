@@ -13,7 +13,7 @@ __METRIX = (
     (.1 ** 15, 'fs'),
 )
 
-def get_level_prefix(level: int, char: str = '¦') -> str:
+def get_level_prefix(level: int, char: str = '¦ ') -> str:
     return char * level
 
 

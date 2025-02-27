@@ -11,7 +11,7 @@ from .bench.case import (
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs
 from .bench.typ import CoException
-from .utils import format_sec_metrix, print_test_results, try_to_run, get_level_prefix
+from .bench.utils import format_sec_metrix, print_test_results, try_to_run, get_level_prefix
 
 if TYPE_CHECKING:
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult

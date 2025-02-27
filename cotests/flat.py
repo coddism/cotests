@@ -1,7 +1,7 @@
 from typing import Optional, TYPE_CHECKING, Sequence
 
 from .group import CoTestGroup
-from .utils import try_to_run
+from .bench.utils import try_to_run
 
 if TYPE_CHECKING:
     from .bench.typ import PrePostTest,  InTest, TestArgs, TestKwargs

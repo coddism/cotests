@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Tuple, List, Union, Optional
 
 from .case_ext import TestCaseExt
-from ..progress_bar import ProgressBarPrinter
-from ..utils import format_sec_metrix, get_level_prefix
+from .progress_bar import ProgressBarPrinter
+from .utils import format_sec_metrix, get_level_prefix
 
 RESULT_TUPLE_SINGLE = Tuple[float]
 RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
