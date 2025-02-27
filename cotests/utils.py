@@ -13,6 +13,9 @@ __METRIX = (
     (.1 ** 15, 'fs'),
 )
 
+def get_level_prefix(level: int, char: str = '¦') -> str:
+    return char * level
+
 
 def get_sec_metrix(sec: float) -> Tuple[float, str]:
     for deci, metr in __METRIX:
@@ -34,10 +37,11 @@ def print_test_results(
         exp: List[Tuple[str, float]],
         *,
         headers: Optional[Tuple] = None,
-):
+) -> List[str]:
     if not exp:
-        print('No results.')
-        return
+        return ['! No results.']
+        # print('No results.')
+        # return
 
     iter_ = exp.__iter__()
     first = next(iter_)
@@ -46,6 +50,8 @@ def print_test_results(
 
     if headers:
         assert len(headers) + 1 == len(first)
+
+    res = []
 
     for i in iter_:
         if len(i[0]) > max_fn_len:
@@ -79,14 +85,16 @@ def print_test_results(
     lens.extend([max_fn_len, 5])
 
     fr = '+' + '-' * (sum(lens) + len(lens) * 3 - 1) + '+'
-    print('\n' + fr)
+    res.append(fr)
     if headers:
-        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
+        res.append('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
 
     for item in exp:
-        print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
+        res.append(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
 
-    print(fr)
+    res.append(fr)
+    return res
+
 
 def try_to_run(t) -> Union[None, Awaitable[None]]:
     if inspect.iscoroutine(t):
@@ -101,3 +109,12 @@ def try_to_run(t) -> Union[None, Awaitable[None]]:
             return t
     # else:
     #     print('No coroutines')
+
+def calc_multi_results(benches: List[float]) -> Tuple[float, float, float, float]:
+    s = sum(benches)
+    mx, mn, avg = (
+        max(benches),
+        min(benches),
+        s / len(benches),
+    )
+    return s, mx, mn, avg

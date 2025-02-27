@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Tuple, List, Union, Optional
 
 from .case_ext import TestCaseExt
 from ..progress_bar import ProgressBarPrinter
+from ..utils import format_sec_metrix, get_level_prefix
 
 RESULT_TUPLE_SINGLE = Tuple[float]
 RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
@@ -21,7 +22,19 @@ def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
     return s, mx, mn, avg
 
 
-class TestCase:
+class AbstractTestCase:
+    IS_ASYNC: bool
+    name: str
+
+    def run_test(self, *, level: int = 0): raise NotImplementedError
+    def run_bench(self, iterations: int, *, level: int = 0): raise NotImplementedError
+    # def run_single(self): ...
+
+    def run(self, iterations: int):
+        raise NotImplementedError
+
+
+class TestCase(AbstractTestCase):
     IS_ASYNC = False
     def __init__(self,
                  test,
@@ -51,10 +64,33 @@ class TestCase:
                                     for _ in ProgressBarPrinter(iterations)])
 
     def run(self, iterations: int):
+        print(f' * {self.name}:', end='', flush=True)
         if iterations == 1:
             return self.run_single()
         else:
             return self.run_multiple(iterations)
+
+    def run_test(self, *, level: int = 0) -> float:
+        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+        try:
+            ts = self._bench_single()
+        except Exception as e_:
+            print(f'error: {e_}')
+            raise
+        else:
+            print(f'ok - {format_sec_metrix(ts)}')
+            return ts
+
+    def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE:
+        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+        try:
+            ts = _calc_multi_results([self._bench_single() for _ in ProgressBarPrinter(iterations)])
+        except Exception as e_:
+            print(f'error: {e_}')
+            raise
+        else:
+            print(f'ok - {format_sec_metrix(ts[0])}')
+            return ts
 
 
 class FunctionTestCase(TestCase):
@@ -80,6 +116,28 @@ class AsyncTestCase(TestCase):
         return _calc_multi_results([await self._bench_single()
                                     for _ in ProgressBarPrinter(iterations)])
 
+    async def run_test(self, *, level: int = 0) -> float:
+        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+        try:
+            ts = await self._bench_single()
+        except Exception as e_:
+            print(f'error: {e_}')
+            raise
+        else:
+            print(f'ok - {format_sec_metrix(ts)}')
+            return ts
+
+    async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE:
+        print(f'{get_level_prefix(level)} * {self.name}:', end='', flush=True)
+        try:
+            ts = _calc_multi_results([await self._bench_single() for _ in ProgressBarPrinter(iterations)])
+        except Exception as e_:
+            print(f'error: {e_}')
+            raise
+        else:
+            print(f'ok - {format_sec_metrix(ts[0])}')
+            return ts
+
 
 class FunctionTestCaseWithAsyncPrePost(AsyncTestCase):
     async def _bench_single(self) -> float:
@@ -95,9 +153,11 @@ class CoroutineTestCase(AsyncTestCase):
         super().__init__(*args, **kwargs)
 
     def _run(self, *_, **__):
+        # todo
         return self._f
 
     async def run_multiple(self, *_, **__):
+        # todo
         raise NotImplementedError('cannot reuse coroutines')
 
 

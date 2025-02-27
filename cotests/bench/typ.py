@@ -19,4 +19,9 @@ if TYPE_CHECKING:
         from typing_extensions import Unpack
 
     InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
-    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase]]
+    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase]]  # todo add group
+
+
+class CoException(Exception):
+    def __init__(self, errors: List):
+        self.__errors = errors

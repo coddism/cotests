@@ -15,25 +15,27 @@ class TObj(CoCase):
     @classmethod
     def test_2(cls, t: float = .3): time.sleep(t)
 
+class TObjA(CoCase):
     async def test_a0(self, t: float = .1): await asyncio.sleep(t)
 
     @classmethod
     async def test_a1(cls, t: float = .2): await asyncio.sleep(t)
 
 
-TObj().run_tests(
-    iterations=5,
-    global_args=(.1,),
-)
-# or
-bench_batch(
-    TObj(),
-    iterations=5,
-    global_args=(.1,),
-)
-# or
-bench_batch(
-    TObj,
-    iterations=5,
-    global_args=(.1,),
-)
+if __name__ == '__main__':
+    TObj().run_tests(
+        iterations=5,
+        global_args=(.1,),
+    )
+    # or
+    # bench_batch(
+    #     TObj(),
+    #     iterations=5,
+    #     global_args=(.1,),
+    # )
+    # or
+    bench_batch(
+        TObj, TObjA,
+        iterations=5,
+        global_args=(.1,),
+    )

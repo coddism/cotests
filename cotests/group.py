@@ -5,18 +5,19 @@ from typing import TYPE_CHECKING, Optional, Iterable, List
 from .bench import AbstractCoCase
 from .bench.case import (
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase,
-    FunctionTestCaseWithAsyncPrePost
+    FunctionTestCaseWithAsyncPrePost,
+    AbstractTestCase,
 )
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs
-from .utils import format_sec_metrix, print_test_results, try_to_run
+from .bench.typ import CoException
+from .utils import format_sec_metrix, print_test_results, try_to_run, get_level_prefix
 
 if TYPE_CHECKING:
-    from .bench.case import TestCase
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
-class CoTestGroup:
+class CoTestGroup(AbstractTestCase):
     NAME = ''
 
     def __init__(
@@ -32,9 +33,9 @@ class CoTestGroup:
             post_test: Optional['PrePostTest'] = None,
             name: Optional[str] = '',
     ):
-        if len(tests) == 0:
-            raise ValueError('Empty tests list')
-        self.__tests: List['TestCase'] = []
+        # if len(tests) == 0:
+        #     raise ValueError('Empty tests list')
+        self.__tests: List['AbstractTestCase'] = []
         self.__has_coroutines = False
         self.name = name or self.NAME
 
@@ -51,6 +52,10 @@ class CoTestGroup:
 
         for test in tests:
             self.__add_test(test)
+
+    @property
+    def IS_ASYNC(self):
+        return self.__has_coroutines
 
     @property
     def has_coroutines(self) -> bool:
@@ -87,6 +92,11 @@ class CoTestGroup:
                     self.__has_coroutines = True
                 else:
                     tc = FunctionTestCase
+            elif isinstance(test, CoTestGroup):
+                if test.IS_ASYNC:
+                    self.__has_coroutines = True
+                self.__tests.append(test)
+                return
             elif isinstance(test, AbstractCoCase):
                 for test in test.get_tests():
                     self.__add_test(test, *args, **kwargs)
@@ -104,82 +114,176 @@ class CoTestGroup:
                 ext=self.__tce,
             ))
 
-    def run_tests(self,
-                  iterations: int = 1,
-                  raise_exceptions: bool = False,
-                  ) -> 'RunResult':
-        print('\n', '-' * 14, 'Start CoTest', self.name, '-' * 14)
-        if not self.__tests:
-            print('Tests not found')
-            return None
-        single_run = iterations == 1
+    async def __go_async(self):
+        try:
+            await self.run_test()
+        except CoException as ce:
+            print('Has errors')
+            print(ce)
 
-        def print_res(rexp: list):
-            print_test_results(
-                rexp,
-                headers=('time',) if single_run else ('full', 'max', 'min', 'avg'),
-            )
+    async def __go_bench_async(self, *args):
+        try:
+            await self.run_bench(*args)
+        except CoException as ce:
+            print('Has errors')
+            print(ce)
 
+    def go(self):
         if self.__has_coroutines:
-            async def do_async():
-                a_start = perf_counter()
-                exp_ = []
-                for test_ in self.__tests:
-                    print(f' * {test_.name}:', end='', flush=True)
-                    try:
-                        if test_.IS_ASYNC:
-                            s_ = await test_.run(iterations)
-                        else:
-                            s_ = test_.run(iterations)
-                    except Exception as e_:
-                        if raise_exceptions:
-                            raise
-                        print(f'error: {e_}')
-                    else:
-                        print(f'ok - {format_sec_metrix(s_[0])}')
-                        exp_.append((test_.name, *s_))
+            return self.__go_async()
 
-                aft = perf_counter() - a_start
-                if not single_run:
-                    print_res(exp_)
-                print(f'Full time: {format_sec_metrix(aft)}')
+        try:
+            self.run_test()
+        except CoException as ce:
+            print('Has errors')
+            print(ce)
 
-            return do_async()
-        else:
-            s_start = perf_counter()
-            exp = []
-            for test in self.__tests:
-                assert test.IS_ASYNC is False
-                print(f' * {test.name}:', end='', flush=True)
-                try:
-                    s = test.run(iterations)
-                except Exception as e:
-                    if raise_exceptions:
-                        raise
-                    print(f'error: {e}')
+    def go_bench(self, iterations: int):
+        if self.__has_coroutines:
+            return self.__go_bench_async(iterations)
+
+        try:
+            self.run_bench(iterations)
+        except CoException as ce:
+            print('Has errors')
+            print(ce)
+
+    def run_test(self, *, level: int = 0):
+        if self.__has_coroutines:
+            return self.run_test_async(level=level)
+
+        pref_ = get_level_prefix(level)
+        print(pref_)
+        print(f'{pref_}⌌', '-' * 14, ' Start CoTest ', self.name, '-' * 14, sep='')
+        if not self.__tests:
+            print(f'{pref_}⌎ Tests not found')
+            return None
+
+        s_start = perf_counter()
+        errors = []
+        for test_ in self.__tests:
+            try:
+                test_.run_test(level=level+1)
+            except Exception as e_:
+                errors.append(e_)
+
+        sft = perf_counter() - s_start
+        print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
+        if errors:
+            raise CoException(errors)
+
+    async def run_test_async(self, *, level: int = 0):
+        pref_ = get_level_prefix(level)
+        print(pref_)
+        print(f'{pref_}⌌', '-' * 14, ' Start CoTest ', self.name, '-' * 14, sep='')
+        if not self.__tests:
+            print(f'{pref_}⌎ Tests not found')
+            return None
+
+        s_start = perf_counter()
+        errors = []
+        for test_ in self.__tests:
+            try:
+                # print('TTTTTTTTTTTTTTTT', test_.IS_ASYNC, test_)
+                if test_.IS_ASYNC:
+                    await test_.run_test(level=level+1)
                 else:
-                    print(f'ok - {format_sec_metrix(s[0])}')
-                    exp.append((test.name, *s))
+                    test_.run_test(level=level+1)
+            except Exception as e_:
+                errors.append(e_)
 
-            sft = perf_counter() - s_start
-            if not single_run:
-                print_res(exp)
-            print(f'Full time: {format_sec_metrix(sft)}')
+        sft = perf_counter() - s_start
+        print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
+        if errors:
+            raise CoException(errors)
 
+    def run_bench(self, iterations: int, *, level: int = 0):
+        # print(self.__has_coroutines)
+        if self.__has_coroutines:
+            return self.run_bench_async(iterations, level=level)
+        pref_ = get_level_prefix(level)
+        pref_1 = get_level_prefix(level+1)
+        print(pref_)
+        print(f'{pref_}⌌', '-' * 14, ' Start CoBench ', self.name, '-' * 14, sep='')
+        if not self.__tests:
+            # raise Exception(f'{pref_}⌎ Tests not found')
+            print(f'{pref_}⌎ Tests not found')
+            return None
+
+        s_start = perf_counter()
+        errors = []
+        exp = []
+
+        for test_ in self.__tests:
+            try:
+                s = test_.run_bench(iterations, level=level+1)
+            except Exception as e_:
+                errors.append(e_)
+            else:
+                if s:
+                    # todo
+                    exp.append((test_.name, *s))
+
+        sft = perf_counter() - s_start
+
+        for str_row in print_test_results(
+            exp,
+            headers=('full', 'max', 'min', 'avg'),
+            # headers=('time',) if single_run else ('full', 'max', 'min', 'avg'),
+        ):
+            print(pref_1, str_row)
+
+        print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
+        if errors:
+            raise CoException(errors)
+
+    async def run_bench_async(self, iterations: int, *, level: int = 0):
+        pref_ = get_level_prefix(level)
+        pref_1 = get_level_prefix(level+1)
+        print(pref_)
+        print(f'{pref_}⌌', '-' * 14, ' Start CoBench ', self.name, '-' * 14, sep='')
+        if not self.__tests:
+            print(f'{pref_}⌎ Tests not found')
+            return None
+
+        s_start = perf_counter()
+        errors = []
+        exp = []
+
+        for test_ in self.__tests:
+            try:
+                if test_.IS_ASYNC:
+                    s = await test_.run_bench(iterations, level=level + 1)
+                else:
+                    s = test_.run_bench(iterations, level=level + 1)
+            except Exception as e_:
+                errors.append(e_)
+            else:
+                if s:
+                    # todo
+                    exp.append((test_.name, *s))
+
+        sft = perf_counter() - s_start
+
+        for str_row in print_test_results(
+            exp,
+            headers=('full', 'max', 'min', 'avg'),
+            # headers=('time',) if single_run else ('full', 'max', 'min', 'avg'),
+        ):
+            print(pref_1, str_row)
+
+        print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
+        if errors:
+            raise CoException(errors)
+
+
+__greeting = """
++---------------------+
+|    Start CoTests    |
++---------------------+
+"""
 
 def test_groups(*groups: CoTestGroup) -> 'RunResult':
-
-    coro = any(x.has_coroutines for x in groups)
-    if coro:
-        async def run():
-            print('\n', '-' * 14, 'Start CoTests', '-' * 14)
-            for group_ in groups:
-                if group_.has_coroutines:
-                    await group_.run_tests()
-                else:
-                    group_.run_tests()
-        return try_to_run(run())
-    else:
-        print('\n', '-' * 14, 'Start CoTests', '-' * 14)
-        for group in groups:
-            group.run_tests()
+    print(__greeting)
+    g = CoTestGroup(*groups, name='__main__')
+    return try_to_run(g.go())

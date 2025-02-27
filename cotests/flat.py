@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 def bench_batch(
         *funcs: 'InTest',
         iterations: int = 1,
+        name: Optional[str] = '',
         raise_exceptions: bool = False,
         global_args: Optional['TestArgs'] = None,
         global_kwargs: Optional['TestKwargs'] = None,
@@ -21,6 +22,7 @@ def bench_batch(
     """
     :param funcs: all functions for test/benchmark
     :param int iterations: count of iterations for all functions
+    :param Optional[str] name: Title for test
     :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :param Optional['TestArgs'] global_args: arguments for each function
     :param Optional['TestKwargs'] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
@@ -40,12 +42,10 @@ def bench_batch(
         personal_kwargs=personal_kwargs,
         pre_test=pre_test,
         post_test=post_test,
+        name=name,
     )
     return try_to_run(
-        g.run_tests(
-            iterations,
-            raise_exceptions
-        )
+        g.go_bench(iterations) if iterations > 1 else g.go()
     )
 
 
