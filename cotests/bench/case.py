@@ -23,19 +23,19 @@ def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
 
 
 class AbstractTestCase:
-    IS_ASYNC: bool
+    is_async: bool
     name: str
 
-    def run_test(self, *, level: int = 0): raise NotImplementedError
-    def run_bench(self, iterations: int, *, level: int = 0): raise NotImplementedError
-    # def run_single(self): ...
-
+    def run_test(self, *, level: int = 0):
+        raise NotImplementedError
+    def run_bench(self, iterations: int, *, level: int = 0):
+        raise NotImplementedError
     def run(self, iterations: int):
         raise NotImplementedError
 
 
 class TestCase(AbstractTestCase):
-    IS_ASYNC = False
+    is_async = False
     def __init__(self,
                  test,
                  *,
@@ -98,7 +98,7 @@ class FunctionTestCase(TestCase):
 
 
 class AsyncTestCase(TestCase):
-    IS_ASYNC = True
+    is_async = True
 
     async def _run(self, *args, **kwargs):
         await self._f(*args, **kwargs)

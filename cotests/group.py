@@ -2,7 +2,7 @@ import inspect
 from time import perf_counter
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
-from .bench import AbstractCoCase
+from .bench import AbstractCoCase, CoException
 from .bench.case import (
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase,
     FunctionTestCaseWithAsyncPrePost,
@@ -10,7 +10,6 @@ from .bench.case import (
 )
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs
-from .bench.typ import CoException
 from .bench.utils import format_sec_metrix, print_test_results, try_to_run, get_level_prefix
 
 if TYPE_CHECKING:
@@ -54,7 +53,7 @@ class CoTestGroup(AbstractTestCase):
             self.__add_test(test)
 
     @property
-    def IS_ASYNC(self):
+    def is_async(self):
         return self.__has_coroutines
 
     @property
@@ -93,7 +92,7 @@ class CoTestGroup(AbstractTestCase):
                 else:
                     tc = FunctionTestCase
             elif isinstance(test, CoTestGroup):
-                if test.IS_ASYNC:
+                if test.is_async:
                     self.__has_coroutines = True
                 self.__tests.append(test)
                 return
@@ -184,8 +183,7 @@ class CoTestGroup(AbstractTestCase):
         errors = []
         for test_ in self.__tests:
             try:
-                # print('TTTTTTTTTTTTTTTT', test_.IS_ASYNC, test_)
-                if test_.IS_ASYNC:
+                if test_.is_async:
                     await test_.run_test(level=level+1)
                 else:
                     test_.run_test(level=level+1)
@@ -252,7 +250,7 @@ class CoTestGroup(AbstractTestCase):
 
         for test_ in self.__tests:
             try:
-                if test_.IS_ASYNC:
+                if test_.is_async:
                     s = await test_.run_bench(iterations, level=level + 1)
                 else:
                     s = test_.run_bench(iterations, level=level + 1)

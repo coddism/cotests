@@ -3,13 +3,15 @@ import importlib.util
 import importlib.machinery
 import os
 
+from typing import List
+
 from cotests import CoTestGroup, test_groups, CoCase
 
 
 if __name__ == '__main__':
     dir_path = os.path.dirname(os.path.realpath(__file__))
     print(f'Search in {dir_path}..')
-    tests = []
+    tests: List[CoTestGroup] = []
 
     for sd in os.scandir(dir_path):
         if sd.is_dir():
@@ -33,18 +35,15 @@ if __name__ == '__main__':
                 tmp_groups = []
                 for k, v in module.__dict__.items():
                     if k.startswith('_'): continue
-                    print(' *', k, type(v), end=': ')
                     if isinstance(v, CoTestGroup):
-                        print('+')
                         tmp_groups.append(v)
-                    elif inspect.isfunction(v) and v.__module__ == module_name and v.__name__.startswith('test'):
-                        print('+')
+                    elif inspect.isfunction(v) and v.__module__ == module_name and v.__name__.startswith('test_'):
                         tmp_tests.append(v)
                     elif inspect.isclass(v) and issubclass(v, CoCase) and v.__module__ == module_name:
-                        print('+')
                         tmp_tests.append(v)
                     else:
-                        print('-')
+                        continue
+                    print(' *', k, type(v))
 
                 # tests.append(CoTestGroup(*tmp_groups, *tmp_tests, name=module_name))
                 if tmp_groups:
@@ -54,5 +53,5 @@ if __name__ == '__main__':
         else:
             print('o_O', sd)
 
-    print(tests)
+    # print(tests)
     test_groups(*tests)

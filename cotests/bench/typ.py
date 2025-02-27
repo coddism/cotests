@@ -12,6 +12,7 @@ RunResult = Union[None, Awaitable[None]]
 if TYPE_CHECKING:
     import sys
     from . import AbstractCoCase
+    from .case import AbstractTestCase
 
     if sys.version_info[:2] >= (3, 11):
         from typing import Unpack
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
         from typing_extensions import Unpack
 
     InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
-    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase]]  # todo add group
+    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase], AbstractTestCase]
 
 
 class CoException(Exception):
