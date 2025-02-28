@@ -2,11 +2,10 @@ import inspect
 from time import perf_counter
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
-from .bench import AbstractCoCase, CoException
+from .bench import AbstractCoCase, CoException, AbstractTestCase
 from .bench.case import (
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase,
     FunctionTestCaseWithAsyncPrePost,
-    AbstractTestCase,
 )
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs

@@ -12,7 +12,6 @@ RunResult = Union[None, Awaitable[None]]
 if TYPE_CHECKING:
     import sys
     from . import AbstractCoCase
-    from .case import AbstractTestCase
 
     if sys.version_info[:2] >= (3, 11):
         from typing import Unpack
@@ -20,9 +19,20 @@ if TYPE_CHECKING:
         from typing_extensions import Unpack
 
     InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
-    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase], AbstractTestCase]
+    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase], 'AbstractTestCase']
 
 
 class CoException(Exception):
     def __init__(self, errors: List):
         self.__errors = errors
+
+
+class AbstractTestCase:
+    is_async: bool
+    name: str
+
+    def run_test(self, *, level: int = 0):
+        raise NotImplementedError
+    def run_bench(self, iterations: int, *, level: int = 0):
+        raise NotImplementedError
+

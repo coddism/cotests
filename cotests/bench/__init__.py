@@ -1,2 +1,2 @@
 from .co_case import AbstractCoCase
-from .typ import CoException
+from .typ import CoException, AbstractTestCase
