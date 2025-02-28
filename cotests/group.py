@@ -51,6 +51,15 @@ class CoTestGroup(AbstractTestCase):
         for test in tests:
             self.__add_test(test)
 
+    def _clone(self, case: AbstractCoCase):
+        cg = CoTestGroup()
+        cg.__cta = self.__cta
+        cg.__tce = self.__tce
+        cg.name = case.name
+        for test in case.get_tests():
+            cg.__add_test(test)
+        return cg
+
     @property
     def is_async(self):
         return self.__has_coroutines
@@ -96,12 +105,10 @@ class CoTestGroup(AbstractTestCase):
                 self.__tests.append(test)
                 return
             elif isinstance(test, AbstractCoCase):
-                for test in test.get_tests():
-                    self.__add_test(test, *args, **kwargs)
+                self.__add_test(self._clone(test))
                 return
             elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
-                for test in test().get_tests():
-                    self.__add_test(test, *args, **kwargs)
+                self.__add_test(test(), *args, **kwargs)
                 return
             else:
                 raise ValueError(f'Unknown test: {test}')

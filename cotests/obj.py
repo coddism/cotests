@@ -20,7 +20,7 @@ class CoCase(AbstractCoCase):
                   post_test: Optional['PrePostTest'] = None,
                   ):
         bench_batch(
-            *self.get_tests(),
+            self,
             iterations=iterations,
             global_args=global_args,
             global_kwargs=global_kwargs,
@@ -29,4 +29,5 @@ class CoCase(AbstractCoCase):
             raise_exceptions=raise_exceptions,
             pre_test=pre_test,
             post_test=post_test,
+            name=self.name,
         )
