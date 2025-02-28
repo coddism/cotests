@@ -109,12 +109,3 @@ def try_to_run(t) -> Union[None, Awaitable[None]]:
             return t
     # else:
     #     print('No coroutines')
-
-def calc_multi_results(benches: List[float]) -> Tuple[float, float, float, float]:
-    s = sum(benches)
-    mx, mn, avg = (
-        max(benches),
-        min(benches),
-        s / len(benches),
-    )
-    return s, mx, mn, avg

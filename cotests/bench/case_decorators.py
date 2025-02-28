@@ -1,19 +1,17 @@
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 from .utils import format_sec_metrix, get_level_prefix
 
 if TYPE_CHECKING:
-    from .typ import AbstractTestCase
+    from .typ import AbstractTestCase, RESULT_TUPLE_MULTI
 
-RESULT_TUPLE_SINGLE = Tuple[float]
-RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
 
 
 def b_sec_s(ts: float) -> float:
     return ts
 
 
-def b_sec_m(ts: RESULT_TUPLE_MULTI) -> float:
+def b_sec_m(ts: 'RESULT_TUPLE_MULTI') -> float:
     return ts[0]
 
 

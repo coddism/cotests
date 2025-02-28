@@ -1,5 +1,9 @@
 from typing import TYPE_CHECKING, Callable, Tuple, Any, Mapping, Iterable, Union, Coroutine, List, Type, Awaitable
 
+
+RESULT_TUPLE_SINGLE = Tuple[float]
+RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
+
 TestFunction = Union[Callable, Coroutine]
 # TestArgs = Union[Tuple[Any,...], List[Any], Set[Any]]
 TestArgs = Iterable[Any]
@@ -35,4 +39,3 @@ class AbstractTestCase:
         raise NotImplementedError
     def run_bench(self, iterations: int, *, level: int = 0):
         raise NotImplementedError
-

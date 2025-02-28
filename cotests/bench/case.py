@@ -1,15 +1,16 @@
 from typing import TYPE_CHECKING, List, Optional
 
 from . import AbstractTestCase
-from .case_decorators import RESULT_TUPLE_MULTI, SyncDecoratorFactory, AsyncDecoratorFactory
+from .case_decorators import SyncDecoratorFactory, AsyncDecoratorFactory
 from .case_ext import TestCaseExt
 from .progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
     from .co_test_args import CoArgsList
+    from .typ import RESULT_TUPLE_MULTI
 
 
-def _calc_multi_results(benches: List[float]) -> RESULT_TUPLE_MULTI:
+def _calc_multi_results(benches: List[float]) -> 'RESULT_TUPLE_MULTI':
     s = sum(benches)
     mx, mn, avg = (
         max(benches),
@@ -48,7 +49,7 @@ class FunctionTestCase(TestCase):
         return self._bench_single()
 
     @SyncDecoratorFactory(True)
-    def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
+    def run_bench(self, iterations: int, *, level: int = 0) -> 'RESULT_TUPLE_MULTI':
         return _calc_multi_results([self._bench_single() for _ in ProgressBarPrinter(iterations)])
 
 
@@ -70,7 +71,7 @@ class AsyncTestCase(TestCase):
         return await self._bench_single()
 
     @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
+    async def run_bench(self, iterations: int, *, level: int = 0) -> 'RESULT_TUPLE_MULTI':
         return _calc_multi_results([await self._bench_single() for _ in ProgressBarPrinter(iterations)])
 
 
@@ -91,7 +92,7 @@ class CoroutineTestCase(AsyncTestCase):
         return self._f
 
     @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, *, level: int = 0) -> RESULT_TUPLE_MULTI:
+    async def run_bench(self, iterations: int, *, level: int = 0) -> 'RESULT_TUPLE_MULTI':
         if iterations > 1:
             raise NotImplementedError('cannot reuse coroutines')
         return await super().run_bench(self, iterations, level=level)
