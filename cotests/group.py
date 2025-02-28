@@ -30,6 +30,8 @@ class CoTestGroup(AbstractTestCase):
             pre_test: Optional['PrePostTest'] = None,
             post_test: Optional['PrePostTest'] = None,
             name: Optional[str] = '',
+            cotest_args: Optional['CoTestArgs'] = None,
+            cotest_ext: Optional['TestCaseExt'] = None,
     ):
         # if len(tests) == 0:
         #     raise ValueError('Empty tests list')
@@ -37,28 +39,38 @@ class CoTestGroup(AbstractTestCase):
         self.__has_coroutines = False
         self.name = name or self.NAME
 
-        self.__cta = CoTestArgs(
-            personal_args,
-            personal_kwargs,
-            global_args,
-            global_kwargs,
+        if cotest_args:
+            if any((global_args, global_kwargs, personal_args, personal_kwargs)):
+                raise Exception('Args conflict')
+            self.__cta = cotest_args
+        else:
+            self.__cta = CoTestArgs(
+                personal_args,
+                personal_kwargs,
+                global_args,
+                global_kwargs,
         )
-        self.__tce = TestCaseExt(
-            pre_test=pre_test,
-            post_test=post_test,
-        )
+
+        if cotest_ext:
+            if any((pre_test, post_test)):
+                raise Exception('Test Case extension conflict')
+            self.__tce = cotest_ext
+        else:
+            self.__tce = TestCaseExt(
+                pre_test=pre_test,
+                post_test=post_test,
+            )
 
         for test in tests:
             self.__add_test(test)
 
-    def _clone(self, case: AbstractCoCase):
-        cg = CoTestGroup()
-        cg.__cta = self.__cta
-        cg.__tce = self.__tce
-        cg.name = case.name
-        for test in case.get_tests():
-            cg.__add_test(test)
-        return cg
+    def _clone(self, case: AbstractCoCase) -> 'CoTestGroup':
+        return CoTestGroup(
+            *case.get_tests(),
+            cotest_args=self.__cta,
+            cotest_ext=self.__tce,
+            name=case.name,
+        )
 
     @property
     def is_async(self):
