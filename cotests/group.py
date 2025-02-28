@@ -120,7 +120,8 @@ class CoTestGroup(AbstractTestCase):
                 self.__add_test(self._clone(test))
                 return
             elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
-                self.__add_test(test(), *args, **kwargs)
+                # self.__add_test(test(), *args, **kwargs)
+                self.__add_test(self._clone(test()))
                 return
             else:
                 raise ValueError(f'Unknown test: {test}')

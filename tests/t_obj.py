@@ -40,5 +40,6 @@ if __name__ == '__main__':
     bench_batch(
         TObj, TObjA(),
         iterations=5,
-        global_args=(.1,),
+        global_args=(.03,),
+        name='t_obj',
     )
