@@ -15,21 +15,23 @@ if TYPE_CHECKING:
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
-def _decorator_go_sync(func):
-    def wrapper(*args, **kwargs):
+def _decorator(cls: 'CoTestGroup', func):
+    def wrapper_sync(*args, **kwargs):
         try:
             func(*args, **kwargs)
         except CoException as ce:
-            ce.print_errors()
-    return wrapper
+            ce.print_errors(cls.name)
 
-def _decorator_go_async(func):
-    async def wrapper(*args, **kwargs):
+    async def wrapper_async(*args, **kwargs):
         try:
             await func(*args, **kwargs)
         except CoException as ce:
-            ce.print_errors()
-    return wrapper
+            ce.print_errors(cls.name)
+
+    if cls.is_async:
+        return wrapper_async
+    else:
+        return wrapper_sync
 
 
 class CoTestGroup(AbstractTestCase):
@@ -145,18 +147,11 @@ class CoTestGroup(AbstractTestCase):
             self.__has_coroutines = True
         self.__tests.append(case)
 
-    @property
-    def __go_decorator(self):
-        if self.is_async:
-            return _decorator_go_async
-        else:
-            return _decorator_go_sync
-
     def go(self):
-        return self.__go_decorator(self.run_test)()
+        return _decorator(self, self.run_test)()
 
     def go_bench(self, iterations: int):
-        return self.__go_decorator(self.run_bench)(iterations)
+        return _decorator(self, self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
         if self.is_async:
@@ -180,7 +175,7 @@ class CoTestGroup(AbstractTestCase):
         sft = perf_counter() - s_start
         print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
         if errors:
-            raise CoException(errors)
+            raise CoException(errors, self.name)
 
     async def run_test_async(self, *, level: int = 0):
         pref_ = get_level_prefix(level)
@@ -204,7 +199,7 @@ class CoTestGroup(AbstractTestCase):
         sft = perf_counter() - s_start
         print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
         if errors:
-            raise CoException(errors)
+            raise CoException(errors, self.name)
 
     def run_bench(self, iterations: int, *, level: int = 0):
         # print(self.__has_coroutines)
@@ -244,7 +239,7 @@ class CoTestGroup(AbstractTestCase):
 
         print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
         if errors:
-            raise CoException(errors)
+            raise CoException(errors, self.name)
 
     async def run_bench_async(self, iterations: int, *, level: int = 0):
         pref_ = get_level_prefix(level)
@@ -283,7 +278,7 @@ class CoTestGroup(AbstractTestCase):
 
         print(f'{pref_}⌎-- Full time: {format_sec_metrix(sft)}')
         if errors:
-            raise CoException(errors)
+            raise CoException(errors, self.name)
 
 
 __greeting = """

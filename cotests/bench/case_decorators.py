@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from .utils import format_sec_metrix, get_level_prefix
+from .typ import CoException
 
 if TYPE_CHECKING:
     from .typ import AbstractTestCase, RESULT_TUPLE_MULTI
@@ -44,7 +45,7 @@ class SyncDecoratorFactory(__DecoratorFactory):
                 ts = func(cls, *args, **kwargs)
             except Exception as e_:
                 print(f'error: {e_}')
-                raise
+                raise CoException([e_], cls.name)
             else:
                 print(f'ok - {format_sec_metrix(self.bs(ts))}')
                 return ts
@@ -61,7 +62,7 @@ class AsyncDecoratorFactory(__DecoratorFactory):
                 ts = await func(cls, *args, **kwargs)
             except Exception as e_:
                 print(f'error: {e_}')
-                raise
+                raise CoException([e_], cls.name)
             else:
                 print(f'ok - {format_sec_metrix(self.bs(ts))}')
                 return ts

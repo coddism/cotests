@@ -27,20 +27,25 @@ if TYPE_CHECKING:
 
 
 class CoException(Exception):
-    def __init__(self, errors: List[Exception]):
+    def __init__(self,
+                 errors: List[Exception],
+                 where: str,
+                 ):
         self.__errors = errors
+        self.__where = where
 
-    def print_errors(self):
+    def print_errors(self, parent: str):
         if self.__errors:
             print('Has errors:')
-            self._r_print()
+            self._r_print((parent,))
 
-    def _r_print(self):
+    def _r_print(self,
+                 parents: Tuple[str, ...]):
         for e in self.__errors:
             if isinstance(e, CoException):
-                e._r_print()
+                e._r_print((*parents, e.__where))
             else:
-                print('*', type(e).__name__, ':', e)
+                print('*', '.'.join(parents), '\n ', type(e).__name__, ':', e)
 
 
 class AbstractTestCase:
