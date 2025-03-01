@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Iterable
+from typing import Callable, List
 
 
 def _case_predicate(obj):
@@ -8,10 +8,8 @@ def _case_predicate(obj):
 
 
 class AbstractCoCase:
-    def get_tests(self) -> Iterable[Callable]:
-        return (
-            x[1] for x in inspect.getmembers(self, _case_predicate)
-        )
+    def get_tests(self) -> List[Callable]:
+        return [x[1] for x in inspect.getmembers(self, _case_predicate)]
 
     @property
     def name(self) -> str:

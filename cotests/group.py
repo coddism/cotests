@@ -101,36 +101,32 @@ class CoTestGroup(AbstractTestCase):
         else:
             if inspect.iscoroutine(test):
                 tc = CoroutineTestCase
-                self.__has_coroutines = True
             elif inspect.iscoroutinefunction(test):
                 tc = CoroutineFunctionTestCase
-                self.__has_coroutines = True
             elif inspect.isfunction(test) or inspect.ismethod(test):
                 if self.__tce.is_async:
                     tc = FunctionTestCaseWithAsyncPrePost
-                    self.__has_coroutines = True
                 else:
                     tc = FunctionTestCase
             elif isinstance(test, CoTestGroup):
-                if test.is_async:
-                    self.__has_coroutines = True
-                self.__tests.append(test)
-                return
+                return self.__add_test_case(test)
             elif isinstance(test, AbstractCoCase):
-                self.__add_test(self._clone(test))
-                return
+                return self.__add_test_case(self._clone(test))
             elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
-                # self.__add_test(test(), *args, **kwargs)
-                self.__add_test(self._clone(test()))
-                return
+                return self.__add_test_case(self._clone(test()))
             else:
                 raise ValueError(f'Unknown test: {test}')
 
-            self.__tests.append(tc(
+            return self.__add_test_case(tc(
                 test,
                 params=self.__cta.get(args, kwargs),
                 ext=self.__tce,
             ))
+
+    def __add_test_case(self, case: AbstractTestCase):
+        if case.is_async:
+            self.__has_coroutines = True
+        self.__tests.append(case)
 
     async def __go_async(self):
         try:
