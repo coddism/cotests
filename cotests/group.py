@@ -15,6 +15,25 @@ if TYPE_CHECKING:
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
+def decorator_go_sync(func):
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except CoException as ce:
+            print('Has errors')
+            print(ce)
+    return wrapper
+
+def decorator_go_async(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            await func(*args, **kwargs)
+        except CoException as ce:
+            print('Has errors')
+            print(ce)
+    return wrapper
+
+
 class CoTestGroup(AbstractTestCase):
     NAME = ''
 
@@ -128,42 +147,21 @@ class CoTestGroup(AbstractTestCase):
             self.__has_coroutines = True
         self.__tests.append(case)
 
-    async def __go_async(self):
-        try:
-            await self.run_test()
-        except CoException as ce:
-            print('Has errors')
-            print(ce)
-
-    async def __go_bench_async(self, *args):
-        try:
-            await self.run_bench(*args)
-        except CoException as ce:
-            print('Has errors')
-            print(ce)
+    @property
+    def __go_decorator(self):
+        if self.is_async:
+            return decorator_go_async
+        else:
+            return decorator_go_sync
 
     def go(self):
-        if self.__has_coroutines:
-            return self.__go_async()
-
-        try:
-            self.run_test()
-        except CoException as ce:
-            print('Has errors')
-            print(ce)
+        return self.__go_decorator(self.run_test)()
 
     def go_bench(self, iterations: int):
-        if self.__has_coroutines:
-            return self.__go_bench_async(iterations)
-
-        try:
-            self.run_bench(iterations)
-        except CoException as ce:
-            print('Has errors')
-            print(ce)
+        return self.__go_decorator(self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
-        if self.__has_coroutines:
+        if self.is_async:
             return self.run_test_async(level=level)
 
         pref_ = get_level_prefix(level)

@@ -15,6 +15,8 @@ class TObj(CoCase):
     @classmethod
     def test_2(cls, t: float = .3): time.sleep(t)
 
+    def test_3(self):...
+
 class TObjA(CoCase):
     async def test_a0(self, t: float = .1): await asyncio.sleep(t)
 
@@ -26,8 +28,9 @@ class TObjA(CoCase):
 
 
 if __name__ == '__main__':
+    iterations = 5
     TObj().run_tests(
-        iterations=5,
+        # iterations=iterations,
         global_args=(.05,),
     )
     # or
@@ -37,9 +40,12 @@ if __name__ == '__main__':
     #     global_args=(.1,),
     # )
     # or
+    def tt0(t: float = .2): time.sleep(t)
+    def tt1(t: float = .2): time.sleep(t)
+
     bench_batch(
-        TObj, TObjA(),
-        iterations=5,
+        TObj, tt0, TObjA(), tt1,
+        iterations=iterations,
         global_args=(.03,),
         name='t_obj',
     )
