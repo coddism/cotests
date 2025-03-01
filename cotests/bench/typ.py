@@ -34,10 +34,11 @@ class CoException(Exception):
         self.__errors = errors
         self.__where = where
 
-    def print_errors(self, parent: str):
+    def print_errors(self):
         if self.__errors:
-            print('Has errors:')
-            self._r_print((parent,))
+            print('! Errors:')
+            self._r_print(())
+            print('⌎' + '-' * 28)
 
     def _r_print(self,
                  parents: Tuple[str, ...]):
@@ -45,7 +46,7 @@ class CoException(Exception):
             if isinstance(e, CoException):
                 e._r_print((*parents, e.__where))
             else:
-                print('*', '.'.join(parents), '\n ', type(e).__name__, ':', e)
+                print('! *', ' / '.join(parents), '\n!  ', type(e).__name__, ':', e)
 
 
 class AbstractTestCase:

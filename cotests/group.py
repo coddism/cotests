@@ -20,13 +20,13 @@ def _decorator(cls: 'CoTestGroup', func):
         try:
             func(*args, **kwargs)
         except CoException as ce:
-            ce.print_errors(cls.name)
+            ce.print_errors()
 
     async def wrapper_async(*args, **kwargs):
         try:
             await func(*args, **kwargs)
         except CoException as ce:
-            ce.print_errors(cls.name)
+            ce.print_errors()
 
     if cls.is_async:
         return wrapper_async
