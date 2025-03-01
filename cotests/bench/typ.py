@@ -27,8 +27,20 @@ if TYPE_CHECKING:
 
 
 class CoException(Exception):
-    def __init__(self, errors: List):
+    def __init__(self, errors: List[Exception]):
         self.__errors = errors
+
+    def print_errors(self):
+        if self.__errors:
+            print('Has errors:')
+            self._r_print()
+
+    def _r_print(self):
+        for e in self.__errors:
+            if isinstance(e, CoException):
+                e._r_print()
+            else:
+                print('*', type(e).__name__, ':', e)
 
 
 class AbstractTestCase:
