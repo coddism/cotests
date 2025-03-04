@@ -5,7 +5,7 @@ import os
 
 from typing import List
 
-from cotests import CoTestGroup, test_groups, CoCase
+from cotests import CoTestGroup, test_groups, CoTestCase
 
 
 if __name__ == '__main__':
@@ -39,7 +39,7 @@ if __name__ == '__main__':
                         tmp_groups.append(v)
                     elif inspect.isfunction(v) and v.__module__ == module_name and v.__name__.startswith('test_'):
                         tmp_tests.append(v)
-                    elif inspect.isclass(v) and issubclass(v, CoCase) and v.__module__ == module_name:
+                    elif inspect.isclass(v) and issubclass(v, CoTestCase) and v.__module__ == module_name:
                         tmp_tests.append(v)
                     else:
                         continue

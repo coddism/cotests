@@ -166,10 +166,10 @@ bench_batch(
 import asyncio
 import time
 
-from cotests import CoCase, bench_batch
+from cotests import CoTestCase, bench_batch
 
 
-class TObj(CoCase):
+class TObj(CoTestCase):
     # test functions should start with "test_"
 
     def test_0(self, t: float = .1): time.sleep(t)

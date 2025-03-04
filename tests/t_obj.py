@@ -1,10 +1,10 @@
 import asyncio
 import time
 
-from cotests import CoCase, bench_batch
+from cotests import CoTestCase, bench_batch
 
 
-class TObj(CoCase):
+class TObj(CoTestCase):
     # test functions should start with "test_"
 
     def test_0(self, t: float = .1): time.sleep(t)
@@ -17,7 +17,7 @@ class TObj(CoCase):
 
     def test_3(self): ...
 
-class TObjA(CoCase):
+class TObjA(CoTestCase):
     async def test_a0(self, t: float = .1): await asyncio.sleep(t)
 
     @classmethod
@@ -26,21 +26,26 @@ class TObjA(CoCase):
     @staticmethod
     async def test_a2(t: float = .15): await asyncio.sleep(t)
 
-    async def test_a3(self, t: float): await asyncio.sleep(t)
+    async def test_a3(self): ...
+    async def test_a4(self, t: float): await asyncio.sleep(t)
 
 
 if __name__ == '__main__':
     iterations = 5
     TObj().run_tests(
-        # iterations=iterations,
+        iterations=iterations,
+        global_args=(.05,),
+    )
+    TObjA().run_tests(
+        iterations=iterations,
         global_args=(.05,),
     )
     # or
-    # bench_batch(
-    #     TObj(),
-    #     iterations=5,
-    #     global_args=(.1,),
-    # )
+    bench_batch(
+        TObj(),
+        iterations=5,
+        global_args=(.1,),
+    )
     # or
     def tt0(t: float = .2): time.sleep(t)
     def tt1(t: float = .2): time.sleep(t)

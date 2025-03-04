@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from .bench.typ import TestArgs, TestKwargs, PrePostTest
 
 
-class CoCase(AbstractCoCase):
+class CoTestCase(AbstractCoCase):
 
     def run_tests(self,
                   iterations: int = 1,

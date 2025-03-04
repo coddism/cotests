@@ -7,7 +7,7 @@ from cotests import bench_batch
 
 
 """
-$ python -m tests.t_json /path/to/your/file.json
+$ python -m tests.json /path/to/your/file.json
 """
 
 
