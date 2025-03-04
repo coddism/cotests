@@ -44,7 +44,6 @@ if __name__ == '__main__':
         iterations=10,
         global_args={args.path_file},
         # global_kwargs={'file_path': args.path_file},
-        raise_exceptions=True,
     )
 
 """

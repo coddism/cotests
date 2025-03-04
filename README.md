@@ -94,12 +94,6 @@ bench_batch(test_0, test_1, test_2, test_3)
 tests_list = [value for key, value in globals().items()
               if key.startswith('test_') and callable(value) and value.__module__ == __name__]
 
-# to stop tests if raise exceptions & print traceback
-bench_batch(
-    *tests_list,
-    raise_exceptions=True
-)
-
 # benchmarks: run all 100 times
 bench_batch(
     *tests_list,
@@ -139,7 +133,6 @@ bench_batch(
     test_a0(),  # run like coroutine
     test_a1(1, 2, a=1),  # run like coroutine with arguments
     # optional
-    raise_exceptions=True,  # raise exceptions, print traceback; default False
     # iterations=1,  # count of iterations you want; default 1 = just test; don't work with coroutines
 )
 # ... with global args
@@ -220,7 +213,7 @@ bench_batch(test_0, test_1,)
 # need to stop?
 bench_batch(
     test_0, test_1,
-    raise_exceptions=True,
+    # raise_exceptions=True,
 )
 ```
 

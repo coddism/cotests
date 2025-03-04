@@ -15,7 +15,6 @@ class CoTestCase(AbstractCoCase):
                   global_kwargs: Optional['TestKwargs'] = None,
                   personal_args: Optional[Iterable['TestArgs']] = None,
                   personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-                  raise_exceptions: bool = False,
                   pre_test: Optional['PrePostTest'] = None,
                   post_test: Optional['PrePostTest'] = None,
                   ):
@@ -26,7 +25,6 @@ class CoTestCase(AbstractCoCase):
             global_kwargs=global_kwargs,
             personal_args=personal_args,
             personal_kwargs=personal_kwargs,
-            raise_exceptions=raise_exceptions,
             pre_test=pre_test,
             post_test=post_test,
             name=self.name,

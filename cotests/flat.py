@@ -11,7 +11,7 @@ def bench_batch(
         *funcs: 'InTest',
         iterations: int = 1,
         name: Optional[str] = '',
-        raise_exceptions: bool = False,
+        # raise_exceptions: bool = False,
         global_args: Optional['TestArgs'] = None,
         global_kwargs: Optional['TestKwargs'] = None,
         personal_args: Optional[Sequence['TestArgs']] = None,
@@ -23,7 +23,7 @@ def bench_batch(
     :param funcs: all functions for test/benchmark
     :param int iterations: count of iterations for all functions
     :param Optional[str] name: Title for test
-    :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
+    # :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :param Optional['TestArgs'] global_args: arguments for each function
     :param Optional['TestKwargs'] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
     :param Optional[Iterable['TestArgs']] personal_args: list of arguments for each function
