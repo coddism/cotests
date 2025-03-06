@@ -11,19 +11,78 @@
 ## DOX
 
 ### bench_batch()
+
+Simple run all types of tests.
     
     # args
-    :param funcs: all functions for test or benchmark
+    :param funcs: all functions/cases/groups for test or benchmark
     # kwargs
-    :param int iterations: count of iterations for all functions
+    :param int iterations: count of iterations for all functions (benchmark mode)
+    :param Optional[str] name: Title for test
     :param Optional[Iterable] global_args: arguments for each function
     :param Optional[Mapping] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
     :param Optional[Iterable[Iterable]] personal_args: list of arguments for each function
     :param Optional[Iterable[Mapping]] personal_kwargs: list of keyword arguments for each function
-    :param bool raise_exceptions: set True if you want to stop `bench_batch()` by exception
     :param Optional[Callable] pre_test: run before each function; is not added to benchmark time
     :param Optional[Callable] post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
+
+```python
+from cotests import bench_batch
+
+def test_0(): ...
+def test_1(): ...
+
+bench_batch(test_0, test_1)
+```
+
+### CoTestCase
+
+Class for tests. By default, run all methods (including `@classmethod` or `@staticmethod`) starts with `test_`.
+Has method `run_tests` - is analog of `bench_batch`.
+
+```python
+from cotests import CoTestCase
+
+class Case0(CoTestCase):
+    def test_0(self): ...
+    def test_1(self): ...
+
+Case0().run_tests()
+```
+
+### CoTestGroup
+
+Main instance.
+Class for group of tests. Can use all type of tests, like `bench_batch()`.
+Has `go()` for test and `go_bench(int)` for benchmark.
+
+```python
+from cotests import CoTestGroup
+
+g0 = CoTestGroup(test_0, test_1, Case0)
+```
+
+### test_groups()
+
+Function for run `CoTestGroup`s. 
+
+### test_module
+
+Function for search and run all tests in module by directory path.
+Looking for all files `t_.*.py` and inside:
+* `CoTestGroup` objects. If found, other types is ignoring.
+* functions starts with `test_` 
+* `CoTestCase` classes
+
+```python
+import os
+from cotests import test_module
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+test_module(dir_path)
+```
+
 
 ## Examples
 

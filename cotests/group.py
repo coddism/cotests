@@ -111,6 +111,7 @@ class CoTestGroup(AbstractTestCase):
     def __init__(
             self,
             *tests: 'InTest',
+            name: Optional[str] = '',
             # iterations: int = 1,
             # raise_exceptions: bool = False,
             global_args: Optional['TestArgs'] = None,
@@ -119,7 +120,6 @@ class CoTestGroup(AbstractTestCase):
             personal_kwargs: Optional[Iterable['TestKwargs']] = None,
             pre_test: Optional['PrePostTest'] = None,
             post_test: Optional['PrePostTest'] = None,
-            name: Optional[str] = '',
             cotest_args: Optional['CoTestArgs'] = None,
             cotest_ext: Optional['TestCaseExt'] = None,
     ):

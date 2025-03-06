@@ -1,7 +1,11 @@
 import asyncio
 import inspect
-from typing import Tuple, Optional, List, Union, Awaitable
 from math import log10
+from typing import TYPE_CHECKING, Tuple, Optional, List
+
+if TYPE_CHECKING:
+    from .typ import RunResult
+
 
 __METRIX = (
     (60, 'min'),
@@ -96,7 +100,7 @@ def print_test_results(
     return res
 
 
-def try_to_run(t) -> Union[None, Awaitable[None]]:
+def try_to_run(t) -> 'RunResult':
     if inspect.iscoroutine(t):
         # try to run
         try:
