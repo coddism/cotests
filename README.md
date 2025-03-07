@@ -45,7 +45,7 @@ Function for run `CoTestGroup`s.
 ### test_module
 
 Function for search and run all tests in module by directory path.
-Looking for all files `t_.*.py` and inside:
+Looking for all files `t_(.*).py` and inside:
 * `CoTestGroup` objects. If found, other types is ignoring.
 * functions starts with `test_` 
 * `CoTestCase` classes
@@ -118,7 +118,7 @@ bench_batch(
     test_0, test_1, test_2,
 )
 
-# more benchy - run all 100 times
+# more benchy - run all 1000 times
 bench_batch(
     test_0, test_1, test_2,
     iterations=1000,
