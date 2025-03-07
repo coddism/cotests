@@ -278,7 +278,7 @@ __greeting = """
 +---------------------+
 """
 
-def test_groups(*groups: CoTestGroup) -> 'RunResult':
+def test_groups(*groups: CoTestGroup, name='__main__') -> 'RunResult':
     print(__greeting)
-    g = CoTestGroup(*groups, name='__main__')
+    g = CoTestGroup(*groups, name=name)
     return try_to_run(g.go())

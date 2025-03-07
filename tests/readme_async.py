@@ -1,27 +1,12 @@
 import asyncio
 import time
-from cotests import bench_batch, CoTestGroup
+from cotests import bench_batch
 
 
 async def test_0(sleep_time: float = .02):
     await asyncio.sleep(sleep_time)
 def test_1(sleep_time: float = .03):
     time.sleep(sleep_time)
-def test_2(*_):
-    raise Exception('test2')
-
-
-ga = CoTestGroup(
-        test_0,
-        (test_0, (.15,)),  # set custom args
-        name='ASYNC',
-    )
-gs = CoTestGroup(
-    test_1,
-    (test_1, (.12,)),
-    test_2,
-    name='SYNC'
-)
 
 
 if __name__ == '__main__':
@@ -32,13 +17,6 @@ if __name__ == '__main__':
     fun_sync = (
         test_1,
         (test_1, (.12,)),
-    )
-
-    bench_batch(
-        ga,
-        gs,
-        CoTestGroup(name='Empty'),
-        iterations=4
     )
 
     bench_batch(*fun_sync, name='ONLY SYNC')

@@ -4,7 +4,7 @@ from .group import CoTestGroup
 from .bench import try_to_run
 
 if TYPE_CHECKING:
-    from .bench.typ import PrePostTest,  InTest, TestArgs, TestKwargs, RunResult
+    from .bench.typ import PrePostTest,  InTest, TestArgs, TestKwargs
 
 
 def bench_batch(
@@ -17,7 +17,7 @@ def bench_batch(
         personal_kwargs: Optional[Sequence['TestKwargs']] = None,
         pre_test: Optional['PrePostTest'] = None,
         post_test: Optional['PrePostTest'] = None,
-) -> 'RunResult':
+):
     """
     :param funcs: all functions/cases/groups for test
     :param int iterations: count of iterations for all tests (benchmark mode)
