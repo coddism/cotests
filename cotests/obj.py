@@ -18,7 +18,7 @@ class CoTestCase(AbstractCoCase):
                   pre_test: Optional['PrePostTest'] = None,
                   post_test: Optional['PrePostTest'] = None,
                   ):
-        bench_batch(
+        return bench_batch(
             *self.get_tests(),
             iterations=iterations,
             global_args=global_args,

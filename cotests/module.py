@@ -15,10 +15,6 @@ def test_module(dir_path: str):
             ...
         elif sd.is_file():
             if sd.name.startswith('t_') and sd.name.endswith('.py'):
-                # if sd.name not in (
-                #         # 't_obj.py',
-                #         't_async.py'
-                # ): continue
                 module_name = sd.name
                 file_path = sd.path
                 print('*' * 10, module_name)

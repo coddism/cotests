@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Optional, Iterable, List, Tuple
 
 from .bench import AbstractCoCase, CoException, AbstractTestCase
 from .bench.case import (
-    CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase,
-    FunctionTestCaseWithAsyncPrePost,
+    CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
 )
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs
@@ -112,8 +111,6 @@ class CoTestGroup(AbstractTestCase):
             self,
             *tests: 'InTest',
             name: Optional[str] = '',
-            # iterations: int = 1,
-            # raise_exceptions: bool = False,
             global_args: Optional['TestArgs'] = None,
             global_kwargs: Optional['TestKwargs'] = None,
             personal_args: Optional[Iterable['TestArgs']] = None,
