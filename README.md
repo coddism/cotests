@@ -5,8 +5,10 @@
 ## Features
 
 * Python3.7+
-* Can run sync functions, coroutines and coroutinefunctions
+* Can run sync functions, coroutines, coroutinefunctions, classes
 * Convenient conversion between min, sec, ms, µs, etc.
+* Comparison table in benchmarks
+* Whole module test
 
 ## DOX
 
@@ -29,14 +31,13 @@ Simple run all types of tests.
 
 ### CoTestCase
 
-Class for tests. By default, run all methods (including `@classmethod` or `@staticmethod`) starts with `test_`.
-Has method `run_tests` - is analog of `bench_batch`.
+A class for tests. By default, it runs all methods (including `@classmethod` or `@staticmethod`) starting with `test_`.
+It has method `run_tests` - is analog of `bench_batch`.
 
 ### CoTestGroup
 
-Main instance.
-Class for group of tests. Can use all type of tests, like `bench_batch()`.
-Has `go()` for test and `go_bench(int)` for benchmark.
+The main entity - a class for group of tests. It can use all types of tests, as `bench_batch()`.
+It has `go()` for test and `go_bench(int)` for benchmark.
 
 ### test_groups()
 
@@ -44,10 +45,10 @@ Function for run `CoTestGroup`s.
 
 ### test_module
 
-Function for search and run all tests in module by directory path.
-Looking for all files `t_(.*).py` and inside:
-* `CoTestGroup` objects. If found, other types is ignoring.
-* functions starts with `test_` 
+Function for searching and running all tests in the module by directory path.
+Search for all files `t_(.*).py` and inside:
+* `CoTestGroup` objects. If found, other types are ignoring.
+* functions starting with `test_` 
 * `CoTestCase` classes
 
 ```python
@@ -419,7 +420,7 @@ def ra():
 
 tests = (test_0, test_1, atest_0, atest_1)
 
-# groups also for use in test_module()
+# groups to use in test_module()
 g0 = CoTestGroup(*tests, pre_test=rb, post_test=ra, name='SYNC')
 g1 = CoTestGroup(*tests, pre_test=rba, post_test=ra, name='ASYNC')
 
