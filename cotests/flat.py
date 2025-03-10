@@ -7,6 +7,29 @@ if TYPE_CHECKING:
     from .bench.typ import PrePostTest,  InTest, TestArgs, TestKwargs
 
 
+def test_batch(
+        *funcs: 'InTest',
+        name: Optional[str] = '',
+        global_args: Optional['TestArgs'] = None,
+        global_kwargs: Optional['TestKwargs'] = None,
+        personal_args: Optional[Sequence['TestArgs']] = None,
+        personal_kwargs: Optional[Sequence['TestKwargs']] = None,
+        pre_test: Optional['PrePostTest'] = None,
+        post_test: Optional['PrePostTest'] = None,
+):
+
+    g = CoTestGroup(
+        *funcs,
+        global_args=global_args,
+        global_kwargs=global_kwargs,
+        personal_args=personal_args,
+        personal_kwargs=personal_kwargs,
+        pre_test=pre_test,
+        post_test=post_test,
+        name=name,
+    )
+    return try_to_run(g.go())
+
 def bench_batch(
         *funcs: 'InTest',
         iterations: int = 1,
@@ -42,9 +65,7 @@ def bench_batch(
         post_test=post_test,
         name=name,
     )
-    return try_to_run(
-        g.go_bench(iterations) if iterations > 1 else g.go()
-    )
+    return try_to_run(g.go_bench(iterations))
 
 
 __all__ = (bench_batch,)
