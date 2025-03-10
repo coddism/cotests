@@ -90,20 +90,26 @@ class _BenchCTX(_TestCTX):
         super().__init__(*args, **kwargs)
         self.__exp = []
         self.__iterations = iterations
-        self.__headers = ('time',) if iterations == 1 else ('full', 'max', 'min', 'avg')
+        if iterations == 1:
+            self.__headers = ('time',)
+            self.__calc = lambda b: b
+        else:
+            self.__headers = ('full', 'max', 'min', 'avg')
+            self.__calc = self.__calc_multi
+
+    @staticmethod
+    def __calc_multi(benches: List[float]) -> Iterable[float]:
+        s = sum(benches)
+        mx, mn, avg = (
+            max(benches),
+            min(benches),
+            s / len(benches),
+        )
+        return s, mx, mn, avg
 
     def add_exp(self, test_name: str, benches: List[float]):
         assert len(benches) == self.__iterations
-        if self.__iterations == 1:
-            self.__exp.append((test_name, benches[0]))
-        else:
-            s = sum(benches)
-            mx, mn, avg = (
-                max(benches),
-                min(benches),
-                s / len(benches),
-            )
-            self.__exp.append((test_name, s, mx, mn, avg))
+        self.__exp.append((test_name, *self.__calc(benches)))
 
     def _final_print(self):
         pref_1 = get_level_prefix(self._level + 1)
