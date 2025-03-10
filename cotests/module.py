@@ -48,4 +48,9 @@ def test_module(dir_path: str):
         else:
             print('o_O', sd)
 
+    print("""
+    +---------------------+
+    |    Start CoTests    |
+    +---------------------+
+    """)
     return test_groups(*tests)

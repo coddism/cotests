@@ -1,5 +1,4 @@
 import inspect
-from contextlib import contextmanager
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
 from .bench import AbstractCoCase, CoException, AbstractTestCase
@@ -8,20 +7,30 @@ from .bench.case import (
 )
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs
-from .bench.utils import try_to_run
 from .bench.group_ctx import AbstractTestGroup, TestCTX, BenchCTX
+from .bench.utils import try_to_run
 
 if TYPE_CHECKING:
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
-@contextmanager
-def _go_ctx():
-    try:
-        yield
-    except CoException as ce:
-        ce.print_errors()
+def _decorator_go(cls: 'CoTestGroup', func):
+    def wrapper_sync(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except CoException as ce:
+            ce.print_errors()
 
+    async def wrapper_async(*args, **kwargs):
+        try:
+            await func(*args, **kwargs)
+        except CoException as ce:
+            ce.print_errors()
+
+    if cls.is_async:
+        return wrapper_async
+    else:
+        return wrapper_sync
 
 
 class CoTestGroup(AbstractTestGroup):
@@ -140,12 +149,10 @@ class CoTestGroup(AbstractTestGroup):
         self.__tests.append(case)
 
     def go(self):
-        with _go_ctx():
-            return self.run_test()
+        return _decorator_go(self, self.run_test)()
 
     def go_bench(self, iterations: int):
-        with _go_ctx():
-            return self.run_bench(iterations)
+        return _decorator_go(self, self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
         if self.is_async:
@@ -191,13 +198,6 @@ class CoTestGroup(AbstractTestGroup):
                         m.add_exp(test_.name, s)
 
 
-__greeting = """
-+---------------------+
-|    Start CoTests    |
-+---------------------+
-"""
-
 def test_groups(*groups: CoTestGroup, name='__main__') -> 'RunResult':
-    print(__greeting)
     g = CoTestGroup(*groups, name=name)
     return try_to_run(g.go())
