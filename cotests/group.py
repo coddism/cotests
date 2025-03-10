@@ -1,6 +1,5 @@
 import inspect
 from contextlib import contextmanager
-from time import perf_counter
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
 from .bench import AbstractCoCase, CoException, AbstractTestCase
@@ -9,7 +8,8 @@ from .bench.case import (
 )
 from .bench.case_ext import TestCaseExt
 from .bench.co_test_args import CoTestArgs
-from .bench.utils import format_sec_metrix, print_test_results, try_to_run, get_level_prefix
+from .bench.utils import try_to_run
+from .bench.group_ctx import AbstractTestGroup, TestCTX, BenchCTX
 
 if TYPE_CHECKING:
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
@@ -23,94 +23,8 @@ def _go_ctx():
         ce.print_errors()
 
 
-class _TestCTX:
-    _GREETINGS: str = 'CoTest'
 
-    def __init__(self, cls: 'CoTestGroup', level: int):
-        self._group = cls
-        self._level = level
-        self.__pref = get_level_prefix(level)
-        self.__start: float = .0
-        self.__finish: float = .0
-        self.__errors = []
-
-    def add_error(self, e: Exception):
-        self.__errors.append(e)
-
-    def __enter__(self):
-        self.__pre()
-        self.__start = perf_counter()
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.__finish = perf_counter() - self.__start
-        self._final_print()
-
-        if self.__errors:
-            raise CoException(self.__errors, self._group.name)
-
-        if exc_type:
-            print(exc_type, exc_value, exc_traceback)
-
-    @contextmanager
-    def ctx(self):
-        try:
-            yield
-        except Exception as e_:
-            self.add_error(e_)
-
-    def __pre(self):
-        print(self.__pref)
-        print(f'{self.__pref}⌌', '-' * 14, f' Start {self._GREETINGS} ', self._group.name, '-' * 14, sep='')
-        if not self._group.tests:
-            print(f'{self.__pref}⌎ Tests not found')
-            raise CoException(
-                [Exception('Tests not found')],
-                where=self._group.name
-            )
-
-    def _final_print(self):
-        print(f'{self.__pref}⌎-- Full time: {format_sec_metrix(self.__finish)}')
-
-
-class _BenchCTX(_TestCTX):
-    _GREETINGS: str = 'CoBench'
-    def __init__(self, *args, iterations: int, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__exp = []
-        self.__iterations = iterations
-        if iterations == 1:
-            self.__headers = ('time',)
-            self.__calc = lambda b: b
-        else:
-            self.__headers = ('full', 'max', 'min', 'avg')
-            self.__calc = self.__calc_multi
-
-    @staticmethod
-    def __calc_multi(benches: List[float]) -> Iterable[float]:
-        s = sum(benches)
-        mx, mn, avg = (
-            max(benches),
-            min(benches),
-            s / len(benches),
-        )
-        return s, mx, mn, avg
-
-    def add_exp(self, test_name: str, benches: List[float]):
-        assert len(benches) == self.__iterations
-        self.__exp.append((test_name, *self.__calc(benches)))
-
-    def _final_print(self):
-        pref_1 = get_level_prefix(self._level + 1)
-        for str_row in print_test_results(
-            self.__exp,
-            headers=self.__headers,
-        ):
-            print(pref_1, str_row)
-        super()._final_print()
-
-
-class CoTestGroup(AbstractTestCase):
+class CoTestGroup(AbstractTestGroup):
     NAME = ''
 
     def __init__(
@@ -166,8 +80,8 @@ class CoTestGroup(AbstractTestCase):
         )
 
     @property
-    def tests(self):
-        return self.__tests
+    def is_empty(self):
+        return self.__tests == []
 
     @property
     def is_async(self):
@@ -237,14 +151,14 @@ class CoTestGroup(AbstractTestCase):
         if self.is_async:
             return self.run_test_async(level=level)
 
-        with _TestCTX(self, level) as m:
+        with TestCTX(self, level) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     test_.run_test(level=level + 1)
 
     async def run_test_async(self, *, level: int = 0):
 
-        with _TestCTX(self, level) as m:
+        with TestCTX(self, level) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     if test_.is_async:
@@ -256,7 +170,7 @@ class CoTestGroup(AbstractTestCase):
         if self.is_async:
             return self.run_bench_async(iterations, level=level)
 
-        with _BenchCTX(self, level, iterations=iterations) as m:
+        with BenchCTX(self, level, iterations=iterations) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     s = test_.run_bench(iterations, level=level+1)
@@ -265,7 +179,7 @@ class CoTestGroup(AbstractTestCase):
 
     async def run_bench_async(self, iterations: int, *, level: int = 0):
 
-        with _BenchCTX(self, level, iterations=iterations) as m:
+        with BenchCTX(self, level, iterations=iterations) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     if test_.is_async:

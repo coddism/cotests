@@ -68,4 +68,4 @@ def bench_batch(
     return try_to_run(g.go_bench(iterations))
 
 
-__all__ = (bench_batch,)
+__all__ = (test_batch, bench_batch)
