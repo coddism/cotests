@@ -4,7 +4,7 @@ from .group import CoTestGroup
 from .bench import try_to_run
 
 if TYPE_CHECKING:
-    from .bench.typ import PrePostTest,  InTest, TestArgs, TestKwargs
+    from .bench.typ import PrePostTest, InTest, TestArgs, TestKwargs
 
 
 def test_batch(

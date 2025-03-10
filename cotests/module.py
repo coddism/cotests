@@ -2,7 +2,7 @@ import inspect
 import importlib.util
 import os
 from typing import List
-from .obj import CoTestCase
+from . import CoTestCase
 from .group import CoTestGroup, test_groups
 
 

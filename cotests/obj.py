@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Iterable
 
-from .flat import bench_batch
+from . import bench_batch
 from .bench import AbstractCoCase
 
 if TYPE_CHECKING:
