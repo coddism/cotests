@@ -101,7 +101,7 @@ def print_test_results(
 
 
 def try_to_run(t) -> 'RunResult':
-    if inspect.iscoroutine(t):
+    if t and inspect.iscoroutine(t):
         # try to run
         try:
             asyncio.get_running_loop()

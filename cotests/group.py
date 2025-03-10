@@ -15,23 +15,12 @@ if TYPE_CHECKING:
     from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
-def _decorator_go(cls: 'CoTestGroup', func):
-    def wrapper_sync(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except CoException as ce:
-            ce.print_errors()
-
-    async def wrapper_async(*args, **kwargs):
-        try:
-            await func(*args, **kwargs)
-        except CoException as ce:
-            ce.print_errors()
-
-    if cls.is_async:
-        return wrapper_async
-    else:
-        return wrapper_sync
+@contextmanager
+def _go_ctx():
+    try:
+        yield
+    except CoException as ce:
+        ce.print_errors()
 
 
 class _TestCTX:
@@ -237,10 +226,12 @@ class CoTestGroup(AbstractTestCase):
         self.__tests.append(case)
 
     def go(self):
-        return _decorator_go(self, self.run_test)()
+        with _go_ctx():
+            return self.run_test()
 
     def go_bench(self, iterations: int):
-        return _decorator_go(self, self.run_bench)(iterations)
+        with _go_ctx():
+            return self.run_bench(iterations)
 
     def run_test(self, *, level: int = 0):
         if self.is_async:
