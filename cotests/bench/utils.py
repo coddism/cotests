@@ -1,5 +1,11 @@
-from typing import Tuple, Optional, List
+import asyncio
+import inspect
 from math import log10
+from typing import TYPE_CHECKING, Tuple, Optional, List
+
+if TYPE_CHECKING:
+    from .typ import RunResult
+
 
 __METRIX = (
     (60, 'min'),
@@ -10,6 +16,9 @@ __METRIX = (
     (.1 ** 12, 'ps'),
     (.1 ** 15, 'fs'),
 )
+
+def get_level_prefix(level: int, char: str = '¦ ') -> str:
+    return char * level
 
 
 def get_sec_metrix(sec: float) -> Tuple[float, str]:
@@ -32,10 +41,11 @@ def print_test_results(
         exp: List[Tuple[str, float]],
         *,
         headers: Optional[Tuple] = None,
-):
+) -> List[str]:
     if not exp:
-        print('No results.')
-        return
+        return ['! No results.']
+        # print('No results.')
+        # return
 
     iter_ = exp.__iter__()
     first = next(iter_)
@@ -44,6 +54,8 @@ def print_test_results(
 
     if headers:
         assert len(headers) + 1 == len(first)
+
+    res = []
 
     for i in iter_:
         if len(i[0]) > max_fn_len:
@@ -77,11 +89,27 @@ def print_test_results(
     lens.extend([max_fn_len, 5])
 
     fr = '+' + '-' * (sum(lens) + len(lens) * 3 - 1) + '+'
-    print('\n' + fr)
+    res.append(fr)
     if headers:
-        print('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
+        res.append('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
 
     for item in exp:
-        print(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
+        res.append(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
 
-    print(fr)
+    res.append(fr)
+    return res
+
+
+def try_to_run(t) -> 'RunResult':
+    if inspect.iscoroutine(t):
+        # try to run
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # print('Run in new loop')
+            asyncio.run(t)
+        else:
+            # print('Cannot run. Return coroutine')
+            return t
+    # else:
+    #     print('No coroutines')
