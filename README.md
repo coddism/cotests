@@ -12,14 +12,13 @@
 
 ## DOX
 
-### bench_batch() & arguments
+### test_batch() & arguments
 
 Simple run all types of tests.
     
     # args
     :param funcs: all functions/cases/groups for test or benchmark
     # kwargs
-    :param int iterations: count of iterations for all functions (benchmark mode)
     :param Optional[str] name: Title for test
     :param Optional[Iterable] global_args: arguments for each function
     :param Optional[Mapping] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
@@ -28,6 +27,10 @@ Simple run all types of tests.
     :param Optional[Callable] pre_test: run before each function; is not added to benchmark time
     :param Optional[Callable] post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
+
+### bench_batch()
+
+Like `test_batch()'`, but with output a results table, and you can set count of iterations - `:param int iterations`.
 
 ### CoTestCase
 
