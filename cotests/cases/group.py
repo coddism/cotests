@@ -2,15 +2,15 @@ import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
 from .abstract import AbstractTestGroup
-from .utils.args import CoTestArgs
-from .utils.ctx import TestCTX, BenchCTX
-from .utils.ttr import try_to_run
-from cotests.case import AbstractCoCase
-from cotests.case_ext import TestCaseExt
-from cotests.cases import (
+from .cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
+from .utils.args import CoTestArgs
+from .utils.ctx import TestCTX, BenchCTX
+from .utils.ttr import try_to_run
+from .utils.case_ext import TestCaseExt
+from cotests.case import AbstractCoCase
 from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
