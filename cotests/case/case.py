@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Iterable
 
-from cotests.group import CoTestGroup
+from cotests.group.group import CoTestGroup
 from .abstract import AbstractCoCase
 
 if TYPE_CHECKING:

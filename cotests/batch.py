@@ -1,6 +1,6 @@
 from typing import Optional, TYPE_CHECKING, Sequence
 
-from .group import CoTestGroup
+from .group.group import CoTestGroup
 
 if TYPE_CHECKING:
     from .typ import PrePostTest, InTest, TestArgs, TestKwargs
