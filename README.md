@@ -18,14 +18,14 @@ Simple run all types of tests.
     
     # args
     :param funcs: all functions/cases/groups for test or benchmark
-    # kwargs
-    :param Optional[str] name: Title for test
-    :param Optional[Iterable] global_args: arguments for each function
-    :param Optional[Mapping] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
-    :param Optional[Iterable[Iterable]] personal_args: list of arguments for each function
-    :param Optional[Iterable[Mapping]] personal_kwargs: list of keyword arguments for each function
-    :param Optional[Callable] pre_test: run before each function; is not added to benchmark time
-    :param Optional[Callable] post_test: run after each function; is not added to benchmark time
+    # kwargs (all optional)
+    :param str name: Title for test
+    :param Iterable global_args: arguments for each function
+    :param Mapping global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
+    :param Iterable[Iterable] personal_args: list of arguments for each function
+    :param Iterable[Mapping] personal_kwargs: list of keyword arguments for each function
+    :param Callable pre_test: run before each function; is not added to benchmark time
+    :param Callable post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
 
 ### bench_batch()

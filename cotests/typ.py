@@ -34,3 +34,7 @@ class TestParams(TypedDict, total=False):
     personal_kwargs: Iterable[TestKwargs]
     pre_test: PrePostTest
     post_test: PrePostTest
+
+
+class TestParamsN(TestParams, total=False):
+    name: str
