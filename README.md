@@ -67,7 +67,7 @@ test_module(dir_path)
 ### Base using
 
 ```python
-from cotests import bench_batch, CoTestGroup, CoTestCase, test_groups
+from cotests import test_batch, bench_batch, CoTestGroup, CoTestCase, test_groups
 
 def test_0(*_, **__): ...
 def test_1(*_, **__): ...
@@ -75,9 +75,11 @@ def test_1(*_, **__): ...
 async def test_a0(*_, **__): ...
 async def test_a1(*_, **__): ...
 
-# Example 1: bench_batch
+# Example 1: just test
+test_batch(test_0, test_1, test_a0, test_a1)
+# Example 1.1: single-run benchmark
 bench_batch(test_0, test_1, test_a0, test_a1)
-# Example 1.1: benchmark
+# Example 1.2: benchmark
 bench_batch(test_0, test_1, test_a0, test_a1, iterations=50)
 
 # Example 2: CoTestCase
@@ -90,9 +92,9 @@ Case0().run_tests()
 Case0().run_tests(iterations=50)
 
 # Example 3: CoTestGroup
-g_sync = CoTestGroup(test_0, test_1)
-g_async = CoTestGroup(test_a0, test_a1)
-g_all = CoTestGroup(test_0, test_1, test_a0, test_a1, Case0)
+g_sync = CoTestGroup(test_0, test_1, name='SYNC')
+g_async = CoTestGroup(test_a0, test_a1, name='ASYNC')
+g_all = CoTestGroup(test_0, test_1, test_a0, test_a1, Case0, name='ALL')
 
 # Example 3.1 - single group
 g_sync.go()
@@ -100,12 +102,11 @@ g_sync.go()
 test_groups(g_sync, g_async, g_all)
 
 # Example 4: ALL
-bench_batch(
+test_batch(
     test_0, test_1, test_a0, test_a1,
     Case0,
     g_sync, g_async, g_all,
 )
-
 ```
 
 ### bench_batch
