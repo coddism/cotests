@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, List, Optional
 
 from . import AbstractTestCase
 from .utils.decorators import SyncDecoratorFactory, AsyncDecoratorFactory
+from .utils.progress_bar import ProgressBarPrinter
 from cotests.case_ext import TestCaseExt
-from .progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
     from cotests.typ import CoArgsList
