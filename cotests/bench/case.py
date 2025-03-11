@@ -34,11 +34,11 @@ class FunctionTestCase(TestCase):
         )
 
     @SyncDecoratorFactory()
-    def run_test(self, *, level: int = 0) -> float:
+    def run_test(self, **__) -> float:
         return self._bench_single()
 
     @SyncDecoratorFactory(True)
-    def run_bench(self, iterations: int, *, level: int = 0) -> List[float]:
+    def run_bench(self, iterations: int, **__) -> List[float]:
         return [self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
@@ -56,11 +56,11 @@ class AsyncTestCase(TestCase):
         ])
 
     @AsyncDecoratorFactory()
-    async def run_test(self, *, level: int = 0) -> float:
+    async def run_test(self, **__) -> float:
         return await self._bench_single()
 
     @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, *, level: int = 0) -> List[float]:
+    async def run_bench(self, iterations: int, **__) -> List[float]:
         return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
@@ -81,10 +81,10 @@ class CoroutineTestCase(AsyncTestCase):
         return self._f
 
     @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, *, level: int = 0) -> List[float]:
+    async def run_bench(self, iterations: int, **__) -> List[float]:
         if iterations > 1:
             raise NotImplementedError('cannot reuse coroutines')
-        return await super().run_bench(self, iterations, level=level)
+        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):

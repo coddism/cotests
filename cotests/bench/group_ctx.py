@@ -37,6 +37,7 @@ class TestCTX:
             raise CoException(self.__errors, self._group.name)
 
         if exc_type:
+            print('EXC!')
             print(exc_type, exc_value, exc_traceback)
 
     @contextmanager
