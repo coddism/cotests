@@ -1,1 +1,1 @@
-from .co_case import AbstractCoCase
+from .abstract import AbstractCoCase
