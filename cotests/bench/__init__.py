@@ -1,3 +1,3 @@
 from .case import AbstractCoCase
-from .typ import CoException
+from .exceptions import CoException
 from .group import CoTestGroup, test_groups
