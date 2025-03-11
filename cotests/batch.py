@@ -1,7 +1,6 @@
 from typing import Optional, TYPE_CHECKING, Sequence
 
 from .group import CoTestGroup
-from .bench import try_to_run
 
 if TYPE_CHECKING:
     from .bench.typ import PrePostTest, InTest, TestArgs, TestKwargs
@@ -28,7 +27,7 @@ def test_batch(
         post_test=post_test,
         name=name,
     )
-    return try_to_run(g.go())
+    return g.go()
 
 def bench_batch(
         *funcs: 'InTest',
@@ -65,7 +64,7 @@ def bench_batch(
         post_test=post_test,
         name=name,
     )
-    return try_to_run(g.go_bench(iterations))
+    return g.go_bench(iterations)
 
 
 __all__ = (test_batch, bench_batch)

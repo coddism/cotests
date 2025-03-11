@@ -149,10 +149,10 @@ class CoTestGroup(AbstractTestGroup):
         self.__tests.append(case)
 
     def go(self):
-        return _decorator_go(self, self.run_test)()
+        return try_to_run(_decorator_go(self, self.run_test)())
 
     def go_bench(self, iterations: int):
-        return _decorator_go(self, self.run_bench)(iterations)
+        return try_to_run(_decorator_go(self, self.run_bench)(iterations))
 
     def run_test(self, *, level: int = 0):
         if self.is_async:
@@ -200,4 +200,4 @@ class CoTestGroup(AbstractTestGroup):
 
 def test_groups(*groups: CoTestGroup, name='__main__') -> 'RunResult':
     g = CoTestGroup(*groups, name=name)
-    return try_to_run(g.go())
+    return g.go()
