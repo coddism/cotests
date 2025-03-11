@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from cotests import CoTestCase, bench_batch
+from cotests import CoTestCase, bench_batch, test_batch
 
 
 class TObj(CoTestCase):
@@ -50,9 +50,8 @@ if __name__ == '__main__':
     def tt0(t: float = .2): time.sleep(t)
     def tt1(t: float = .2): time.sleep(t)
 
-    bench_batch(
+    test_batch(
         TObj, tt0, TObjA(), tt1,
-        iterations=iterations,
         global_args=(.03,),
         name='t_obj',
     )

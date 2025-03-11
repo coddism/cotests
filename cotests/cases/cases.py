@@ -1,23 +1,12 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from . import AbstractTestCase
-from .case_decorators import SyncDecoratorFactory, AsyncDecoratorFactory
-from .case_ext import TestCaseExt
-from .progress_bar import ProgressBarPrinter
+from .abstract import AbstractTestCase
+from .utils.decorators import SyncDecoratorFactory, AsyncDecoratorFactory
+from .utils.progress_bar import ProgressBarPrinter
+from .utils.case_ext import TestCaseExt
 
 if TYPE_CHECKING:
-    from .co_test_args import CoArgsList
-    from .typ import RESULT_TUPLE_MULTI
-
-
-def _calc_multi_results(benches: List[float]) -> 'RESULT_TUPLE_MULTI':
-    s = sum(benches)
-    mx, mn, avg = (
-        max(benches),
-        min(benches),
-        s / len(benches),
-    )
-    return s, mx, mn, avg
+    from cotests.typ import CoArgsList
 
 
 class TestCase(AbstractTestCase):
@@ -45,13 +34,12 @@ class FunctionTestCase(TestCase):
         )
 
     @SyncDecoratorFactory()
-    def run_test(self, *, level: int = 0) -> float:
+    def run_test(self, **__) -> float:
         return self._bench_single()
 
     @SyncDecoratorFactory(True)
-    def run_bench(self, iterations: int, *, level: int = 0) -> 'RESULT_TUPLE_MULTI':
-        return _calc_multi_results([self._bench_single() for _ in ProgressBarPrinter(iterations)])
-
+    def run_bench(self, iterations: int, **__) -> List[float]:
+        return [self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class AsyncTestCase(TestCase):
@@ -67,12 +55,12 @@ class AsyncTestCase(TestCase):
         ])
 
     @AsyncDecoratorFactory()
-    async def run_test(self, *, level: int = 0) -> float:
+    async def run_test(self, **__) -> float:
         return await self._bench_single()
 
     @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, *, level: int = 0) -> 'RESULT_TUPLE_MULTI':
-        return _calc_multi_results([await self._bench_single() for _ in ProgressBarPrinter(iterations)])
+    async def run_bench(self, iterations: int, **__) -> List[float]:
+        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class FunctionTestCaseWithAsyncPrePost(AsyncTestCase):
@@ -92,10 +80,10 @@ class CoroutineTestCase(AsyncTestCase):
         return self._f
 
     @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, *, level: int = 0) -> 'RESULT_TUPLE_MULTI':
+    async def run_bench(self, iterations: int, **__) -> List[float]:
         if iterations > 1:
             raise NotImplementedError('cannot reuse coroutines')
-        return await super().run_bench(self, iterations, level=level)
+        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):

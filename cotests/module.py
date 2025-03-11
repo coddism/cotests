@@ -1,12 +1,17 @@
 import inspect
 import importlib.util
 import os
-from typing import List
-from .obj import CoTestCase
-from .group import CoTestGroup, test_groups
+from typing import List, Optional, Collection
+from .case.abstract import AbstractCoCase
+from .cases.group import CoTestGroup, test_groups
 
 
-def test_module(dir_path: str):
+def test_module(
+        dir_path: str,
+        *,
+        file_prefix: str = 't_',
+        ignore_files: Optional[Collection[str]] = None,
+):
     print(f'Search tests in {dir_path}..')
     tests: List[CoTestGroup] = []
 
@@ -14,7 +19,9 @@ def test_module(dir_path: str):
         if sd.is_dir():
             ...
         elif sd.is_file():
-            if sd.name.startswith('t_') and sd.name.endswith('.py'):
+            if sd.name.startswith(file_prefix) and sd.name.endswith('.py'):
+                if ignore_files and sd.name in ignore_files:
+                    continue
                 module_name = sd.name
                 file_path = sd.path
                 print('*' * 10, module_name)
@@ -34,7 +41,7 @@ def test_module(dir_path: str):
                         tmp_groups.append(v)
                     elif inspect.isfunction(v) and v.__module__ == module_name and v.__name__.startswith('test_'):
                         tmp_tests.append(v)
-                    elif inspect.isclass(v) and v.__module__ == module_name and issubclass(v, CoTestCase):
+                    elif inspect.isclass(v) and v.__module__ == module_name and issubclass(v, AbstractCoCase):
                         tmp_tests.append(v)
                     else:
                         continue
@@ -48,4 +55,12 @@ def test_module(dir_path: str):
         else:
             print('o_O', sd)
 
+    print("""
+    +---------------------+
+    |    Start CoTests    |
+    +---------------------+
+    """)
     return test_groups(*tests)
+
+
+__all__ = (test_module, )

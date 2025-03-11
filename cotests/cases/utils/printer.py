@@ -1,10 +1,5 @@
-import asyncio
-import inspect
 from math import log10
-from typing import TYPE_CHECKING, Tuple, Optional, List
-
-if TYPE_CHECKING:
-    from .typ import RunResult
+from typing import Tuple, Optional, List
 
 
 __METRIX = (
@@ -98,18 +93,3 @@ def print_test_results(
 
     res.append(fr)
     return res
-
-
-def try_to_run(t) -> 'RunResult':
-    if inspect.iscoroutine(t):
-        # try to run
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            # print('Run in new loop')
-            asyncio.run(t)
-        else:
-            # print('Cannot run. Return coroutine')
-            return t
-    # else:
-    #     print('No coroutines')

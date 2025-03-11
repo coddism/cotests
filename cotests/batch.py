@@ -1,11 +1,33 @@
 from typing import Optional, TYPE_CHECKING, Sequence
 
-from .group import CoTestGroup
-from .bench import try_to_run
+from .cases.group import CoTestGroup
 
 if TYPE_CHECKING:
-    from .bench.typ import PrePostTest,  InTest, TestArgs, TestKwargs
+    from .typ import PrePostTest, InTest, TestArgs, TestKwargs
 
+
+def test_batch(
+        *funcs: 'InTest',
+        name: Optional[str] = '',
+        global_args: Optional['TestArgs'] = None,
+        global_kwargs: Optional['TestKwargs'] = None,
+        personal_args: Optional[Sequence['TestArgs']] = None,
+        personal_kwargs: Optional[Sequence['TestKwargs']] = None,
+        pre_test: Optional['PrePostTest'] = None,
+        post_test: Optional['PrePostTest'] = None,
+):
+
+    g = CoTestGroup(
+        *funcs,
+        global_args=global_args,
+        global_kwargs=global_kwargs,
+        personal_args=personal_args,
+        personal_kwargs=personal_kwargs,
+        pre_test=pre_test,
+        post_test=post_test,
+        name=name,
+    )
+    return g.go()
 
 def bench_batch(
         *funcs: 'InTest',
@@ -30,7 +52,6 @@ def bench_batch(
     :param Optional[Callable] post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
     """
-    assert iterations >= 1
 
     g = CoTestGroup(
         *funcs,
@@ -42,9 +63,7 @@ def bench_batch(
         post_test=post_test,
         name=name,
     )
-    return try_to_run(
-        g.go_bench(iterations) if iterations > 1 else g.go()
-    )
+    return g.go_bench(iterations)
 
 
-__all__ = (bench_batch,)
+__all__ = (test_batch, bench_batch)

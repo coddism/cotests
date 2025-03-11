@@ -12,14 +12,13 @@
 
 ## DOX
 
-### bench_batch() & arguments
+### test_batch() & arguments
 
 Simple run all types of tests.
     
     # args
     :param funcs: all functions/cases/groups for test or benchmark
     # kwargs
-    :param int iterations: count of iterations for all functions (benchmark mode)
     :param Optional[str] name: Title for test
     :param Optional[Iterable] global_args: arguments for each function
     :param Optional[Mapping] global_kwargs: keyword arguments for each function (can merge with own keyword arguments)
@@ -28,6 +27,10 @@ Simple run all types of tests.
     :param Optional[Callable] pre_test: run before each function; is not added to benchmark time
     :param Optional[Callable] post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
+
+### bench_batch()
+
+Like `test_batch()'`, but with output a results table, and you can set count of iterations - `:param int iterations`.
 
 ### CoTestCase
 
@@ -64,7 +67,7 @@ test_module(dir_path)
 ### Base using
 
 ```python
-from cotests import bench_batch, CoTestGroup, CoTestCase, test_groups
+from cotests import test_batch, bench_batch, CoTestGroup, CoTestCase, test_groups
 
 def test_0(*_, **__): ...
 def test_1(*_, **__): ...
@@ -72,9 +75,11 @@ def test_1(*_, **__): ...
 async def test_a0(*_, **__): ...
 async def test_a1(*_, **__): ...
 
-# Example 1: bench_batch
+# Example 1: just test
+test_batch(test_0, test_1, test_a0, test_a1)
+# Example 1.1: single-run benchmark
 bench_batch(test_0, test_1, test_a0, test_a1)
-# Example 1.1: benchmark
+# Example 1.2: benchmark
 bench_batch(test_0, test_1, test_a0, test_a1, iterations=50)
 
 # Example 2: CoTestCase
@@ -87,9 +92,9 @@ Case0().run_tests()
 Case0().run_tests(iterations=50)
 
 # Example 3: CoTestGroup
-g_sync = CoTestGroup(test_0, test_1)
-g_async = CoTestGroup(test_a0, test_a1)
-g_all = CoTestGroup(test_0, test_1, test_a0, test_a1, Case0)
+g_sync = CoTestGroup(test_0, test_1, name='SYNC')
+g_async = CoTestGroup(test_a0, test_a1, name='ASYNC')
+g_all = CoTestGroup(test_0, test_1, test_a0, test_a1, Case0, name='ALL')
 
 # Example 3.1 - single group
 g_sync.go()
@@ -97,29 +102,29 @@ g_sync.go()
 test_groups(g_sync, g_async, g_all)
 
 # Example 4: ALL
-bench_batch(
+test_batch(
     test_0, test_1, test_a0, test_a1,
     Case0,
     g_sync, g_async, g_all,
 )
-
 ```
 
-### bench_batch
+### test_batch & bench_batch
 
 ```python
-from cotests import bench_batch
+from cotests import test_batch, bench_batch
 
 def test_0(): ...
 def test_1(): ...
 def test_2(): ...
 
 # just test
-bench_batch(
-    test_0, test_1, test_2,
-)
+test_batch(test_0, test_1, test_2,)
 
-# more benchy - run all 1000 times
+# benchy
+bench_batch(test_0, test_1, test_2,)
+
+# more benchy
 bench_batch(
     test_0, test_1, test_2,
     iterations=1000,
@@ -129,29 +134,40 @@ bench_batch(
 Output:
 ```
 ⌌-------------- Start CoTest --------------
-¦  * test_0:ok - 330.001 ns
-¦  * test_1:ok - 319.997 ns
-¦  * test_2:ok - 230.000 ns
-⌎-- Full time: 78.230 µs
+¦  * test_0:ok - 309.999 ns
+¦  * test_1:ok - 320.000 ns
+¦  * test_2:ok - 250.000 ns
+⌎-- Full time: 122.440 µs
 
 ⌌-------------- Start CoBench --------------
-¦  * test_0:..................................................ok - 136.789 µs
-¦  * test_1:..................................................ok - 131.890 µs
-¦  * test_2:..................................................ok - 128.939 µs
-¦  +--------------------------------------------------------------------+
-¦  |    full    |    max     |    min     |    avg     |   f    |   %   |
-¦  | 136.789 µs | 249.995 ns | 130.000 ns | 136.789 ns | test_0 | 106.1 |
-¦  | 131.890 µs | 230.000 ns | 119.995 ns | 131.890 ns | test_1 | 102.3 |
-¦  | 128.939 µs | 189.997 ns | 119.995 ns | 128.939 ns | test_2 | 100.0 |
-¦  +--------------------------------------------------------------------+
-⌎-- Full time: 3.511 ms
+¦  * test_0:.ok - 250.000 ns
+¦  * test_1:.ok - 210.001 ns
+¦  * test_2:.ok - 210.001 ns
+¦  +-----------------------------+
+¦  |    time    |   f    |   %   |
+¦  | 250.000 ns | test_0 | 119.0 |
+¦  | 210.001 ns | test_1 | 100.0 |
+¦  | 210.001 ns | test_2 | 100.0 |
+¦  +-----------------------------+
+⌎-- Full time: 84.820 µs
 
+⌌-------------- Start CoBench --------------
+¦  * test_0:..................................................ok - 219.999 ns
+¦  * test_1:..................................................ok - 239.999 ns
+¦  * test_2:..................................................ok - 190.001 ns
+¦  +-------------------------------------------------------------------+
+¦  |    full    |    max     |    min    |    avg     |   f    |   %   |
+¦  | 127.119 µs | 290.001 ns | 90.000 ns | 127.119 ns | test_0 | 119.5 |
+¦  | 106.339 µs | 239.999 ns | 90.000 ns | 106.339 ns | test_1 | 100.0 |
+¦  | 125.599 µs | 530.001 ns | 90.000 ns | 125.599 ns | test_2 | 118.1 |
+¦  +-------------------------------------------------------------------+
+⌎-- Full time: 3.417 ms
 ```
 
 ### bench_batch: arguments
 
 ```python
-from cotests import bench_batch
+from cotests import test_batch
 
 def test_0(*_, **__): ...
 def test_1(*_, **__): ...
@@ -165,26 +181,26 @@ tests_list = [value for key, value in globals().items()
               if key.startswith('test_') and callable(value) and value.__module__ == __name__]
 
 # test with args: like test_0(1), test_1(1), etc...
-bench_batch(
+test_batch(
     *tests_list,
     global_args=(1,)
 )
 
 # test with kwargs: like test_0(a=1), test_1(a=1), etc...
-bench_batch(
+test_batch(
     *tests_list,
     global_kwargs={'a': 1}
 )
 
 # It can be combined: like test_0(1, a=1), test_1(1, a=1), etc...
-bench_batch(
+test_batch(
     *tests_list,
     global_args=(1,),
     global_kwargs={'a': 1}
 )
 
 # different ways to set test function & combo kwargs
-bench_batch(
+test_batch(
     test_0,  # test_0()
     (test_1, (1, 2,)),  # test_1(1, 2)
     (test_2, {'a': 1}),  # test_2(a=1)
@@ -197,12 +213,11 @@ bench_batch(
 
 # ... with personal args
 # test_0(0, a=0), test_0(1, a=1), ..., test_0(5, a=5), test_1(0, a=0), test_0(1, a=1), ..., test_a1(5, a=5)
-bench_batch(
+test_batch(
     *tests_list,
     personal_args=[(x,) for x in range(len(tests_list))],
     personal_kwargs=[{'a': x} for x in range(len(tests_list))],
 )
-
 ```
 
 ### CoTestCase
@@ -211,7 +226,7 @@ bench_batch(
 import asyncio
 import time
 
-from cotests import CoTestCase, bench_batch
+from cotests import CoTestCase, test_batch
 
 
 class TObj(CoTestCase):
@@ -239,16 +254,19 @@ TObj().run_tests(
     global_args=(.1,),
 )
 # or
-bench_batch(
+test_batch(
     TObj(),
     global_args=(.1,),
 )
 # or
-bench_batch(
+test_batch(
     TObj,
     global_args=(.1,),
 )
 ```
+
+Partial output:
+
 ```
 Init Case
 
@@ -265,7 +283,7 @@ Del Case
 ### errors?
 
 ```python
-from cotests import bench_batch, CoTestCase
+from cotests import test_batch, CoTestCase
 
 def test_0(): ...
 def test_1(): raise Exception('I want error!')
@@ -274,7 +292,7 @@ class T0(CoTestCase):
     def test_t0(self): ...
     def test_t1(self): raise ValueError('I want ValueError in case!')
 
-bench_batch(test_0, test_1, T0)
+test_batch(test_0, test_1, T0)
 ```
 
 ```
@@ -354,7 +372,7 @@ Output:
 ```python
 import asyncio
 import time
-from cotests import bench_batch
+from cotests import test_batch, bench_batch
 
 
 async def test_0(sleep_time: float = .02):
@@ -373,13 +391,13 @@ if __name__ == '__main__':
         (test_1, (.12,)),
     )
 
-    bench_batch(*fun_sync, name='ONLY SYNC')
+    test_batch(*fun_sync, name='ONLY SYNC')
 
     bench_batch(
         *fun_async,  # coroutinefunctions can reuse
         test_0(.05),  # coroutine with reuse - error
         iterations=2,
-        name='ASYNC W\T LOOP',
+        name='ASYNC W/T LOOP',
     )
 
     async def main():
@@ -391,7 +409,7 @@ if __name__ == '__main__':
             name='ASYNC WITH LOOP',
         )
         # without coroutines = without await
-        bench_batch(*fun_sync, name='SYNC WITH LOOP',)
+        test_batch(*fun_sync, name='SYNC WITH LOOP',)
     asyncio.run(main())
 ```
 

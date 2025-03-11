@@ -79,3 +79,6 @@ class TestCaseExt:
             return res
 
         return wrapper
+
+
+__all__ = (TestCaseExt,)

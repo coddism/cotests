@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from cotests import CoTestCase, bench_batch
+from cotests import CoTestCase, test_batch
 
 
 class TObj(CoTestCase):
@@ -29,12 +29,12 @@ TObj().run_tests(
     global_args=(.1,),
 )
 # or
-bench_batch(
+test_batch(
     TObj(),
     global_args=(.1,),
 )
 # or
-bench_batch(
+test_batch(
     TObj,
     global_args=(.1,),
 )

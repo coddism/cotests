@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Tuple, Sequence, Dict, List, Set
 
 if TYPE_CHECKING:
-    from .typ import CoArgsList, TestArgs, TestKwargs
+    from cotests.typ import CoArgsList, TestArgs, TestKwargs
 
 
 class CoTestArgs:
@@ -70,3 +70,6 @@ class CoTestArgs:
             return [(p[0], self.__merge_kw(p[1], kwargs)) for p in self.__params]
         else:
             return self.__params
+
+
+__all__ = (CoTestArgs,)
