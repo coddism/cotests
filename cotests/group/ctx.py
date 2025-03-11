@@ -1,20 +1,18 @@
 from time import perf_counter
 from contextlib import contextmanager
-from typing import List, Iterable
+from typing import TYPE_CHECKING, List, Iterable
 
-from cotests.cases import AbstractTestCase
 from cotests.exceptions import CoException
 from cotests.utils import get_level_prefix, format_sec_metrix, print_test_results
 
-
-class AbstractTestGroup(AbstractTestCase):
-    is_empty: bool
+if TYPE_CHECKING:
+    from .abstract import AbstractTestGroup
 
 
 class TestCTX:
     _GREETINGS: str = 'CoTest'
 
-    def __init__(self, cls: AbstractTestGroup, level: int):
+    def __init__(self, cls: 'AbstractTestGroup', level: int):
         self._group = cls
         self._level = level
         self.__pref = get_level_prefix(level)
@@ -99,4 +97,4 @@ class BenchCTX(TestCTX):
         super()._final_print()
 
 
-__all__ = (AbstractTestGroup, TestCTX, BenchCTX)
+__all__ = (TestCTX, BenchCTX)
