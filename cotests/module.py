@@ -2,7 +2,7 @@ import inspect
 import importlib.util
 import os
 from typing import List, Optional, Collection
-from . import CoTestCase
+from .case.case import CoTestCase
 from .cases.group import CoTestGroup, test_groups
 
 
@@ -61,3 +61,6 @@ def test_module(
     +---------------------+
     """)
     return test_groups(*tests)
+
+
+__all__ = (test_module, )

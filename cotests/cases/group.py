@@ -10,7 +10,7 @@ from .utils.args import CoTestArgs
 from .utils.ctx import TestCTX, BenchCTX
 from .utils.ttr import try_to_run
 from .utils.case_ext import TestCaseExt
-from cotests.case import AbstractCoCase
+from cotests.case.abstract import AbstractCoCase
 from cotests.exceptions import CoException
 
 if TYPE_CHECKING:

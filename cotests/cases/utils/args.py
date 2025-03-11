@@ -70,3 +70,6 @@ class CoTestArgs:
             return [(p[0], self.__merge_kw(p[1], kwargs)) for p in self.__params]
         else:
             return self.__params
+
+
+__all__ = (CoTestArgs,)
