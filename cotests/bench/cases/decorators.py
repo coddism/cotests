@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
 
-from .utils import format_sec_metrix, get_level_prefix
-from .typ import CoException
+from ..utils import format_sec_metrix, get_level_prefix
+from ..typ import CoException
 
 if TYPE_CHECKING:
-    from .cases import AbstractTestCase
-    from .typ import RESULT_TUPLE_MULTI
-
+    from . import AbstractTestCase
+    from ..typ import RESULT_TUPLE_MULTI
 
 
 def b_sec_s(ts: float) -> float:

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List, Optional
 
 from . import AbstractTestCase
-from ..case_decorators import SyncDecoratorFactory, AsyncDecoratorFactory
+from .decorators import SyncDecoratorFactory, AsyncDecoratorFactory
 from ..case_ext import TestCaseExt
 from ..progress_bar import ProgressBarPrinter
 
