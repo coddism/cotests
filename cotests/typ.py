@@ -15,7 +15,7 @@ PrePostTest = Callable[[], Union[None, Awaitable[None]]]
 
 if TYPE_CHECKING:
     import sys
-    from . import AbstractCoCase
+    from cotests.case import AbstractCoCase
 
     if sys.version_info[:2] >= (3, 11):
         from typing import Unpack

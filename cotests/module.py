@@ -3,7 +3,7 @@ import importlib.util
 import os
 from typing import List
 from . import CoTestCase
-from .bench import CoTestGroup, test_groups
+from .group import CoTestGroup, test_groups
 
 
 def test_module(dir_path: str):

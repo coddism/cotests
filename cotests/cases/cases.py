@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from . import AbstractTestCase
 from .decorators import SyncDecoratorFactory, AsyncDecoratorFactory
-from ..case_ext import TestCaseExt
+from cotests.case_ext import TestCaseExt
 from .progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
-    from ..typ import CoArgsList
+    from cotests.typ import CoArgsList
 
 
 class TestCase(AbstractTestCase):

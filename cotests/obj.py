@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING, Optional, Iterable
 
 from . import bench_batch
-from .bench import AbstractCoCase
+from .case import AbstractCoCase
 
 if TYPE_CHECKING:
-    from .bench.typ import TestArgs, TestKwargs, PrePostTest
+    from cotests.typ import TestArgs, TestKwargs, PrePostTest
 
 
 class CoTestCase(AbstractCoCase):

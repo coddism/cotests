@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Tuple, Sequence, Dict, List, Set
 
 if TYPE_CHECKING:
-    from ..typ import CoArgsList, TestArgs, TestKwargs
+    from cotests.typ import CoArgsList, TestArgs, TestKwargs
 
 
 class CoTestArgs:

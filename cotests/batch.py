@@ -1,9 +1,9 @@
 from typing import Optional, TYPE_CHECKING, Sequence
 
-from .bench import CoTestGroup
+from .group import CoTestGroup
 
 if TYPE_CHECKING:
-    from .bench.typ import PrePostTest, InTest, TestArgs, TestKwargs
+    from .typ import PrePostTest, InTest, TestArgs, TestKwargs
 
 
 def test_batch(
