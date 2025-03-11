@@ -9,7 +9,7 @@ from ..cases import (
 from ..case_ext import TestCaseExt
 from .args import CoTestArgs
 from .ctx import AbstractTestGroup, TestCTX, BenchCTX
-from ..utils import try_to_run
+from .utils import try_to_run
 
 if TYPE_CHECKING:
     from cotests.bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
