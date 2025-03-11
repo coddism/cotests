@@ -372,7 +372,7 @@ Output:
 ```python
 import asyncio
 import time
-from cotests import bench_batch
+from cotests import test_batch, bench_batch
 
 
 async def test_0(sleep_time: float = .02):
@@ -391,13 +391,13 @@ if __name__ == '__main__':
         (test_1, (.12,)),
     )
 
-    bench_batch(*fun_sync, name='ONLY SYNC')
+    test_batch(*fun_sync, name='ONLY SYNC')
 
     bench_batch(
         *fun_async,  # coroutinefunctions can reuse
         test_0(.05),  # coroutine with reuse - error
         iterations=2,
-        name='ASYNC W\T LOOP',
+        name='ASYNC W/T LOOP',
     )
 
     async def main():
@@ -409,7 +409,7 @@ if __name__ == '__main__':
             name='ASYNC WITH LOOP',
         )
         # without coroutines = without await
-        bench_batch(*fun_sync, name='SYNC WITH LOOP',)
+        test_batch(*fun_sync, name='SYNC WITH LOOP',)
     asyncio.run(main())
 ```
 
