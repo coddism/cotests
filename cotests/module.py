@@ -1,12 +1,17 @@
 import inspect
 import importlib.util
 import os
-from typing import List
+from typing import List, Optional, Collection
 from . import CoTestCase
 from .group.group import CoTestGroup, test_groups
 
 
-def test_module(dir_path: str):
+def test_module(
+        dir_path: str,
+        *,
+        file_prefix: str = 't_',
+        ignore_files: Optional[Collection[str]] = None,
+):
     print(f'Search tests in {dir_path}..')
     tests: List[CoTestGroup] = []
 
@@ -14,7 +19,9 @@ def test_module(dir_path: str):
         if sd.is_dir():
             ...
         elif sd.is_file():
-            if sd.name.startswith('t_') and sd.name.endswith('.py'):
+            if sd.name.startswith(file_prefix) and sd.name.endswith('.py'):
+                if ignore_files and sd.name in ignore_files:
+                    continue
                 module_name = sd.name
                 file_path = sd.path
                 print('*' * 10, module_name)
