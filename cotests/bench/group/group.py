@@ -1,18 +1,18 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
-from .bench import AbstractCoCase, CoException
-from .bench.cases import (
+from .. import AbstractCoCase, CoException
+from ..cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
 )
-from .bench.case_ext import TestCaseExt
-from .bench.co_test_args import CoTestArgs
-from .bench.group_ctx import AbstractTestGroup, TestCTX, BenchCTX
-from .bench.utils import try_to_run
+from ..case_ext import TestCaseExt
+from ..co_test_args import CoTestArgs
+from ..group_ctx import AbstractTestGroup, TestCTX, BenchCTX
+from ..utils import try_to_run
 
 if TYPE_CHECKING:
-    from .bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
+    from cotests.bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
 
 
 def _decorator_go(cls: 'CoTestGroup', func):
