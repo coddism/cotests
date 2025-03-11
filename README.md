@@ -167,7 +167,7 @@ Output:
 ### bench_batch: arguments
 
 ```python
-from cotests import bench_batch
+from cotests import test_batch
 
 def test_0(*_, **__): ...
 def test_1(*_, **__): ...
@@ -181,26 +181,26 @@ tests_list = [value for key, value in globals().items()
               if key.startswith('test_') and callable(value) and value.__module__ == __name__]
 
 # test with args: like test_0(1), test_1(1), etc...
-bench_batch(
+test_batch(
     *tests_list,
     global_args=(1,)
 )
 
 # test with kwargs: like test_0(a=1), test_1(a=1), etc...
-bench_batch(
+test_batch(
     *tests_list,
     global_kwargs={'a': 1}
 )
 
 # It can be combined: like test_0(1, a=1), test_1(1, a=1), etc...
-bench_batch(
+test_batch(
     *tests_list,
     global_args=(1,),
     global_kwargs={'a': 1}
 )
 
 # different ways to set test function & combo kwargs
-bench_batch(
+test_batch(
     test_0,  # test_0()
     (test_1, (1, 2,)),  # test_1(1, 2)
     (test_2, {'a': 1}),  # test_2(a=1)
@@ -213,12 +213,11 @@ bench_batch(
 
 # ... with personal args
 # test_0(0, a=0), test_0(1, a=1), ..., test_0(5, a=5), test_1(0, a=0), test_0(1, a=1), ..., test_a1(5, a=5)
-bench_batch(
+test_batch(
     *tests_list,
     personal_args=[(x,) for x in range(len(tests_list))],
     personal_kwargs=[{'a': x} for x in range(len(tests_list))],
 )
-
 ```
 
 ### CoTestCase
