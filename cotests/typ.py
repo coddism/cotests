@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Tuple, Any, Mapping, Iterable, Union, Coroutine, List, Type, Awaitable
+from typing import TYPE_CHECKING, Callable, Tuple, Any, Mapping, Iterable, Union, Coroutine, List, Type, Awaitable, TypedDict
 
 
 # RESULT_TUPLE_SINGLE = Tuple[float]
@@ -25,3 +25,12 @@ if TYPE_CHECKING:
 
     InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
     InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase], AbstractTestCase]
+
+
+class TestParams(TypedDict, total=False):
+    global_args: TestArgs
+    global_kwargs: TestKwargs
+    personal_args: Iterable[TestArgs]
+    personal_kwargs: Iterable[TestKwargs]
+    pre_test: PrePostTest
+    post_test: PrePostTest

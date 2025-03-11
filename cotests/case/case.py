@@ -1,32 +1,25 @@
-from typing import TYPE_CHECKING, Optional, Iterable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
 
 from cotests.cases.group import CoTestGroup
 from .abstract import AbstractCoCase
 
 if TYPE_CHECKING:
-    from cotests.typ import TestArgs, TestKwargs, PrePostTest
+    from cotests.typ import Unpack, TestParams
 
 
 class CoTestCase(AbstractCoCase):
 
     def run_test(self,
                  iterations: Optional[int] = None,
-                 global_args: Optional['TestArgs'] = None,
-                 global_kwargs: Optional['TestKwargs'] = None,
-                 personal_args: Optional[Iterable['TestArgs']] = None,
-                 personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-                 pre_test: Optional['PrePostTest'] = None,
-                 post_test: Optional['PrePostTest'] = None,
+                 **kwargs: Unpack[TestParams],
                  ):
+
         g = CoTestGroup(
             *self.get_tests(),
-            global_args=global_args,
-            global_kwargs=global_kwargs,
-            personal_args=personal_args,
-            personal_kwargs=personal_kwargs,
-            pre_test=pre_test,
-            post_test=post_test,
             name=self.name,
+            **kwargs,
         )
         if iterations is None:
             return g.go()
