@@ -1,10 +1,10 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
-from .args import CoTestArgs
 from .abstract import AbstractTestGroup
-from .ctx import TestCTX, BenchCTX
-from .utils import try_to_run
+from .utils.args import CoTestArgs
+from .utils.ctx import TestCTX, BenchCTX
+from .utils.ttr import try_to_run
 from cotests.case import AbstractCoCase
 from cotests.case_ext import TestCaseExt
 from cotests.cases import (

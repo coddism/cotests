@@ -6,7 +6,7 @@ from cotests.exceptions import CoException
 from cotests.utils import get_level_prefix, format_sec_metrix, print_test_results
 
 if TYPE_CHECKING:
-    from .abstract import AbstractTestGroup
+    from ..abstract import AbstractTestGroup
 
 
 class TestCTX:
