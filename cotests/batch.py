@@ -52,7 +52,6 @@ def bench_batch(
     :param Optional[Callable] post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
     """
-    assert iterations >= 1
 
     g = CoTestGroup(
         *funcs,

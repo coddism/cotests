@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Iterable
 
-from cotests import bench_batch
+from cotests.group import CoTestGroup
 from .abstract import AbstractCoCase
 
 if TYPE_CHECKING:
@@ -18,9 +18,8 @@ class CoTestCase(AbstractCoCase):
                   pre_test: Optional['PrePostTest'] = None,
                   post_test: Optional['PrePostTest'] = None,
                   ):
-        return bench_batch(
+        g = CoTestGroup(
             *self.get_tests(),
-            iterations=iterations,
             global_args=global_args,
             global_kwargs=global_kwargs,
             personal_args=personal_args,
@@ -29,3 +28,4 @@ class CoTestCase(AbstractCoCase):
             post_test=post_test,
             name=self.name,
         )
+        return g.go_bench(iterations)

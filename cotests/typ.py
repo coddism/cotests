@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING, Callable, Tuple, Any, Mapping, Iterable, Union, Coroutine, List, Type, Awaitable
 
 
-RESULT_TUPLE_SINGLE = Tuple[float]
+# RESULT_TUPLE_SINGLE = Tuple[float]
 RESULT_TUPLE_MULTI = Tuple[float, float, float, float]
 
 TestFunction = Union[Callable, Coroutine]
 # TestArgs = Union[Tuple[Any,...], List[Any], Set[Any]]
 TestArgs = Iterable[Any]
 TestKwargs = Mapping[str, Any]
-TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
+# TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 CoArgsList = List[Tuple['TestArgs', 'TestKwargs']]
 PrePostTest = Callable[[], Union[None, Awaitable[None]]]
 
