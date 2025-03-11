@@ -7,7 +7,7 @@ from ..cases import (
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
 )
 from ..case_ext import TestCaseExt
-from ..co_test_args import CoTestArgs
+from .args import CoTestArgs
 from ..group_ctx import AbstractTestGroup, TestCTX, BenchCTX
 from ..utils import try_to_run
 

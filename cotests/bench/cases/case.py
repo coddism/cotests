@@ -6,7 +6,7 @@ from ..case_ext import TestCaseExt
 from ..progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
-    from ..co_test_args import CoArgsList
+    from ..typ import CoArgsList
 
 
 class TestCase(AbstractTestCase):
