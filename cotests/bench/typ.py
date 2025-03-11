@@ -11,7 +11,7 @@ TestKwargs = Mapping[str, Any]
 TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 CoArgsList = List[Tuple['TestArgs', 'TestKwargs']]
 PrePostTest = Callable[[], Union[None, Awaitable[None]]]
-RunResult = Union[None, Awaitable[None]]
+
 
 if TYPE_CHECKING:
     import sys

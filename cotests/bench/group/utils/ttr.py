@@ -1,10 +1,9 @@
 import asyncio
 import inspect
+from typing import Union, Awaitable
 
-from ..typ import RunResult
 
-
-def try_to_run(t) -> 'RunResult':
+def try_to_run(t) -> Union[None, Awaitable[None]]:
     if t and inspect.iscoroutine(t):
         # try to run
         try:

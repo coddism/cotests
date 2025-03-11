@@ -1,18 +1,18 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
+from .args import CoTestArgs
+from .ctx import AbstractTestGroup, TestCTX, BenchCTX
+from .utils import try_to_run
 from .. import AbstractCoCase, CoException
+from ..case_ext import TestCaseExt
 from ..cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
 )
-from ..case_ext import TestCaseExt
-from .args import CoTestArgs
-from .ctx import AbstractTestGroup, TestCTX, BenchCTX
-from .utils import try_to_run
 
 if TYPE_CHECKING:
-    from cotests.bench.typ import InTest, TestArgs, TestKwargs, PrePostTest, RunResult
+    from cotests.bench.typ import InTest, TestArgs, TestKwargs, PrePostTest
 
 
 def _decorator_go(cls: 'CoTestGroup', func):
@@ -199,6 +199,6 @@ class CoTestGroup(AbstractTestGroup):
                         m.add_exp(test_.name, s)
 
 
-def test_groups(*groups: CoTestGroup, name='__main__') -> 'RunResult':
+def test_groups(*groups: CoTestGroup, name='__main__'):
     g = CoTestGroup(*groups, name=name)
     return g.go()
