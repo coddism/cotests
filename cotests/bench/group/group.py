@@ -8,7 +8,7 @@ from ..cases import (
 )
 from ..case_ext import TestCaseExt
 from .args import CoTestArgs
-from ..group_ctx import AbstractTestGroup, TestCTX, BenchCTX
+from .ctx import AbstractTestGroup, TestCTX, BenchCTX
 from ..utils import try_to_run
 
 if TYPE_CHECKING:
