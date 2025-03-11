@@ -1,8 +1,9 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
-from .bench import AbstractCoCase, CoException, AbstractTestCase
-from .bench.case import (
+from .bench import AbstractCoCase, CoException
+from .bench.cases import (
+    AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
 )
 from .bench.case_ext import TestCaseExt

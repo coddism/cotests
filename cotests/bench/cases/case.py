@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, List, Optional
 
 from . import AbstractTestCase
-from .case_decorators import SyncDecoratorFactory, AsyncDecoratorFactory
-from .case_ext import TestCaseExt
-from .progress_bar import ProgressBarPrinter
+from ..case_decorators import SyncDecoratorFactory, AsyncDecoratorFactory
+from ..case_ext import TestCaseExt
+from ..progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
-    from .co_test_args import CoArgsList
+    from ..co_test_args import CoArgsList
 
 
 class TestCase(AbstractTestCase):
@@ -40,7 +40,6 @@ class FunctionTestCase(TestCase):
     @SyncDecoratorFactory(True)
     def run_bench(self, iterations: int, **__) -> List[float]:
         return [self._bench_single() for _ in ProgressBarPrinter(iterations)]
-
 
 
 class AsyncTestCase(TestCase):

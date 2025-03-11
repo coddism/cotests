@@ -4,7 +4,8 @@ from .utils import format_sec_metrix, get_level_prefix
 from .typ import CoException
 
 if TYPE_CHECKING:
-    from .typ import AbstractTestCase, RESULT_TUPLE_MULTI
+    from .cases import AbstractTestCase
+    from .typ import RESULT_TUPLE_MULTI
 
 
 

@@ -47,13 +47,3 @@ class CoException(Exception):
                 e._r_print((*parents, e.__where))
             else:
                 print('! *', ' / '.join(parents), '\n!  ', type(e).__name__, ':', e)
-
-
-class AbstractTestCase:
-    is_async: bool
-    name: str
-
-    def run_test(self, *, level: int = 0):
-        raise NotImplementedError
-    def run_bench(self, iterations: int, *, level: int = 0):
-        raise NotImplementedError

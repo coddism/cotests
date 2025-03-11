@@ -2,7 +2,8 @@ from time import perf_counter
 from contextlib import contextmanager
 from typing import List, Iterable
 
-from .typ import AbstractTestCase, CoException
+from .cases import AbstractTestCase
+from .typ import CoException
 from .utils import get_level_prefix, format_sec_metrix, print_test_results
 
 
