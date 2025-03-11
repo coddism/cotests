@@ -9,15 +9,15 @@ if TYPE_CHECKING:
 
 class CoTestCase(AbstractCoCase):
 
-    def run_tests(self,
-                  iterations: int = 1,
-                  global_args: Optional['TestArgs'] = None,
-                  global_kwargs: Optional['TestKwargs'] = None,
-                  personal_args: Optional[Iterable['TestArgs']] = None,
-                  personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-                  pre_test: Optional['PrePostTest'] = None,
-                  post_test: Optional['PrePostTest'] = None,
-                  ):
+    def run_test(self,
+                 iterations: Optional[int] = None,
+                 global_args: Optional['TestArgs'] = None,
+                 global_kwargs: Optional['TestKwargs'] = None,
+                 personal_args: Optional[Iterable['TestArgs']] = None,
+                 personal_kwargs: Optional[Iterable['TestKwargs']] = None,
+                 pre_test: Optional['PrePostTest'] = None,
+                 post_test: Optional['PrePostTest'] = None,
+                 ):
         g = CoTestGroup(
             *self.get_tests(),
             global_args=global_args,
@@ -28,4 +28,7 @@ class CoTestCase(AbstractCoCase):
             post_test=post_test,
             name=self.name,
         )
-        return g.go_bench(iterations)
+        if iterations is None:
+            return g.go()
+        else:
+            return g.go_bench(iterations)

@@ -155,7 +155,7 @@ class CoTestGroup(AbstractTestGroup):
         return try_to_run(_decorator_go(self, self.run_test)())
 
     def go_bench(self, iterations: int):
-        assert iterations >= 1
+        assert iterations >= 1, 'Incorrect iterations count'
         return try_to_run(_decorator_go(self, self.run_bench)(iterations))
 
     def run_test(self, *, level: int = 0):

@@ -18,9 +18,9 @@ class Case0(CoTestCase):
     def test_0(self): ...
     def test_1(self): ...
     async def test_a0(self): ...
-Case0().run_tests()
+Case0().run_test()
 # Example 2.1: benchmark
-Case0().run_tests(iterations=50)
+Case0().run_test(iterations=50)
 
 # Example 3: CoTestGroup
 g_sync = CoTestGroup(test_0, test_1, name='SYNC')

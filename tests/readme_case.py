@@ -25,7 +25,7 @@ class TObj(CoTestCase):
     async def test_a1(cls, t: float = .2): await asyncio.sleep(t)
 
 
-TObj().run_tests(
+TObj().run_test(
     global_args=(.1,),
 )
 # or
