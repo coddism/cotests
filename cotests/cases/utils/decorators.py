@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from cotests.utils import format_sec_metrix, get_level_prefix
+from .printer import format_sec_metrix, get_level_prefix
 from cotests.exceptions import CoException
 
 if TYPE_CHECKING:

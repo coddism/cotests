@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, List, Iterable
 
 from cotests.exceptions import CoException
-from cotests.utils import get_level_prefix, format_sec_metrix, print_test_results
+from .printer import get_level_prefix, format_sec_metrix, print_test_results
 
 if TYPE_CHECKING:
     from ..abstract import AbstractTestGroup
