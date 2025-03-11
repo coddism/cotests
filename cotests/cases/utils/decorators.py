@@ -4,8 +4,8 @@ from cotests.utils import format_sec_metrix, get_level_prefix
 from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
-    from . import AbstractTestCase
-    from ..typ import RESULT_TUPLE_MULTI
+    from cotests.cases import AbstractTestCase
+    from cotests.typ import RESULT_TUPLE_MULTI
 
 
 def b_sec_s(ts: float) -> float:
