@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from typing import List, Iterable
 
 from ..cases import AbstractTestCase
-from .. import CoException
+from cotests.exceptions import CoException
 from ..utils import get_level_prefix, format_sec_metrix, print_test_results
 
 

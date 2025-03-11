@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from ..utils import format_sec_metrix, get_level_prefix
-from .. import CoException
+from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
     from . import AbstractTestCase

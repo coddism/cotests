@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING, Optional, Iterable, List
 from .args import CoTestArgs
 from .ctx import AbstractTestGroup, TestCTX, BenchCTX
 from .utils import try_to_run
-from .. import AbstractCoCase, CoException
+from .. import AbstractCoCase
 from ..case_ext import TestCaseExt
 from ..cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost,
 )
+from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
     from cotests.bench.typ import InTest, TestArgs, TestKwargs, PrePostTest
