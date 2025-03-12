@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 def _decorator_go(cls: 'CoTestGroup', func):
     def wrapper_sync(*args, **kwargs):
         try:
+            if cls.constructor:
+                cls.constructor()
             func(*args, **kwargs)
         except CoException as ce:
             ce.print_errors()
@@ -28,9 +30,12 @@ def _decorator_go(cls: 'CoTestGroup', func):
                 cls.destructor()
 
     async def wrapper_async(*args, **kwargs):
-        if cls.constructor:
-            await cls.constructor()
         try:
+            if cls.constructor:
+                if inspect.iscoroutinefunction(cls.constructor):
+                    await cls.constructor()
+                else:
+                    cls.constructor()
             await func(*args, **kwargs)
         except CoException as ce:
             ce.print_errors()
@@ -97,24 +102,28 @@ class CoTestGroup(AbstractTestGroup):
             )
 
         if constructor:
-            if inspect.iscoroutinefunction(constructor):
-                self.__has_coroutines = True
-                self.constructor = constructor
-            elif callable(constructor):
-                constructor()
-            else:
+            try:
+                self.constructor = self.__check_ac(constructor)
+            except ValueError:
                 raise ValueError('Incorrect group constructor')
+
         if destructor:
-            if inspect.iscoroutinefunction(destructor):
-                self.__has_coroutines = True
-                self.destructor = destructor
-            elif callable(destructor):
-                self.destructor = destructor
-            else:
+            try:
+                self.destructor = self.__check_ac(destructor)
+            except ValueError:
                 raise ValueError('Incorrect group destructor')
 
         for test in tests:
             self.__add_test(test)
+
+    def __check_ac(self, cd):
+        if inspect.iscoroutinefunction(cd):
+            self.__has_coroutines = True
+            return cd
+        elif callable(cd):
+            return cd
+        else:
+            raise ValueError
 
     def _clone(self, case: AbstractCoCase) -> 'CoTestGroup':
         return CoTestGroup(
