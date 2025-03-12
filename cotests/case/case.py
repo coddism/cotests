@@ -13,8 +13,14 @@ class CoTestCase(AbstractCoCase):
     def constructor(self): ...
     def destructor(self): ...
 
+    def create_group(self, **kwargs) -> CoTestGroup:
+        return CoTestGroup(
+            *self.get_tests(),
+            name=self.name,
+            **self.__preset_kwargs(kwargs),
+        )
+
     def __preset_kwargs(self, kwargs: Dict):
-        # print(kwargs)
         for ac in ('constructor', 'destructor'):
             if hasattr(self, ac):
                 ic = getattr(self, ac)
@@ -25,19 +31,10 @@ class CoTestCase(AbstractCoCase):
         return kwargs
 
     def run_test(self, **kwargs: Unpack[TestParams]):
-        return CoTestGroup(
-            *self.get_tests(),
-            name=self.name,
-            **self.__preset_kwargs(kwargs),
-        ).go()
+        return self.create_group(**kwargs).go()
 
     def run_bench(self,
                  iterations: int = 1,
                  **kwargs: Unpack[TestParams],
                  ):
-
-        return CoTestGroup(
-            *self.get_tests(),
-            name=self.name,
-            **self.__preset_kwargs(kwargs),
-        ).go_bench(iterations)
+        return self.create_group(**kwargs).go_bench(iterations)

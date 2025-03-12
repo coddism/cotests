@@ -20,31 +20,15 @@ if TYPE_CHECKING:
 def _decorator_go(cls: 'CoTestGroup', func):
     def wrapper_sync(*args, **kwargs):
         try:
-            if cls.constructor:
-                cls.constructor()
             func(*args, **kwargs)
         except CoException as ce:
             ce.print_errors()
-        finally:
-            if cls.destructor:
-                cls.destructor()
 
     async def wrapper_async(*args, **kwargs):
         try:
-            if cls.constructor:
-                if inspect.iscoroutinefunction(cls.constructor):
-                    await cls.constructor()
-                else:
-                    cls.constructor()
             await func(*args, **kwargs)
         except CoException as ce:
             ce.print_errors()
-        finally:
-            if cls.destructor:
-                if inspect.iscoroutinefunction(cls.destructor):
-                    await cls.destructor()
-                else:
-                    cls.destructor()
 
     if cls.is_async:
         return wrapper_async
@@ -54,8 +38,6 @@ def _decorator_go(cls: 'CoTestGroup', func):
 
 class CoTestGroup(AbstractTestGroup):
     NAME = ''
-    constructor = None
-    destructor = None
 
     def __init__(
             self,
@@ -126,11 +108,10 @@ class CoTestGroup(AbstractTestGroup):
             raise ValueError
 
     def _clone(self, case: AbstractCoCase) -> 'CoTestGroup':
-        return CoTestGroup(
-            *case.get_tests(),
+        # todo
+        return case.create_group(
             cotest_args=self.__cta,
             cotest_ext=self.__tce,
-            name=case.name,
         )
 
     @property
@@ -207,7 +188,7 @@ class CoTestGroup(AbstractTestGroup):
 
     async def run_test_async(self, *, level: int = 0):
 
-        with TestCTX(self, level) as m:
+        async with TestCTX(self, level) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     if test_.is_async:
@@ -228,7 +209,7 @@ class CoTestGroup(AbstractTestGroup):
 
     async def run_bench_async(self, iterations: int, *, level: int = 0):
 
-        with BenchCTX(self, level, iterations=iterations) as m:
+        async with BenchCTX(self, level, iterations=iterations) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     if test_.is_async:

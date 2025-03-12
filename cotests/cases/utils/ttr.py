@@ -19,3 +19,12 @@ def try_to_run(t) -> 'RunResult':
             return t
     # else:
     #     print('No coroutines')
+
+
+async def run_fun(fun):
+    if fun is None:
+        return
+    if inspect.iscoroutine(fun):
+        await fun
+    else:
+        raise ValueError(f'Fun {fun} is not supportable')
