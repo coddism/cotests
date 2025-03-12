@@ -23,6 +23,9 @@ def _decorator_go(cls: 'CoTestGroup', func):
             func(*args, **kwargs)
         except CoException as ce:
             ce.print_errors()
+        finally:
+            if cls.destructor:
+                cls.destructor()
 
     async def wrapper_async(*args, **kwargs):
         if cls.constructor:
@@ -31,6 +34,12 @@ def _decorator_go(cls: 'CoTestGroup', func):
             await func(*args, **kwargs)
         except CoException as ce:
             ce.print_errors()
+        finally:
+            if cls.destructor:
+                if inspect.iscoroutinefunction(cls.destructor):
+                    await cls.destructor()
+                else:
+                    cls.destructor()
 
     if cls.is_async:
         return wrapper_async
@@ -41,6 +50,7 @@ def _decorator_go(cls: 'CoTestGroup', func):
 class CoTestGroup(AbstractTestGroup):
     NAME = ''
     constructor = None
+    destructor = None
 
     def __init__(
             self,
@@ -54,7 +64,9 @@ class CoTestGroup(AbstractTestGroup):
             post_test: Optional['TestCallable'] = None,
             cotest_args: Optional['CoTestArgs'] = None,
             cotest_ext: Optional['TestCaseExt'] = None,
+
             constructor: Optional['TestCallable'] = None,
+            destructor: Optional['TestCallable'] = None,
     ):
         # if len(tests) == 0:
         #     raise ValueError('Empty tests list')
@@ -91,7 +103,15 @@ class CoTestGroup(AbstractTestGroup):
             elif callable(constructor):
                 constructor()
             else:
-                raise ValueError('Incorrect group init function')
+                raise ValueError('Incorrect group constructor')
+        if destructor:
+            if inspect.iscoroutinefunction(destructor):
+                self.__has_coroutines = True
+                self.destructor = destructor
+            elif callable(destructor):
+                self.destructor = destructor
+            else:
+                raise ValueError('Incorrect group destructor')
 
         for test in tests:
             self.__add_test(test)

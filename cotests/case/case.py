@@ -9,19 +9,19 @@ if TYPE_CHECKING:
     from cotests.typ import Unpack, TestParams
 
 
-_INIT_KEY = 'constructor'
-
 class CoTestCase(AbstractCoCase):
     def constructor(self): ...
+    def destructor(self): ...
 
     def __preset_kwargs(self, kwargs: Dict):
         # print(kwargs)
-        if hasattr(self, _INIT_KEY):
-            ic = getattr(self, _INIT_KEY)
-            if callable(ic):
-                if _INIT_KEY in kwargs:
-                    raise AttributeError('Init functions conflict')
-                kwargs[_INIT_KEY] = ic
+        for ac in ('constructor', 'destructor'):
+            if hasattr(self, ac):
+                ic = getattr(self, ac)
+                if callable(ic):
+                    if ac in kwargs:
+                        raise AttributeError('Init functions conflict')
+                    kwargs[ac] = ic
         return kwargs
 
     def run_test(self, **kwargs: Unpack[TestParams]):
