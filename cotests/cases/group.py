@@ -99,10 +99,6 @@ class CoTestGroup(AbstractTestGroup):
     def is_async(self):
         return self.__has_coroutines
 
-    @property
-    def has_coroutines(self) -> bool:
-        return self.__has_coroutines
-
     def __add_test(self, test: 'InTest', *args, **kwargs):
         if isinstance(test, tuple):
             if args or kwargs:
