@@ -1,17 +1,17 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
+from cotests.case.case import CoTestCase
+from cotests.exceptions import CoException
 from .abstract import AbstractTestGroup
 from .cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
 from .utils.args import CoTestArgs
+from .utils.case_ext import TestCaseExt
 from .utils.ctx import TestCTX, BenchCTX
 from .utils.ttr import try_to_run
-from .utils.case_ext import TestCaseExt
-from cotests.case.abstract import AbstractCoCase
-from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
@@ -107,8 +107,7 @@ class CoTestGroup(AbstractTestGroup):
         else:
             raise ValueError
 
-    def _clone(self, case: AbstractCoCase) -> 'CoTestGroup':
-        # todo
+    def _clone(self, case: CoTestCase) -> 'CoTestGroup':
         return case.create_group(
             cotest_args=self.__cta,
             cotest_ext=self.__tce,
@@ -152,9 +151,9 @@ class CoTestGroup(AbstractTestGroup):
                     tc = FunctionTestCase
             elif isinstance(test, CoTestGroup):
                 return self.__add_test_case(test)
-            elif isinstance(test, AbstractCoCase):
+            elif isinstance(test, CoTestCase):
                 return self.__add_test_case(self._clone(test))
-            elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
+            elif inspect.isclass(test) and issubclass(test, CoTestCase):
                 return self.__add_test_case(self._clone(test()))
             else:
                 raise ValueError(f'Unknown test: {test}')

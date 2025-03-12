@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict
 
-from cotests.cases.group import CoTestGroup
+import cotests.cases
 from .abstract import AbstractCoCase
 
 if TYPE_CHECKING:
@@ -13,8 +13,8 @@ class CoTestCase(AbstractCoCase):
     def constructor(self): ...
     def destructor(self): ...
 
-    def create_group(self, **kwargs) -> CoTestGroup:
-        return CoTestGroup(
+    def create_group(self, **kwargs):
+        return cotests.cases.CoTestGroup(
             *self.get_tests(),
             name=self.name,
             **self.__preset_kwargs(kwargs),
