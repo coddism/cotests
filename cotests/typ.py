@@ -16,7 +16,7 @@ TestCallable = Callable[[], RunResult]
 
 if TYPE_CHECKING:
     import sys
-    from cotests.case.abstract import AbstractCoCase
+    from cotests.case import CoTestCase
     from cotests.cases.abstract import AbstractTestCase
 
     if sys.version_info[:2] >= (3, 11):
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
         from typing_extensions import Unpack
 
     InTestTuple = Tuple[TestFunction, Unpack[Tuple[Any, ...]]]
-    InTest = Union[TestFunction, InTestTuple, AbstractCoCase, Type[AbstractCoCase], AbstractTestCase]
+    InTest = Union[TestFunction, InTestTuple, CoTestCase, Type[CoTestCase], AbstractTestCase]
 
 
 class TestParams(TypedDict, total=False):

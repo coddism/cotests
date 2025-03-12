@@ -1,1 +1,1 @@
-from .group import CoTestGroup
+from .group import CoTestGroup, test_groups
