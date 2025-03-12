@@ -10,7 +10,8 @@ TestArgs = Iterable[Any]
 TestKwargs = Mapping[str, Any]
 # TestTuple = Tuple[TestFunction, TestArgs, TestKwargs]
 CoArgsList = List[Tuple['TestArgs', 'TestKwargs']]
-PrePostTest = Callable[[], Union[None, Awaitable[None]]]
+RunResult = Union[None, Awaitable[None]]
+TestCallable = Callable[[], RunResult]
 
 
 if TYPE_CHECKING:
@@ -32,8 +33,8 @@ class TestParams(TypedDict, total=False):
     global_kwargs: TestKwargs
     personal_args: Iterable[TestArgs]
     personal_kwargs: Iterable[TestKwargs]
-    pre_test: PrePostTest
-    post_test: PrePostTest
+    pre_test: TestCallable
+    post_test: TestCallable
 
 
 class TestParamsN(TestParams, total=False):

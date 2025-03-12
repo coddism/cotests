@@ -1,9 +1,12 @@
 import asyncio
 import inspect
-from typing import Union, Awaitable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cotests.typ import RunResult
 
 
-def try_to_run(t) -> Union[None, Awaitable[None]]:
+def try_to_run(t) -> 'RunResult':
     if t and inspect.iscoroutine(t):
         # try to run
         try:

@@ -14,7 +14,7 @@ from cotests.case.abstract import AbstractCoCase
 from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
-    from cotests.typ import InTest, TestArgs, TestKwargs, PrePostTest
+    from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
 
 
 def _decorator_go(cls: 'CoTestGroup', func):
@@ -25,6 +25,8 @@ def _decorator_go(cls: 'CoTestGroup', func):
             ce.print_errors()
 
     async def wrapper_async(*args, **kwargs):
+        if cls.constructor:
+            await cls.constructor()
         try:
             await func(*args, **kwargs)
         except CoException as ce:
@@ -38,6 +40,7 @@ def _decorator_go(cls: 'CoTestGroup', func):
 
 class CoTestGroup(AbstractTestGroup):
     NAME = ''
+    constructor = None
 
     def __init__(
             self,
@@ -47,10 +50,11 @@ class CoTestGroup(AbstractTestGroup):
             global_kwargs: Optional['TestKwargs'] = None,
             personal_args: Optional[Iterable['TestArgs']] = None,
             personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-            pre_test: Optional['PrePostTest'] = None,
-            post_test: Optional['PrePostTest'] = None,
+            pre_test: Optional['TestCallable'] = None,
+            post_test: Optional['TestCallable'] = None,
             cotest_args: Optional['CoTestArgs'] = None,
             cotest_ext: Optional['TestCaseExt'] = None,
+            constructor: Optional['TestCallable'] = None,
     ):
         # if len(tests) == 0:
         #     raise ValueError('Empty tests list')
@@ -79,6 +83,15 @@ class CoTestGroup(AbstractTestGroup):
                 pre_test=pre_test,
                 post_test=post_test,
             )
+
+        if constructor:
+            if inspect.iscoroutinefunction(constructor):
+                self.__has_coroutines = True
+                self.constructor = constructor
+            elif callable(constructor):
+                constructor()
+            else:
+                raise ValueError('Incorrect group init function')
 
         for test in tests:
             self.__add_test(test)
