@@ -5,19 +5,19 @@ from typing import TYPE_CHECKING
 from .cases.group import CoTestGroup
 
 if TYPE_CHECKING:
-    from .typ import InTest, Unpack, TestParamsN
+    from .typ import InTest, Unpack, TestParamsName
 
 
 def test_batch(
         *funcs: 'InTest',
-        **kwargs: Unpack[TestParamsN],
+        **kwargs: Unpack[TestParamsName],
 ):
     return CoTestGroup(*funcs, **kwargs).go()
 
 def bench_batch(
         *funcs: 'InTest',
         iterations: int = 1,
-        **kwargs: Unpack[TestParamsN],
+        **kwargs: Unpack[TestParamsName],
 ):
     return CoTestGroup(*funcs, **kwargs).go_bench(iterations)
 

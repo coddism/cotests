@@ -6,7 +6,7 @@ import cotests.cases
 from .abstract import AbstractCoCase
 
 if TYPE_CHECKING:
-    from cotests.typ import Unpack, TestParams, TestParamsFull
+    from cotests.typ import Unpack, TestParamsCase, TestParamsFull
 
 
 class CoTestCase(AbstractCoCase):
@@ -50,11 +50,11 @@ class CoTestCase(AbstractCoCase):
                     del kwargs['cotest_ext']
         return kwargs
 
-    def run_test(self, **kwargs: Unpack[TestParams]):
+    def run_test(self, **kwargs: Unpack[TestParamsCase]):
         return self.create_group(**kwargs).go()
 
     def run_bench(self,
-                 iterations: int = 1,
-                 **kwargs: Unpack[TestParams],
-                 ):
+                  iterations: int = 1,
+                  **kwargs: Unpack[TestParamsCase],
+                  ):
         return self.create_group(**kwargs).go_bench(iterations)

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     InTest = Union[TestFunction, InTestTuple, CoTestCase, Type[CoTestCase], AbstractTestCase]
 
 
-class TestParams(TypedDict, total=False):
+class TestParamsCase(TypedDict, total=False):
     global_args: TestArgs
     global_kwargs: TestKwargs
     personal_args: Iterable[TestArgs]
@@ -39,11 +39,11 @@ class TestParams(TypedDict, total=False):
     post_test: TestCallable
 
 
-class TestParamsN(TestParams, total=False):
+class TestParamsName(TestParamsCase, total=False):
     name: str
 
 
-class TestParamsFull(TestParamsN, total=False):
+class TestParamsFull(TestParamsName, total=False):
     cotest_args: 'CoTestArgs'
     cotest_ext: 'TestCaseExt'
     constructor: TestCallable
