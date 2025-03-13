@@ -1,6 +1,7 @@
 import inspect
 import importlib.util
 import os
+import unittest
 from typing import List, Optional, Collection
 from .case import CoTestCase
 from .cases import CoTestGroup, test_groups
@@ -33,6 +34,7 @@ def test_module(
 
                 tmp_tests = []
                 tmp_groups = []
+                tmp_unittests = []
                 for k, v in module.__dict__.items():
                     if k.startswith('_'):
                         continue
@@ -41,8 +43,13 @@ def test_module(
                         tmp_groups.append(v)
                     elif inspect.isfunction(v) and v.__module__ == module_name and v.__name__.startswith('test_'):
                         tmp_tests.append(v)
-                    elif inspect.isclass(v) and v.__module__ == module_name and issubclass(v, CoTestCase):
-                        tmp_tests.append(v)
+                    elif inspect.isclass(v) and v.__module__ == module_name:
+                        if issubclass(v, CoTestCase):
+                            tmp_tests.append(v)
+                        elif issubclass(v, unittest.TestCase):
+                            tmp_unittests.append(v)
+                        else:
+                            continue
                     else:
                         continue
                     print(' *', k, type(v))
@@ -52,6 +59,9 @@ def test_module(
                     tests.append(CoTestGroup(*tmp_groups, name=module_name))
                 elif tmp_tests:
                     tests.append(CoTestGroup(*tmp_tests, name=module_name))
+
+                if tmp_unittests:
+                    tests.append(CoTestGroup(*tmp_unittests, name=module_name))
         else:
             print('o_O', sd)
 

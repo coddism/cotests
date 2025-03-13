@@ -5,7 +5,7 @@
 ## Features
 
 * Python3.7+
-* Can run sync functions, coroutines, coroutinefunctions, classes
+* Can run sync functions, coroutines, coroutinefunctions, classes, unittest.TestCase
 * Convenient conversion between min, sec, ms, µs, etc.
 * Comparison table in benchmarks
 * Whole module test

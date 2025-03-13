@@ -1,5 +1,6 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
+import unittest
 
 from cotests.case.case import CoTestCase
 from cotests.exceptions import CoException
@@ -8,6 +9,7 @@ from .cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
+from .unit_case import UnitTestCase
 from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
 from .utils.ctx import TestCTX, BenchCTX
@@ -155,6 +157,8 @@ class CoTestGroup(AbstractTestGroup):
                 return self.__add_test_case(self._clone(test))
             elif inspect.isclass(test) and issubclass(test, CoTestCase):
                 return self.__add_test_case(self._clone(test()))
+            elif inspect.isclass(test) and issubclass(test, unittest.TestCase):
+                return self.__add_test_case(UnitTestCase(test))
             else:
                 raise ValueError(f'Unknown test: {test}')
 
