@@ -9,6 +9,14 @@ class TObj(CoTestCase):
     def __init__(self): print('Init Case')
     def __del__(self): print('Del Case')
 
+    # optional additional functions
+    async def constructor(self):
+        print('Additional constructor')
+    def destructor(self):
+        print('Additional destructor')
+    def pre_test(self):
+        print(' :)', end=' ')
+
     def test_0(self, t: float = .1): time.sleep(t)
 
     @staticmethod
@@ -25,7 +33,7 @@ class TObj(CoTestCase):
     async def test_a1(cls, t: float = .2): await asyncio.sleep(t)
 
 
-TObj().run_tests(
+TObj().run_test(
     global_args=(.1,),
 )
 # or

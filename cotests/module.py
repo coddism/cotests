@@ -2,8 +2,8 @@ import inspect
 import importlib.util
 import os
 from typing import List, Optional, Collection
-from .case.abstract import AbstractCoCase
-from .cases.group import CoTestGroup, test_groups
+from .case import CoTestCase
+from .cases import CoTestGroup, test_groups
 
 
 def test_module(
@@ -41,7 +41,7 @@ def test_module(
                         tmp_groups.append(v)
                     elif inspect.isfunction(v) and v.__module__ == module_name and v.__name__.startswith('test_'):
                         tmp_tests.append(v)
-                    elif inspect.isclass(v) and v.__module__ == module_name and issubclass(v, AbstractCoCase):
+                    elif inspect.isclass(v) and v.__module__ == module_name and issubclass(v, CoTestCase):
                         tmp_tests.append(v)
                     else:
                         continue

@@ -1,9 +1,10 @@
-from time import perf_counter
 from contextlib import contextmanager
+from time import perf_counter
 from typing import TYPE_CHECKING, List, Iterable
 
 from cotests.exceptions import CoException
 from .printer import get_level_prefix, format_sec_metrix, print_test_results
+from .ttr import run_fun
 
 if TYPE_CHECKING:
     from ..abstract import AbstractTestGroup
@@ -24,20 +25,22 @@ class TestCTX:
         self.__errors.append(e)
 
     def __enter__(self):
+        self._group.constructor()
         self.__pre()
-        self.__start = perf_counter()
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.__finish = perf_counter() - self.__start
-        self._final_print()
+    async def __aenter__(self):
+        await run_fun(self._group.constructor())
+        self.__pre()
+        return self
 
-        if self.__errors:
-            raise CoException(self.__errors, self._group.name)
+    def __exit__(self, *args, **kwargs):
+        self.__post(*args, **kwargs)
+        self._group.destructor()
 
-        if exc_type:
-            print('EXC!')
-            print(exc_type, exc_value, exc_traceback)
+    async def __aexit__(self, *args, **kwargs):
+        self.__post(*args, **kwargs)
+        await run_fun(self._group.destructor())
 
     @contextmanager
     def ctx(self):
@@ -55,6 +58,18 @@ class TestCTX:
                 [Exception('Tests not found')],
                 where=self._group.name
             )
+        self.__start = perf_counter()
+
+    def __post(self, exc_type, exc_value, exc_traceback):
+        self.__finish = perf_counter() - self.__start
+        self._final_print()
+
+        if self.__errors:
+            raise CoException(self.__errors, self._group.name)
+
+        if exc_type:
+            print('EXC!')
+            print(exc_type, exc_value, exc_traceback)
 
     def _final_print(self):
         print(f'{self.__pref}⌎-- Full time: {format_sec_metrix(self.__finish)}')

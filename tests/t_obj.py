@@ -32,11 +32,11 @@ class TObjA(CoTestCase):
 
 if __name__ == '__main__':
     iterations = 5
-    TObj().run_tests(
+    TObj().run_bench(
         iterations=iterations,
         global_args=(.05,),
     )
-    TObjA().run_tests(
+    TObjA().run_bench(
         iterations=iterations,
         global_args=(.05,),
     )

@@ -30,10 +30,12 @@ class TestCaseExt:
                  pre_test: Optional[Callable] = None,
                  post_test: Optional[Callable] = None,
                  ):
+        self.__is_not_empty = bool(pre_test or post_test)
+
         self.pre_test = pre_test or self.__empty_function
         self.post_test = post_test or self.__empty_function
         self.is_async = False
-        if pre_test or post_test:
+        if self.__is_not_empty:
             for x in (pre_test, post_test):
                 self.__check_function(x)
             self.decor = self.__with_prepost
@@ -41,6 +43,10 @@ class TestCaseExt:
         else:
             self.decor = bench_decorator
             self.decor_async = bench_decorator_async
+
+    @property
+    def is_not_empty(self):
+        return self.__is_not_empty
 
     def __check_function(self, x):
         if x:

@@ -1,20 +1,20 @@
 import inspect
 from typing import TYPE_CHECKING, Optional, Iterable, List
 
+from cotests.case.case import CoTestCase
+from cotests.exceptions import CoException
 from .abstract import AbstractTestGroup
 from .cases import (
     AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
 from .utils.args import CoTestArgs
+from .utils.case_ext import TestCaseExt
 from .utils.ctx import TestCTX, BenchCTX
 from .utils.ttr import try_to_run
-from .utils.case_ext import TestCaseExt
-from cotests.case.abstract import AbstractCoCase
-from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
-    from cotests.typ import InTest, TestArgs, TestKwargs, PrePostTest
+    from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
 
 
 def _decorator_go(cls: 'CoTestGroup', func):
@@ -47,10 +47,13 @@ class CoTestGroup(AbstractTestGroup):
             global_kwargs: Optional['TestKwargs'] = None,
             personal_args: Optional[Iterable['TestArgs']] = None,
             personal_kwargs: Optional[Iterable['TestKwargs']] = None,
-            pre_test: Optional['PrePostTest'] = None,
-            post_test: Optional['PrePostTest'] = None,
+            pre_test: Optional['TestCallable'] = None,
+            post_test: Optional['TestCallable'] = None,
             cotest_args: Optional['CoTestArgs'] = None,
             cotest_ext: Optional['TestCaseExt'] = None,
+
+            constructor: Optional['TestCallable'] = None,
+            destructor: Optional['TestCallable'] = None,
     ):
         # if len(tests) == 0:
         #     raise ValueError('Empty tests list')
@@ -80,15 +83,34 @@ class CoTestGroup(AbstractTestGroup):
                 post_test=post_test,
             )
 
+        if constructor:
+            try:
+                self.constructor = self.__check_ac(constructor)
+            except ValueError:
+                raise ValueError('Incorrect group constructor')
+
+        if destructor:
+            try:
+                self.destructor = self.__check_ac(destructor)
+            except ValueError:
+                raise ValueError('Incorrect group destructor')
+
         for test in tests:
             self.__add_test(test)
 
-    def _clone(self, case: AbstractCoCase) -> 'CoTestGroup':
-        return CoTestGroup(
-            *case.get_tests(),
+    def __check_ac(self, cd):
+        if inspect.iscoroutinefunction(cd):
+            self.__has_coroutines = True
+            return cd
+        elif callable(cd):
+            return cd
+        else:
+            raise ValueError
+
+    def _clone(self, case: CoTestCase) -> 'CoTestGroup':
+        return case.create_group(
             cotest_args=self.__cta,
             cotest_ext=self.__tce,
-            name=case.name,
         )
 
     @property
@@ -97,10 +119,6 @@ class CoTestGroup(AbstractTestGroup):
 
     @property
     def is_async(self):
-        return self.__has_coroutines
-
-    @property
-    def has_coroutines(self) -> bool:
         return self.__has_coroutines
 
     def __add_test(self, test: 'InTest', *args, **kwargs):
@@ -133,9 +151,9 @@ class CoTestGroup(AbstractTestGroup):
                     tc = FunctionTestCase
             elif isinstance(test, CoTestGroup):
                 return self.__add_test_case(test)
-            elif isinstance(test, AbstractCoCase):
+            elif isinstance(test, CoTestCase):
                 return self.__add_test_case(self._clone(test))
-            elif inspect.isclass(test) and issubclass(test, AbstractCoCase):
+            elif inspect.isclass(test) and issubclass(test, CoTestCase):
                 return self.__add_test_case(self._clone(test()))
             else:
                 raise ValueError(f'Unknown test: {test}')
@@ -155,7 +173,7 @@ class CoTestGroup(AbstractTestGroup):
         return try_to_run(_decorator_go(self, self.run_test)())
 
     def go_bench(self, iterations: int):
-        assert iterations >= 1
+        assert iterations >= 1, 'Incorrect iterations count'
         return try_to_run(_decorator_go(self, self.run_bench)(iterations))
 
     def run_test(self, *, level: int = 0):
@@ -169,7 +187,7 @@ class CoTestGroup(AbstractTestGroup):
 
     async def run_test_async(self, *, level: int = 0):
 
-        with TestCTX(self, level) as m:
+        async with TestCTX(self, level) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     if test_.is_async:
@@ -190,7 +208,7 @@ class CoTestGroup(AbstractTestGroup):
 
     async def run_bench_async(self, iterations: int, *, level: int = 0):
 
-        with BenchCTX(self, level, iterations=iterations) as m:
+        async with BenchCTX(self, level, iterations=iterations) as m:
             for test_ in self.__tests:
                 with m.ctx():
                     if test_.is_async:
