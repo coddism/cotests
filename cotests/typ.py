@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     import sys
     from cotests.case import CoTestCase
     from cotests.cases.abstract import AbstractTestCase
+    from cotests.cases.utils.args import CoTestArgs
+    from cotests.cases.utils.case_ext import TestCaseExt
 
     if sys.version_info[:2] >= (3, 11):
         from typing import Unpack
@@ -39,3 +41,10 @@ class TestParams(TypedDict, total=False):
 
 class TestParamsN(TestParams, total=False):
     name: str
+
+
+class TestParamsFull(TestParamsN, total=False):
+    cotest_args: 'CoTestArgs'
+    cotest_ext: 'TestCaseExt'
+    constructor: TestCallable
+    destructor: TestCallable
