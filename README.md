@@ -15,7 +15,8 @@
 ### test_batch() & arguments
 
 Simple run all types of tests.
-    
+
+```reStructuredText   
     # args
     :param funcs: all functions/cases/groups for test or benchmark
     # kwargs (all optional)
@@ -27,6 +28,7 @@ Simple run all types of tests.
     :param Callable pre_test: run before each function; is not added to benchmark time
     :param Callable post_test: run after each function; is not added to benchmark time
     :return: None | Awaitable[None]
+```
 
 ### bench_batch()
 
@@ -35,7 +37,9 @@ Like `test_batch()'`, but with output a results table, and you can set count of 
 ### CoTestCase
 
 A class for tests. By default, it runs all methods (including `@classmethod` or `@staticmethod`) starting with `test_`.
-It has method `run_tests` - is analog of `bench_batch`.
+It has methods (without `name` parameter; name taken from class name):
+* `run_tests` - is analog of `test_batch`
+* `run_bench` - is analog of `bench_batch`
 
 ### CoTestGroup
 
@@ -122,46 +126,47 @@ def test_2(): ...
 test_batch(test_0, test_1, test_2,)
 
 # benchy
-bench_batch(test_0, test_1, test_2,)
+bench_batch(test_0, test_1, test_2, name='benchy')
 
 # more benchy
 bench_batch(
     test_0, test_1, test_2,
     iterations=1000,
+    name='more benchy',
 )
 ```
 
 Output:
 ```
 ⌌-------------- Start CoTest --------------
-¦  * test_0:ok - 309.999 ns
-¦  * test_1:ok - 320.000 ns
-¦  * test_2:ok - 250.000 ns
-⌎-- Full time: 122.440 µs
+¦  * test_0:ok - 360.000 ns
+¦  * test_1:ok - 340.000 ns
+¦  * test_2:ok - 229.998 ns
+⌎-- Full time: 79.940 µs
 
-⌌-------------- Start CoBench --------------
-¦  * test_0:.ok - 250.000 ns
-¦  * test_1:.ok - 210.001 ns
-¦  * test_2:.ok - 210.001 ns
+⌌-------------- Start CoBench benchy--------------
+¦  * test_0:.ok - 290.000 ns
+¦  * test_1:.ok - 290.000 ns
+¦  * test_2:.ok - 309.999 ns
 ¦  +-----------------------------+
 ¦  |    time    |   f    |   %   |
-¦  | 250.000 ns | test_0 | 119.0 |
-¦  | 210.001 ns | test_1 | 100.0 |
-¦  | 210.001 ns | test_2 | 100.0 |
+¦  | 290.000 ns | test_0 | 100.0 |
+¦  | 290.000 ns | test_1 | 100.0 |
+¦  | 309.999 ns | test_2 | 106.9 |
 ¦  +-----------------------------+
-⌎-- Full time: 84.820 µs
+⌎-- Full time: 99.939 µs
 
-⌌-------------- Start CoBench --------------
-¦  * test_0:..................................................ok - 219.999 ns
-¦  * test_1:..................................................ok - 239.999 ns
-¦  * test_2:..................................................ok - 190.001 ns
-¦  +-------------------------------------------------------------------+
-¦  |    full    |    max     |    min    |    avg     |   f    |   %   |
-¦  | 127.119 µs | 290.001 ns | 90.000 ns | 127.119 ns | test_0 | 119.5 |
-¦  | 106.339 µs | 239.999 ns | 90.000 ns | 106.339 ns | test_1 | 100.0 |
-¦  | 125.599 µs | 530.001 ns | 90.000 ns | 125.599 ns | test_2 | 118.1 |
-¦  +-------------------------------------------------------------------+
-⌎-- Full time: 3.417 ms
+⌌-------------- Start CoBench more benchy--------------
+¦  * test_0:..................................................ok - 259.999 ns
+¦  * test_1:..................................................ok - 309.999 ns
+¦  * test_2:..................................................ok - 220.001 ns
+¦  +--------------------------------------------------------------------+
+¦  |    full    |    max     |    min     |    avg     |   f    |   %   |
+¦  | 137.490 µs | 259.999 ns |  90.000 ns | 137.490 ns | test_0 | 106.0 |
+¦  | 140.370 µs | 310.001 ns | 119.999 ns | 140.370 ns | test_1 | 108.2 |
+¦  | 129.719 µs | 390.000 ns | 110.002 ns | 129.719 ns | test_2 | 100.0 |
+¦  +--------------------------------------------------------------------+
+⌎-- Full time: 3.798 ms
 ```
 
 ### bench_batch: arguments
@@ -234,6 +239,14 @@ class TObj(CoTestCase):
     def __init__(self): print('Init Case')
     def __del__(self): print('Del Case')
 
+    # optional additional functions
+    async def constructor(self):
+        print('Additional constructor')
+    def destructor(self):
+        print('Additional destructor')
+    def pre_test(self):
+        print(' :)', end=' ')
+
     def test_0(self, t: float = .1): time.sleep(t)
 
     @staticmethod
@@ -269,14 +282,16 @@ Partial output:
 
 ```
 Init Case
+Additional constructor
 
 ⌌-------------- Start CoTest TObj--------------
-¦  * test_0:ok - 100.095 ms
-¦  * test_1:ok - 100.085 ms
-¦  * test_2:ok - 100.085 ms
-¦  * test_a0:ok - 100.307 ms
-¦  * test_a1:ok - 100.278 ms
-⌎-- Full time: 501.431 ms
+¦  * test_0: :) ok - 100.096 ms
+¦  * test_1: :) ok - 100.087 ms
+¦  * test_2: :) ok - 100.117 ms
+¦  * test_a0: :) ok - 100.328 ms
+¦  * test_a1: :) ok - 100.272 ms
+⌎-- Full time: 501.606 ms
+Additional destructor
 Del Case
 ```
 

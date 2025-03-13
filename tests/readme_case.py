@@ -9,6 +9,7 @@ class TObj(CoTestCase):
     def __init__(self): print('Init Case')
     def __del__(self): print('Del Case')
 
+    # optional additional functions
     async def constructor(self):
         print('Additional constructor')
     def destructor(self):
