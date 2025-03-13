@@ -33,6 +33,16 @@ class CoTestCase(AbstractCoCase):
                 if ac in kwargs:
                     raise AttributeError(f'{ac} functions conflict')
                 kwargs[ac] = irf
+        for ac in ('pre_test', 'post_test'):
+            irf = self.__is_reassigned_function(ac)
+            if irf:
+                if ac in kwargs:
+                    raise AttributeError(f'{ac} functions conflict')
+                if 'cotest_ext' in kwargs:
+                    if kwargs['cotest_ext'].is_not_empty:
+                        raise AttributeError(f'{ac} CTE conflict')
+                    del kwargs['cotest_ext']
+                kwargs[ac] = irf
         return kwargs
 
     def run_test(self, **kwargs: Unpack[TestParams]):

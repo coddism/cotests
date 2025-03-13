@@ -9,10 +9,12 @@ class TObj(CoTestCase):
     def __init__(self): print('Init Case')
     def __del__(self): print('Del Case')
 
-    def constructor(self):
+    async def constructor(self):
         print('Additional constructor')
-    async def destructor(self):
+    def destructor(self):
         print('Additional destructor')
+    def pre_test(self):
+        print(' :)', end=' ')
 
     def test_0(self, t: float = .1): time.sleep(t)
 
