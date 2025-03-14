@@ -38,7 +38,8 @@ def print_test_results(
         headers: Optional[Tuple] = None,
 ) -> List[str]:
     if not exp:
-        return ['! No results.']
+        return []
+        # return ['! No results.']
         # print('No results.')
         # return
 

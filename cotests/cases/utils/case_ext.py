@@ -87,4 +87,4 @@ class TestCaseExt:
         return wrapper
 
 
-__all__ = (TestCaseExt,)
+__all__ = ('TestCaseExt',)

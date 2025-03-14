@@ -1,11 +1,11 @@
 import inspect
 import unittest
-from typing import TYPE_CHECKING, Optional, Iterable, List
+from typing import TYPE_CHECKING, Optional, Iterable, List, Type
 
 from cotests.case.case import CoTestCase
-from .abstract import AbstractTestGroup
+from cotests.exceptions import UnknownTestTypeError
+from .abstract import AbstractTestCase, AbstractTestGroup
 from .cases import (
-    AbstractTestCase,
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
 from .unit_case import UnitTestCase
@@ -16,6 +16,7 @@ from .utils.group_go_decorator import GoDecor
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
+    from .cases import TestCase
 
 
 class CoTestGroup(AbstractTestGroup):
@@ -42,6 +43,7 @@ class CoTestGroup(AbstractTestGroup):
         self.__tests: List['AbstractTestCase'] = []
         self.__has_coroutines = False
         self.name = name or self.NAME
+        self._init_errors = []
 
         if cotest_args:
             if any((global_args, global_kwargs, personal_args, personal_kwargs)):
@@ -78,7 +80,10 @@ class CoTestGroup(AbstractTestGroup):
                 raise ValueError('Incorrect group destructor')
 
         for test in tests:
-            self.__add_test(test)
+            try:
+                self.__add_test(test)
+            except UnknownTestTypeError as e:
+                self._init_errors.append(e)
 
     def __check_ac(self, cd):
         if inspect.iscoroutinefunction(cd):
@@ -103,6 +108,21 @@ class CoTestGroup(AbstractTestGroup):
     def is_async(self):
         return self.__has_coroutines
 
+    @property
+    def init_errors(self):
+        return self._init_errors
+
+    def __get_function_test_case(self, test: 'InTest') -> Optional[Type['TestCase']]:
+        if inspect.iscoroutine(test):
+            return CoroutineTestCase
+        elif inspect.iscoroutinefunction(test):
+            return CoroutineFunctionTestCase
+        elif inspect.isfunction(test) or inspect.ismethod(test):
+            if self.__tce.is_async:
+                return FunctionTestCaseWithAsyncPrePost
+            else:
+                return FunctionTestCase
+
     def __add_test(self, test: 'InTest', *args, **kwargs):
         if isinstance(test, tuple):
             if args or kwargs:
@@ -122,31 +142,24 @@ class CoTestGroup(AbstractTestGroup):
 
             self.__add_test(f, *a_, **kw_)
         else:
-            if inspect.iscoroutine(test):
-                tc = CoroutineTestCase
-            elif inspect.iscoroutinefunction(test):
-                tc = CoroutineFunctionTestCase
-            elif inspect.isfunction(test) or inspect.ismethod(test):
-                if self.__tce.is_async:
-                    tc = FunctionTestCaseWithAsyncPrePost
-                else:
-                    tc = FunctionTestCase
+            tc = self.__get_function_test_case(test)
+            if tc:
+                return self.__add_test_case(tc(
+                    test,
+                    params=self.__cta.get(args, kwargs),
+                    ext=self.__tce,
+                ))
             elif isinstance(test, CoTestGroup):
                 return self.__add_test_case(test)
             elif isinstance(test, CoTestCase):
                 return self.__add_test_case(self._clone(test))
-            elif inspect.isclass(test) and issubclass(test, CoTestCase):
-                return self.__add_test_case(self._clone(test()))
-            elif inspect.isclass(test) and issubclass(test, unittest.TestCase):
-                return self.__add_test_case(UnitTestCase(test))
-            else:
-                raise ValueError(f'Unknown test: {test}')
+            elif inspect.isclass(test):
+                if issubclass(test, CoTestCase):
+                    return self.__add_test_case(self._clone(test()))
+                if issubclass(test, unittest.TestCase):
+                    return self.__add_test_case(UnitTestCase(test))
 
-            return self.__add_test_case(tc(
-                test,
-                params=self.__cta.get(args, kwargs),
-                ext=self.__tce,
-            ))
+            raise UnknownTestTypeError(f'Unknown test: {type(test)} {test}')
 
     def __add_test_case(self, case: AbstractTestCase):
         if case.is_async:

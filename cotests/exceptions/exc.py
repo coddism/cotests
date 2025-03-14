@@ -22,3 +22,15 @@ class CoException(Exception):
                 e._r_print((*parents, e.__where))
             else:
                 print('! *', ' / '.join(parents), '\n!  ', type(e).__name__, ':', e)
+
+
+class InitGroupErrors(CoException):
+    def __init__(self, errors: List[Exception]):
+        super().__init__(errors, '__init__')
+
+
+class UnknownTestTypeError(Exception):
+    ...
+
+
+__all__ = ('CoException', 'InitGroupErrors', 'UnknownTestTypeError',)

@@ -22,4 +22,4 @@ def bench_batch(
     return CoTestGroup(*funcs, **kwargs).go_bench(iterations)
 
 
-__all__ = (test_batch, bench_batch)
+__all__ = ('test_batch', 'bench_batch',)

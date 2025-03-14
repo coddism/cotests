@@ -1,3 +1,6 @@
+from typing import List
+
+
 class AbstractTestCase:
     is_async: bool
     name: str
@@ -10,5 +13,6 @@ class AbstractTestCase:
 
 class AbstractTestGroup(AbstractTestCase):
     is_empty: bool
+    init_errors: List[Exception]
     def constructor(self): ...
     def destructor(self): ...

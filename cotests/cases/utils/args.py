@@ -72,4 +72,4 @@ class CoTestArgs:
             return self.__params
 
 
-__all__ = (CoTestArgs,)
+__all__ = ('CoTestArgs',)

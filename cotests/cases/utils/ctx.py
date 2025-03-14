@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from time import perf_counter
 from typing import TYPE_CHECKING, List, Iterable
 
-from cotests.exceptions import CoException
+from cotests.exceptions import CoException, InitGroupErrors
 from .printer import get_level_prefix, format_sec_metrix, print_test_results
 from .ttr import run_fun
 
@@ -68,6 +68,11 @@ class TestCTX:
         if any(exc):
             self.add_error(exc[1])
 
+        if self._group.init_errors:
+            self.add_error(
+                InitGroupErrors(self._group.init_errors)
+            )
+
         if self.__errors:
             raise CoException(self.__errors, self._group.name)
 
@@ -113,4 +118,4 @@ class BenchCTX(TestCTX):
         super()._final_print()
 
 
-__all__ = (TestCTX, BenchCTX)
+__all__ = ('TestCTX', 'BenchCTX')

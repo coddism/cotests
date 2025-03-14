@@ -73,4 +73,4 @@ def test_module(
     return test_groups(*tests)
 
 
-__all__ = (test_module, )
+__all__ = ('test_module', )
