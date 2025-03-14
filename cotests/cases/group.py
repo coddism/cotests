@@ -1,9 +1,8 @@
 import inspect
-from typing import TYPE_CHECKING, Optional, Iterable, List
 import unittest
+from typing import TYPE_CHECKING, Optional, Iterable, List
 
 from cotests.case.case import CoTestCase
-from cotests.exceptions import CoException
 from .abstract import AbstractTestGroup
 from .cases import (
     AbstractTestCase,
@@ -13,29 +12,10 @@ from .unit_case import UnitTestCase
 from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
 from .utils.ctx import TestCTX, BenchCTX
-from .utils.ttr import try_to_run
+from .utils.group_go_decorator import GoDecor
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
-
-
-def _decorator_go(cls: 'CoTestGroup', func):
-    def wrapper_sync(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except CoException as ce:
-            ce.print_errors()
-
-    async def wrapper_async(*args, **kwargs):
-        try:
-            await func(*args, **kwargs)
-        except CoException as ce:
-            ce.print_errors()
-
-    if cls.is_async:
-        return wrapper_async
-    else:
-        return wrapper_sync
 
 
 class CoTestGroup(AbstractTestGroup):
@@ -174,11 +154,11 @@ class CoTestGroup(AbstractTestGroup):
         self.__tests.append(case)
 
     def go(self):
-        return try_to_run(_decorator_go(self, self.run_test)())
+        return GoDecor(self, self.run_test)()
 
     def go_bench(self, iterations: int):
         assert iterations >= 1, 'Incorrect iterations count'
-        return try_to_run(_decorator_go(self, self.run_bench)(iterations))
+        return GoDecor(self, self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
         if self.is_async:

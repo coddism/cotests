@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class CoTestCase(AbstractCoCase):
 
-    def __is_reassigned_function(self, fun_name: str) -> Optional[Callable]:
+    def __is_reassigned_method(self, fun_name: str) -> Optional[Callable]:
         ic = getattr(self, fun_name)
         ic2 = getattr(super(), fun_name)
         if ic != ic2:
@@ -31,8 +31,8 @@ class CoTestCase(AbstractCoCase):
             raise AttributeError('Name in Case kwargs')
 
         # noinspection PyTypedDict
-        def process(fn: str) -> bool:
-            irf = self.__is_reassigned_function(fn)
+        def process_method(fn: str) -> bool:
+            irf = self.__is_reassigned_method(fn)
             if irf:
                 if fn in kwargs:
                     raise AttributeError(f'{fn} functions conflict')
@@ -41,9 +41,9 @@ class CoTestCase(AbstractCoCase):
             return False
 
         for ac in ('constructor', 'destructor'):
-            process(ac)
+            process_method(ac)
         for ac in ('pre_test', 'post_test'):
-            if process(ac):
+            if process_method(ac):
                 if 'cotest_ext' in kwargs:
                     if kwargs['cotest_ext'].is_not_empty:
                         raise AttributeError(f'{ac} CTE conflict')

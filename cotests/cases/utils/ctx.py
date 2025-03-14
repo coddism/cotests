@@ -34,12 +34,12 @@ class TestCTX:
         self.__pre()
         return self
 
-    def __exit__(self, *args, **kwargs):
-        self.__post(*args, **kwargs)
+    def __exit__(self, *args):
+        self.__post(*args)
         self._group.destructor()
 
-    async def __aexit__(self, *args, **kwargs):
-        self.__post(*args, **kwargs)
+    async def __aexit__(self, *args):
+        self.__post(*args)
         await run_fun(self._group.destructor())
 
     @contextmanager
@@ -60,16 +60,17 @@ class TestCTX:
             )
         self.__start = perf_counter()
 
-    def __post(self, exc_type, exc_value, exc_traceback):
+    def __post(self, *exc):
+        # exc: Tuple[type, value, traceback]
         self.__finish = perf_counter() - self.__start
         self._final_print()
+
+        if any(exc):
+            self.add_error(exc[1])
 
         if self.__errors:
             raise CoException(self.__errors, self._group.name)
 
-        if exc_type:
-            print('EXC!')
-            print(exc_type, exc_value, exc_traceback)
 
     def _final_print(self):
         print(f'{self.__pref}⌎-- Full time: {format_sec_metrix(self.__finish)}')
