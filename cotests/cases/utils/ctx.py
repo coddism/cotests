@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from ..abstract import AbstractTestGroup
 
 
+START_LINE = '-'*14
+
 class TestCTX:
     _GREETINGS: str = 'CoTest'
 
@@ -20,6 +22,10 @@ class TestCTX:
         self.__start: float = .0
         self.__finish: float = .0
         self.__errors = []
+
+    @property
+    def logger(self):
+        return self._group.logger
 
     def add_error(self, e: Exception):
         self.__errors.append(e)
@@ -50,10 +56,13 @@ class TestCTX:
             self.add_error(e_)
 
     def __pre(self):
-        print(self.__pref)
-        print(f'{self.__pref}⌌', '-' * 14, f' Start {self._GREETINGS} ', self._group.name, '-' * 14, sep='')
+        self.logger.debug('PRE!')
+        self.logger.info(self.__pref)
+        self.logger.info(
+            f'{self.__pref}⌌{START_LINE} Start {self._GREETINGS} {self._group.name} {START_LINE}'
+        )
         if self._group.is_empty:
-            print(f'{self.__pref}⌎ Tests not found')
+            self.logger.error(f'{self.__pref}⌎ Tests not found')
             raise CoException(
                 [Exception('Tests not found')],
                 where=self._group.name
@@ -78,7 +87,7 @@ class TestCTX:
 
 
     def _final_print(self):
-        print(f'{self.__pref}⌎-- Full time: {format_sec_metrix(self.__finish)}')
+        self.logger.info(f'{self.__pref}⌎-- Full time: {format_sec_metrix(self.__finish)}')
 
 
 class BenchCTX(TestCTX):
@@ -114,7 +123,7 @@ class BenchCTX(TestCTX):
             self.__exp,
             headers=self.__headers,
         ):
-            print(pref_1, str_row)
+            self.logger.info(pref_1 + str_row)
         super()._final_print()
 
 

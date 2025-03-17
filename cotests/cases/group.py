@@ -13,6 +13,7 @@ from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
 from .utils.ctx import TestCTX, BenchCTX
 from .utils.group_go_decorator import GoDecor
+from ..logger import create_logger
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
@@ -44,6 +45,10 @@ class CoTestGroup(AbstractTestGroup):
         self.__has_coroutines = False
         self.name = name or self.NAME
         self._init_errors = []
+
+        # LOGGING
+        self.logger = create_logger('TGroup')
+        self.logger.debug(f'CoTestGroup "{self.name}" INIT')
 
         if cotest_args:
             if any((global_args, global_kwargs, personal_args, personal_kwargs)):

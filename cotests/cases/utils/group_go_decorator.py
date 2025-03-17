@@ -14,6 +14,7 @@ class GoDecor:
         self.__func = func
 
     def __call__(self, *args, **kwargs):
+        self.__group.logger.debug('GO!')
         if self.__group.is_async:
             return self.__async(*args, **kwargs)
         else:
