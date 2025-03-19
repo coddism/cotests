@@ -53,6 +53,5 @@ class CoLogger:
 
 
 logger = CoLogger()
-logger.log('LOGGER INIT')
 
 __all__  = ('logger', 'CoLogger', )

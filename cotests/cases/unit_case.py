@@ -1,10 +1,12 @@
 import unittest
 from typing import Type, Tuple
 from .abstract import AbstractTestCase
+from .runner.unit import UnitCaseRunner
 
 
 class UnitTestCase(AbstractTestCase):
     is_async = False
+    _RUNNER = UnitCaseRunner
 
     def __init__(self, test: Type[unittest.TestCase]):
         self.name = test.__name__

@@ -1,6 +1,9 @@
 import sys
 import unittest
 
+from cotests import CoTestGroup
+
+
 class TestStringMethods(unittest.TestCase):
 
     def test_upper(self):
@@ -44,12 +47,19 @@ class EmptyTC(unittest.TestCase):
 if __name__ == '__main__':
     # unittest.main(verbosity=2)
 
-    loader = unittest.TestLoader()
-    tests = [
-        loader.loadTestsFromTestCase(test)
-        for test in (TestStringMethods,)
-    ]
-    suite = unittest.TestSuite(tests)
+    # loader = unittest.TestLoader()
+    # tests = [
+    #     loader.loadTestsFromTestCase(test)
+    #     for test in (TestStringMethods,)
+    # ]
+    # suite = unittest.TestSuite(tests)
+    #
+    # runner = unittest.TextTestRunner(verbosity=2)
+    # runner.run(suite)
 
-    runner = unittest.TextTestRunner(verbosity=2)
-    runner.run(suite)
+    CoTestGroup(
+        TestStringMethods,
+        MyTestCase,
+        EmptyTC,
+        name='UNITS',
+    ).go()
