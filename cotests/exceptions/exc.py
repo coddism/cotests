@@ -9,6 +9,7 @@ class CoException(Exception):
         self.__errors = errors
         self.__where = where
 
+    # todo arg logger / or move
     def print_errors(self):
         if self.__errors:
             print('! Errors:')

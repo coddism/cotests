@@ -27,7 +27,7 @@ class FunctionTestCase(TestCase):
     is_async = False
     _RUNNER = CaseRunner
 
-    def run_test(self, **__) -> float:
+    def run_test(self) -> float:
         return sum(
             self._ext.decor(self._f)(*p[0], **p[1])
             for p in self._params
@@ -47,7 +47,7 @@ class AsyncTestCase(TestCase):
             for p in self._params
         ])
 
-    async def run_test(self, **__) -> float:
+    async def run_test(self) -> float:
         return await self._bench_single()
 
 

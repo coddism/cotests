@@ -21,7 +21,7 @@ class UnitTestCase(AbstractTestCase):
         start = f'{s_pp} {block_name} {s_pp}'
         return start, '~'*len(start)
 
-    def run_test(self, *_, **__):
+    def run_test(self):
         pp = self.__prints()
         print(pp[0])
         runner = unittest.TextTestRunner(verbosity=2)

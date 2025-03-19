@@ -11,9 +11,9 @@ class AbstractTestCase:
     name: str
     _RUNNER: Type['AbstractRunner']
 
-    def run_test(self, *, level: int = 0):
+    def run_test(self):
         raise NotImplementedError
-    def run_bench(self, iterations: int, *, level: int = 0):
+    def run_bench(self, iterations: int):
         raise NotImplementedError
     def get_runner(self, parent: 'AbstractRunner') -> 'AbstractRunner':
         return self._RUNNER(self, parent)
