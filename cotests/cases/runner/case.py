@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, List
 
 from .abstract import AbstractRunner
-from ..utils.printer import format_sec_metrix
-from cotests.exceptions import CoException
+from .utils.printer import format_sec_metrix
 from .utils.progress_bar import ProgressBarPrinter
+from cotests.exceptions import CoException
 
 if TYPE_CHECKING:
     from ..cases import TestCase

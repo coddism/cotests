@@ -183,11 +183,8 @@ class CoTestGroup(AbstractTestGroup):
     def run_test(self, *, level: int = 0):
         return RootGroupRunner(self).run()
 
-
     def run_bench(self, iterations: int, *, level: int = 0):
         return RootGroupRunner(self).bench(iterations)
-
-
 
 
 def test_groups(*groups: CoTestGroup, name='__main__'):

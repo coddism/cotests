@@ -6,7 +6,7 @@ from .abstract import AbstractRunner
 
 from cotests.exceptions import CoException, InitGroupErrors
 
-from ..utils.printer import format_sec_metrix, print_test_results
+from .utils.printer import format_sec_metrix, print_test_results
 from ..utils.ttr import run_fun
 
 if TYPE_CHECKING:
@@ -90,13 +90,11 @@ class GroupBenchCTX(GroupTestCTX):
         self._exp = []
 
     def _final_print(self):
-
-        logger2 = self._runner.logger.child
-        for str_row in print_test_results(
+        print_test_results(
             self._exp,
             headers=self._HEADERS,
-        ):
-            logger2.log(str_row)
+            logger=self._runner.logger.child
+        )
         super()._final_print()
 
     @staticmethod
