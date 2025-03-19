@@ -134,31 +134,29 @@ class RootGroupRunner(GroupRunner):
 class CaseRunner(AbstractRunner):
     test: 'TestCase'
 
-    def __run(self):
-        yield f'* {self.test.name}:'
+    def run(self):
+        line = self.logger.line
+        line.log(f'* {self.test.name}:')
         try:
             ts = self.test.run_test()
         except Exception as e_:
-            yield f'error: {e_}'
+            line.log(f'error: {e_}')
             raise CoException([e_], self.test.name)
         else:
-            yield f'ok - {format_sec_metrix(ts)}'
+            line.log(f'ok - {format_sec_metrix(ts)}')
+        line.finish()
 
-    def run(self):
-        self.logger.log_iter(self.__run())
-
-    def __bench(self, iterations: int):
-        yield f'* {self.test.name}:'
+    def bench(self, iterations: int):
+        line = self.logger.line
+        line.log(f'* {self.test.name}:')
         try:
             ts = self.test.run_bench(iterations)
         except Exception as e_:
-            yield f'error: {e_}'
+            line.log(f'error: {e_}')
             raise CoException([e_], self.test.name)
         else:
-            yield f'ok - {format_sec_metrix(ts[0])}'
-
-    def bench(self, iterations: int):
-        self.logger.log_iter(self.__bench(iterations))
+            line.log(f'ok - {format_sec_metrix(ts[0])}')
+        line.finish()
 
 
 
