@@ -3,7 +3,7 @@ from typing import Iterable
 
 class CoLoggerLine:
     @staticmethod
-    def log(msg: str): print(msg, end='')
+    def log(msg: str): print(msg, end='', flush=True)
 
     @staticmethod
     def finish(msg: str = ''): print(msg)

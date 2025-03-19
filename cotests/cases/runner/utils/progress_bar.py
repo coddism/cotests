@@ -1,4 +1,7 @@
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
+
+if TYPE_CHECKING:
+    from cotests.logger import CoLogger
 
 
 class ProgressBarPrinter:
@@ -7,10 +10,15 @@ class ProgressBarPrinter:
     def __init__(self,
                  iterations_count: int,
                  *,
+                 logger: 'CoLogger',
                  max_width: int = 50,
                  ):
         self.__ic = iterations_count
         self.__max_width = max_width
+        self.__logger = logger
+
+    def __print(self):
+        self.__logger.log(self.PRINT_CHAR)
 
     def __counter(self) -> Iterator[None]:
         print_every_val = self.__ic / self.__max_width
@@ -20,14 +28,14 @@ class ProgressBarPrinter:
         for i in range(self.__ic):
             yield
             if i == pv_next:
-                print(self.PRINT_CHAR, end='', flush=True)
+                self.__print()
                 pv += print_every_val
                 pv_next = int(pv)
 
     def __counter_every(self) -> Iterator[None]:
         for i in range(self.__ic):
             yield
-            print(self.PRINT_CHAR, end='', flush=True)
+            self.__print()
 
     def __iter__(self):
         if self.__ic <= self.__max_width:
