@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from time import perf_counter
 from typing import TYPE_CHECKING, Optional, List
 
@@ -48,10 +49,18 @@ class GroupTestCTX:
     def __enter__(self):
         self.test.constructor()
         self.__pre()
+        return self
 
     def __exit__(self, *args):
         self.__post(*args)
         self.test.destructor()
+
+    @contextmanager
+    def ctx(self):
+        try:
+            yield
+        except CoException as e_:
+            self.__runner.add_error(e_)
 
     def __pre(self):
         self.logger.log('')
@@ -95,22 +104,23 @@ class GroupRunner(AbstractRunner):
         self.__errors.append(e)
 
     def run(self):
-
-        with GroupTestCTX(self):
+        with GroupTestCTX(self) as c:
             for test in self.test.tests:
-                try:
+                with c.ctx():
                     get_runner(test, self).run()
-                except Exception as e_:
-                    self.__errors.append(e_)
 
         if self.__errors:
             raise CoException(self.__errors, self.test.name)
 
-    # def bench(self, iterations: int):
-    #     self.logger.info('')
-    #     self.logger.info(
-    #         f'⌌{self.START_LINE} Start CoBench {self.test.name} {self.START_LINE}'
-    #     )
+    def bench(self, iterations: int):
+        with GroupTestCTX(self) as c:
+            for test in self.test.tests:
+                with c.ctx():
+                    s = get_runner(test, self).bench(iterations)
+                    # print(s)
+
+        if self.__errors:
+            raise CoException(self.__errors, self.test.name)
 
 
 class RootGroupRunner(GroupRunner):
@@ -136,6 +146,20 @@ class CaseRunner(AbstractRunner):
 
     def run(self):
         self.logger.log_iter(self.__run())
+
+    def __bench(self, iterations: int):
+        yield f'* {self.test.name}:'
+        try:
+            ts = self.test.run_bench(iterations)
+        except Exception as e_:
+            yield f'error: {e_}'
+            raise CoException([e_], self.test.name)
+        else:
+            yield f'ok - {format_sec_metrix(ts[0])}'
+
+    def bench(self, iterations: int):
+        self.logger.log_iter(self.__bench(iterations))
+
 
 
 def get_runner(

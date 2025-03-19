@@ -37,7 +37,8 @@ class FunctionTestCase(TestCase):
     def run_test(self, **__) -> float:
         return self._bench_single()
 
-    @SyncDecoratorFactory(True)
+    # @SyncDecoratorFactory(True)
+    # todo ProgressBarPrinter to args
     def run_bench(self, iterations: int, **__) -> List[float]:
         return [self._bench_single() for _ in ProgressBarPrinter(iterations)]
 

@@ -20,14 +20,14 @@ class ProgressBarPrinter:
         for i in range(self.__ic):
             yield
             if i == pv_next:
-                print(self.PRINT_CHAR, end='')
+                print(self.PRINT_CHAR, end='', flush=True)
                 pv += print_every_val
                 pv_next = int(pv)
 
     def __counter_every(self) -> Iterator[None]:
         for i in range(self.__ic):
             yield
-            print(self.PRINT_CHAR, end='')
+            print(self.PRINT_CHAR, end='', flush=True)
 
     def __iter__(self):
         if self.__ic <= self.__max_width:

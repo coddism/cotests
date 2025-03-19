@@ -28,7 +28,7 @@ class CoLogger:
         print(self.__pref, end='')
         try:
             for msg in msgs:
-                print(msg, end='')
+                print(msg, end='', flush=True)
         finally:
             print()
 

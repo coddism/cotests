@@ -207,12 +207,14 @@ class CoTestGroup(AbstractTestGroup):
         if self.is_async:
             return self.run_bench_async(iterations, level=level)
 
-        with BenchCTX(self, level, iterations=iterations) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    s = test_.run_bench(iterations, level=level+1)
-                    if s:
-                        m.add_exp(test_.name, s)
+        return RootGroupRunner(self).bench(iterations)
+
+        # with BenchCTX(self, level, iterations=iterations) as m:
+        #     for test_ in self.__tests:
+        #         with m.ctx():
+        #             s = test_.run_bench(iterations, level=level+1)
+        #             if s:
+        #                 m.add_exp(test_.name, s)
 
     async def run_bench_async(self, iterations: int, *, level: int = 0):
 
