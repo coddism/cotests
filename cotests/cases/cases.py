@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 
 from .abstract import AbstractTestCase
-from .utils.decorators import AsyncDecoratorFactory
 from .utils.progress_bar import ProgressBarPrinter
 from .utils.case_ext import TestCaseExt
 from .runner.case import CaseRunner
@@ -55,11 +54,9 @@ class AsyncTestCase(TestCase):
             for p in self._params
         ])
 
-    @AsyncDecoratorFactory()
     async def run_test(self, **__) -> float:
         return await self._bench_single()
 
-    @AsyncDecoratorFactory(True)
     async def run_bench(self, iterations: int, **__) -> List[float]:
         return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
@@ -80,7 +77,6 @@ class CoroutineTestCase(AsyncTestCase):
     def _run(self, *_, **__):
         return self._f
 
-    @AsyncDecoratorFactory(True)
     async def run_bench(self, iterations: int, **__) -> List[float]:
         if iterations > 1:
             raise NotImplementedError('cannot reuse coroutines')

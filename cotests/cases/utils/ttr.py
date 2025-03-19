@@ -1,6 +1,6 @@
 import asyncio
 import inspect
-from typing import TYPE_CHECKING, Awaitable, Optional
+from typing import TYPE_CHECKING, Awaitable, Optional, Any
 
 if TYPE_CHECKING:
     from cotests.typ import RunResult
@@ -21,10 +21,11 @@ def try_to_run(t: Optional[Awaitable[None]]) -> 'RunResult':
     #     print('No coroutines')
 
 
-async def run_fun(fun: Optional[Awaitable[None]]) -> None:
-    if fun is None:
-        return
+async def run_fun(fun: Any):
+    # if fun is None:
+    #     return
     if inspect.iscoroutine(fun):
-        await fun
+        return await fun
     else:
-        raise ValueError(f'Fun {fun} is not supportable')
+        return fun
+        # raise ValueError(f'Fun {fun} is not supportable')

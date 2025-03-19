@@ -7,6 +7,7 @@ from .abstract import AbstractRunner
 from cotests.exceptions import CoException, InitGroupErrors
 
 from ..utils.printer import format_sec_metrix, print_test_results
+from ..utils.ttr import run_fun
 
 if TYPE_CHECKING:
     from ..abstract import AbstractTestCase, AbstractTestGroup
@@ -37,6 +38,15 @@ class GroupTestCTX:
     def __exit__(self, *args):
         self.__post(*args)
         self.test.destructor()
+
+    async def __aenter__(self):
+        await run_fun(self.test.constructor())
+        self.__pre()
+        return self
+
+    async def __aexit__(self, *args):
+        self.__post(*args)
+        await run_fun(self.test.destructor())
 
     @contextmanager
     def ctx(self):
@@ -129,18 +139,37 @@ class GroupRunner(AbstractRunner):
             raise CoException(self.__errors, self.test.name)
 
     def run(self):
+        if self.test.is_async:
+            return self.__run_async()
+
         with GroupTestCTX(self) as c:
             for test in self.test.tests:
                 with c.ctx():
                     test.get_runner(self).run()
 
-    def bench(self, iterations: int):
-        ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
+    async def __run_async(self):
+        async with GroupTestCTX(self) as c:
+            for test in self.test.tests:
+                with c.ctx():
+                    await run_fun(test.get_runner(self).run())
 
+    def bench(self, iterations: int):
+        if self.test.is_async:
+            return self.__bench_async(iterations)
+
+        ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
         with ctx(self) as c:
             for test in self.test.tests:
                 with c.ctx():
                     s = test.get_runner(self).bench(iterations)
+                    c.add_exp(test.name, s)
+
+    async def __bench_async(self, iterations: int):
+        ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
+        with ctx(self) as c:
+            for test in self.test.tests:
+                with c.ctx():
+                    s = await run_fun(test.get_runner(self).bench(iterations))
                     c.add_exp(test.name, s)
 
 
