@@ -1,32 +1,15 @@
 from contextlib import contextmanager
 from time import perf_counter
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, List
 
-from .abstract import AbstractTestGroup
-from .cases import TestCase
-from .utils.printer import format_sec_metrix
-from cotests.logger import CoLogger
+from .abstract import AbstractRunner
+
 from cotests.exceptions import CoException, InitGroupErrors
 
+from ..utils.printer import format_sec_metrix
+
 if TYPE_CHECKING:
-    from .abstract import AbstractTestCase
-
-
-class AbstractRunner:
-    def __init__(self,
-                 test: 'AbstractTestCase',
-                 parent: Optional['AbstractRunner'],
-                 ):
-        self.test = test
-        self.parent = parent
-        self.logger = CoLogger(self.level)
-
-    @property
-    def level(self):
-        return self.parent.level + 1
-
-    def run(self): raise NotImplementedError
-    def bench(self, iterations: int): raise NotImplementedError
+    from ..abstract import AbstractTestCase, AbstractTestGroup
 
 
 class GroupTestCTX:
@@ -107,7 +90,7 @@ class GroupRunner(AbstractRunner):
         with GroupTestCTX(self) as c:
             for test in self.test.tests:
                 with c.ctx():
-                    get_runner(test, self).run()
+                    test.get_runner(self).run()
 
         if self.__errors:
             raise CoException(self.__errors, self.test.name)
@@ -116,7 +99,7 @@ class GroupRunner(AbstractRunner):
         with GroupTestCTX(self) as c:
             for test in self.test.tests:
                 with c.ctx():
-                    s = get_runner(test, self).bench(iterations)
+                    test.get_runner(self).bench(iterations)
                     # print(s)
 
         if self.__errors:
@@ -129,44 +112,3 @@ class RootGroupRunner(GroupRunner):
 
     @property
     def level(self): return 0
-
-
-class CaseRunner(AbstractRunner):
-    test: 'TestCase'
-
-    def run(self):
-        line = self.logger.line
-        line.log(f'* {self.test.name}:')
-        try:
-            ts = self.test.run_test()
-        except Exception as e_:
-            line.log(f'error: {e_}')
-            raise CoException([e_], self.test.name)
-        else:
-            line.log(f'ok - {format_sec_metrix(ts)}')
-        line.finish()
-
-    def bench(self, iterations: int):
-        line = self.logger.line
-        line.log(f'* {self.test.name}:')
-        try:
-            ts = self.test.run_bench(iterations)
-        except Exception as e_:
-            line.log(f'error: {e_}')
-            raise CoException([e_], self.test.name)
-        else:
-            line.log(f'ok - {format_sec_metrix(ts[0])}')
-        line.finish()
-
-
-
-def get_runner(
-        test: 'AbstractTestCase',
-        parent: 'AbstractRunner',
-) -> 'AbstractRunner':
-    if isinstance(test, AbstractTestGroup):
-        return GroupRunner(test, parent)
-    elif isinstance(test, TestCase):
-        return CaseRunner(test, parent)
-
-    raise TypeError(f'Unknown test: {test}')

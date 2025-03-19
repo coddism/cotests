@@ -4,12 +4,14 @@ from .abstract import AbstractTestCase
 from .utils.decorators import SyncDecoratorFactory, AsyncDecoratorFactory
 from .utils.progress_bar import ProgressBarPrinter
 from .utils.case_ext import TestCaseExt
+from .runner.case import CaseRunner
 
 if TYPE_CHECKING:
     from cotests.typ import CoArgsList
 
 
 class TestCase(AbstractTestCase):
+    _RUNNER = CaseRunner
     def __init__(self,
                  test,
                  *,
