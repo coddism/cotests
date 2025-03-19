@@ -182,10 +182,10 @@ class CoTestGroup(AbstractTestGroup):
         return GoDecor(self, self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
-        RootGroupRunner(self).run()
+        if self.is_async:
+            return self.run_test_async(level=level)
 
-        # if self.is_async:
-        #     return self.run_test_async(level=level)
+        return RootGroupRunner(self).run()
 
         # with TestCTX(self, level) as m:
         #     # m.run_tests(self.__tests)

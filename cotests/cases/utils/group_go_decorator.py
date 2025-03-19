@@ -25,9 +25,9 @@ class GoDecor:
             yield
         except CoException as ce:
             ce.print_errors()
-        except Exception as e:
-            ce = CoException([e], self.__group.name)
-            ce.print_errors()
+        # except Exception as e:
+        #     ce = CoException([e], self.__group.name)
+        #     ce.print_errors()
 
     def __sync(self, *args, **kwargs):
         with self.__ctxm():
