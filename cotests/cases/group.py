@@ -8,13 +8,12 @@ from .abstract import AbstractTestCase, AbstractTestGroup
 from .cases import (
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
+from .runner import RootGroupRunner
 from .unit_case import UnitTestCase
 from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
-from .utils.ctx import TestCTX, BenchCTX
 from .utils.group_go_decorator import GoDecor
 from ..logger import logger
-from .runner import RootGroupRunner
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
@@ -182,39 +181,13 @@ class CoTestGroup(AbstractTestGroup):
         return GoDecor(self, self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
-        # if self.is_async:
-        #     return self.run_test_async(level=level)
-
         return RootGroupRunner(self).run()
 
-    async def run_test_async(self, *, level: int = 0):
-
-        async with TestCTX(self, level) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    if test_.is_async:
-                        await test_.run_test(level=level+1)
-                    else:
-                        test_.run_test(level=level+1)
 
     def run_bench(self, iterations: int, *, level: int = 0):
-        # if self.is_async:
-        #     return self.run_bench_async(iterations, level=level)
-
         return RootGroupRunner(self).bench(iterations)
 
-    async def run_bench_async(self, iterations: int, *, level: int = 0):
 
-        async with BenchCTX(self, level, iterations=iterations) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    if test_.is_async:
-                        s = await test_.run_bench(iterations, level=level + 1)
-                    else:
-                        s = test_.run_bench(iterations, level=level + 1)
-
-                    if s:
-                        m.add_exp(test_.name, s)
 
 
 def test_groups(*groups: CoTestGroup, name='__main__'):
