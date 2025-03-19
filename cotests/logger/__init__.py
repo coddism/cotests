@@ -21,6 +21,10 @@ class CoLogger:
     def level(self):
         return self.__level
 
+    @property
+    def child(self):
+        return CoLogger(self.level+1)
+
     @level.setter
     def level(self, val: int):
         assert val >= 0

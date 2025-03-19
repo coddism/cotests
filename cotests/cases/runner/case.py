@@ -34,3 +34,4 @@ class CaseRunner(AbstractRunner):
         else:
             line.log(f'ok - {format_sec_metrix(ts[0])}')
         line.finish()
+        return ts

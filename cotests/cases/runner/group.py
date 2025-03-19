@@ -1,12 +1,12 @@
 from contextlib import contextmanager
 from time import perf_counter
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Tuple, Type
 
 from .abstract import AbstractRunner
 
 from cotests.exceptions import CoException, InitGroupErrors
 
-from ..utils.printer import format_sec_metrix
+from ..utils.printer import format_sec_metrix, print_test_results
 
 if TYPE_CHECKING:
     from ..abstract import AbstractTestCase, AbstractTestGroup
@@ -17,17 +17,17 @@ class GroupTestCTX:
     START_LINE = '-' * 14
 
     def __init__(self, cls: 'GroupRunner'):
-        self.__runner = cls
+        self._runner = cls
         self.__start: float = .0
         self.__finish: float = .0
 
     @property
     def test(self):
-        return self.__runner.test
+        return self._runner.test
 
     @property
     def logger(self):
-        return self.__runner.logger
+        return self._runner.logger
 
     def __enter__(self):
         self.test.constructor()
@@ -43,7 +43,7 @@ class GroupTestCTX:
         try:
             yield
         except CoException as e_:
-            self.__runner.add_error(e_)
+            self._runner.add_error(e_)
 
     def __pre(self):
         self.logger.log('')
@@ -64,7 +64,7 @@ class GroupTestCTX:
         self._final_print()
 
         if any(exc):
-            self.__runner.add_error(exc[1])
+            self._runner.add_error(exc[1])
 
         # if self.__errors:
         #     raise CoException(self.__errors, self.test.name)
@@ -72,6 +72,46 @@ class GroupTestCTX:
     def _final_print(self):
         self.logger.info(f'⌎-- Full time: {format_sec_metrix(self.__finish)}')
 
+
+class GroupBenchCTX(GroupTestCTX):
+    _GREETINGS = 'CoBench'
+    _HEADERS: Tuple[str] = ('full', 'max', 'min', 'avg')
+
+    def __init__(self, cls: 'GroupRunner'):
+        super().__init__(cls)
+        self._exp = []
+
+    def _final_print(self):
+
+        logger2 = self._runner.logger.child
+        for str_row in print_test_results(
+            self._exp,
+            headers=self._HEADERS,
+        ):
+            logger2.log(str_row)
+        super()._final_print()
+
+    @staticmethod
+    def _calc(benches):
+        s = sum(benches)
+        mx, mn, avg = (
+            max(benches),
+            min(benches),
+            s / len(benches),
+        )
+        return s, mx, mn, avg
+
+    def add_exp(self, test_name: str, benches: List[float]):
+        # assert len(benches) == self.__iterations
+        if benches:
+            self._exp.append((test_name, *self._calc(benches)))
+
+
+class GroupSingleBenchCTX(GroupBenchCTX):
+    _HEADERS = ('time',)
+
+    @staticmethod
+    def _calc(bench): return bench
 
 
 class GroupRunner(AbstractRunner):
@@ -96,11 +136,13 @@ class GroupRunner(AbstractRunner):
             raise CoException(self.__errors, self.test.name)
 
     def bench(self, iterations: int):
-        with GroupTestCTX(self) as c:
+        ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
+
+        with ctx(self) as c:
             for test in self.test.tests:
                 with c.ctx():
-                    test.get_runner(self).bench(iterations)
-                    # print(s)
+                    s = test.get_runner(self).bench(iterations)
+                    c.add_exp(test.name, s)
 
         if self.__errors:
             raise CoException(self.__errors, self.test.name)
