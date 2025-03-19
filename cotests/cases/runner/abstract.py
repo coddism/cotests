@@ -18,6 +18,9 @@ class AbstractRunner:
     def level(self):
         return self.parent.level + 1
 
+    @property
+    def is_async(self): return self.test.is_async
+
     def run(self): raise NotImplementedError
     def bench(self, iterations: int): raise NotImplementedError
 

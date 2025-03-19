@@ -1,13 +1,11 @@
 from contextlib import contextmanager
 from time import perf_counter
-from typing import TYPE_CHECKING, List, Tuple, Type
-
-from .abstract import AbstractRunner
+from typing import TYPE_CHECKING, List, Tuple, Type, Coroutine, Callable
 
 from cotests.exceptions import CoException, InitGroupErrors
-
+from .abstract import AbstractRunner
 from .utils.printer import format_sec_metrix, print_test_results
-from ..utils.ttr import run_fun
+from ..utils.ttr import run_fun, try_to_run
 
 if TYPE_CHECKING:
     from ..abstract import AbstractTestCase, AbstractTestGroup
@@ -171,9 +169,41 @@ class GroupRunner(AbstractRunner):
                     c.add_exp(test.name, s)
 
 
+class GoDec:
+    def __init__(self, runner: 'RootGroupRunner'):
+        self.__runner = runner
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        if exc[1] and isinstance(exc[1], CoException):
+            exc[1].print_errors()
+            return True
+
+
 class RootGroupRunner(GroupRunner):
     def __init__(self, test: 'AbstractTestCase'):
         super().__init__(test, None)
+        self.deci: Callable[[Callable], Callable] = self.__do_async if self.is_async else self.__do
 
     @property
     def level(self): return 0
+
+    def __do(self, fun):
+        def wr(*args, **kwargs):
+            with GoDec(self): fun(*args, **kwargs)
+        return wr
+
+    def __do_async(self, fun):
+        async def cor(coro: Coroutine):
+            with GoDec(self): await coro
+        def wr(*args, **kwargs):
+            return try_to_run(cor(fun(*args, **kwargs)))
+        return wr
+
+    def run(self):
+        return self.deci(super().run)()
+
+    def bench(self, iterations: int):
+        return self.deci(super().bench)(iterations)

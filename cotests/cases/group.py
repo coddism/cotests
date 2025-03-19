@@ -12,7 +12,6 @@ from .runner import RootGroupRunner
 from .unit_case import UnitTestCase
 from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
-from .utils.group_go_decorator import GoDecor
 from ..logger import logger
 
 if TYPE_CHECKING:
@@ -174,16 +173,10 @@ class CoTestGroup(AbstractTestGroup):
         self.__tests.append(case)
 
     def go(self):
-        return GoDecor(self, self.run_test)()
+        return RootGroupRunner(self).run()
 
     def go_bench(self, iterations: int):
         assert iterations >= 1, 'Incorrect iterations count'
-        return GoDecor(self, self.run_bench)(iterations)
-
-    def run_test(self, *, level: int = 0):
-        return RootGroupRunner(self).run()
-
-    def run_bench(self, iterations: int, *, level: int = 0):
         return RootGroupRunner(self).bench(iterations)
 
 
