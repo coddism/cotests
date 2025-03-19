@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from .abstract import AbstractRunner
 from ..utils.printer import format_sec_metrix
 from cotests.exceptions import CoException
+from ..utils.progress_bar import ProgressBarPrinter
 
 if TYPE_CHECKING:
     from ..cases import TestCase
@@ -31,7 +32,7 @@ class CaseCTX:
 class CaseRunner(AbstractRunner):
     test: 'TestCase'
 
-    def run(self):
+    def run(self) -> float:
         with CaseCTX(self) as c:
             ts = self.test.run_test()
             c.finish(ts)
@@ -39,7 +40,7 @@ class CaseRunner(AbstractRunner):
 
     def bench(self, iterations: int):
         with CaseCTX(self) as c:
-            ts = self.test.run_bench(iterations)
+            ts: List[float] = [self.test.run_test() for _ in ProgressBarPrinter(iterations)]
             c.finish(ts[0])
             return ts
 
@@ -54,6 +55,6 @@ class AsyncCaseRunner(CaseRunner):
 
     async def bench(self, iterations: int):
         with CaseCTX(self) as c:
-            ts = await self.test.run_bench(iterations)
+            ts = [await self.test.run_test() for _ in ProgressBarPrinter(iterations)]
             c.finish(ts[0])
             return ts

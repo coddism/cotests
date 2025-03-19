@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from .abstract import AbstractTestCase
-from .utils.progress_bar import ProgressBarPrinter
-from .utils.case_ext import TestCaseExt
 from .runner.case import CaseRunner, AsyncCaseRunner
+from .utils.case_ext import TestCaseExt
 
 if TYPE_CHECKING:
     from cotests.typ import CoArgsList
@@ -28,18 +27,11 @@ class FunctionTestCase(TestCase):
     is_async = False
     _RUNNER = CaseRunner
 
-    def _bench_single(self) -> float:
+    def run_test(self, **__) -> float:
         return sum(
             self._ext.decor(self._f)(*p[0], **p[1])
             for p in self._params
         )
-
-    def run_test(self, **__) -> float:
-        return self._bench_single()
-
-    # todo ProgressBarPrinter to args
-    def run_bench(self, iterations: int, **__) -> List[float]:
-        return [self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class AsyncTestCase(TestCase):
@@ -58,9 +50,6 @@ class AsyncTestCase(TestCase):
     async def run_test(self, **__) -> float:
         return await self._bench_single()
 
-    async def run_bench(self, iterations: int, **__) -> List[float]:
-        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
-
 
 class FunctionTestCaseWithAsyncPrePost(AsyncTestCase):
     async def _bench_single(self) -> float:
@@ -77,11 +66,6 @@ class CoroutineTestCase(AsyncTestCase):
 
     def _run(self, *_, **__):
         return self._f
-
-    async def run_bench(self, iterations: int, **__) -> List[float]:
-        if iterations > 1:
-            raise NotImplementedError('cannot reuse coroutines')
-        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):
