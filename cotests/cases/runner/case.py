@@ -8,6 +8,26 @@ if TYPE_CHECKING:
     from ..cases import TestCase
 
 
+class CaseCTX:
+    def __init__(self, runner: 'CaseRunner'):
+        self.__runner = runner
+        self.__logger = runner.logger.line
+
+    def finish(self, ts: float):
+        self.__logger.log(f'ok - {format_sec_metrix(ts)}')
+
+    def __enter__(self):
+        self.__logger.log(f'* {self.__runner.test.name}:')
+        return self
+
+    def __exit__(self, *exc):
+        if any(exc):
+            self.__logger.finish(f'error: {exc[1]}')
+            raise CoException([exc[1]], self.__runner.test.name)
+        else:
+            self.__logger.finish()
+
+
 class CaseRunner(AbstractRunner):
     test: 'TestCase'
 
@@ -15,58 +35,28 @@ class CaseRunner(AbstractRunner):
         if self.test.is_async:
             return self.__run_async()
 
-        line = self.logger.line
-        line.log(f'* {self.test.name}:')
-        try:
+        with CaseCTX(self) as c:
             ts = self.test.run_test()
-        except Exception as e_:
-            line.log(f'error: {e_}')
-            raise CoException([e_], self.test.name)
-        else:
-            line.log(f'ok - {format_sec_metrix(ts)}')
-        finally:
-            line.finish()
+            c.finish(ts)
+            return ts
 
     async def __run_async(self):
-        line = self.logger.line
-        line.log(f'* {self.test.name}:')
-        try:
+        with CaseCTX(self) as c:
             ts = await self.test.run_test()
-        except Exception as e_:
-            line.log(f'error: {e_}')
-            raise CoException([e_], self.test.name)
-        else:
-            line.log(f'ok - {format_sec_metrix(ts)}')
-        finally:
-            line.finish()
+            c.finish(ts)
+            return ts
 
     def bench(self, iterations: int):
         if self.test.is_async:
             return self.__bench_async(iterations)
 
-        line = self.logger.line
-        line.log(f'* {self.test.name}:')
-        try:
+        with CaseCTX(self) as c:
             ts = self.test.run_bench(iterations)
-        except Exception as e_:
-            line.log(f'error: {e_}')
-            raise CoException([e_], self.test.name)
-        else:
-            line.log(f'ok - {format_sec_metrix(ts[0])}')
-        finally:
-            line.finish()
-        return ts
+            c.finish(ts[0])
+            return ts
 
     async def __bench_async(self, iterations: int):
-        line = self.logger.line
-        line.log(f'* {self.test.name}:')
-        try:
+        with CaseCTX(self) as c:
             ts = await self.test.run_bench(iterations)
-        except Exception as e_:
-            line.log(f'error: {e_}')
-            raise CoException([e_], self.test.name)
-        else:
-            line.log(f'ok - {format_sec_metrix(ts[0])}')
-        finally:
-            line.finish()
-        return ts
+            c.finish(ts[0])
+            return ts

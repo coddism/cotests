@@ -6,7 +6,7 @@ class CoLoggerLine:
     def log(msg: str): print(msg, end='')
 
     @staticmethod
-    def finish(): print()
+    def finish(msg: str = ''): print(msg)
 
 
 class CoLogger:
