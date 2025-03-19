@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List, Optional
 
 from .abstract import AbstractTestCase
-from .utils.decorators import SyncDecoratorFactory, AsyncDecoratorFactory
+from .utils.decorators import AsyncDecoratorFactory
 from .utils.progress_bar import ProgressBarPrinter
 from .utils.case_ext import TestCaseExt
 from .runner.case import CaseRunner
@@ -35,11 +35,9 @@ class FunctionTestCase(TestCase):
             for p in self._params
         )
 
-    # @SyncDecoratorFactory()
     def run_test(self, **__) -> float:
         return self._bench_single()
 
-    # @SyncDecoratorFactory(True)
     # todo ProgressBarPrinter to args
     def run_bench(self, iterations: int, **__) -> List[float]:
         return [self._bench_single() for _ in ProgressBarPrinter(iterations)]

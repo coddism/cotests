@@ -36,23 +36,6 @@ class __DecoratorFactory:
         raise NotImplementedError
 
 
-class SyncDecoratorFactory(__DecoratorFactory):
-    @staticmethod
-    def wrapper(self: '__DecoratorFactory', func):
-        def w(cls: 'AbstractTestCase', *args, **kwargs):
-            self._print_start(cls, **kwargs)
-            try:
-                ts = func(cls, *args, **kwargs)
-            except Exception as e_:
-                print(f'error: {e_}')
-                raise CoException([e_], cls.name)
-            else:
-                print(f'ok - {format_sec_metrix(self.bs(ts))}')
-                return ts
-
-        return w
-
-
 class AsyncDecoratorFactory(__DecoratorFactory):
     @staticmethod
     def wrapper(self: '__DecoratorFactory', func):
