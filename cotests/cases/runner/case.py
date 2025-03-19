@@ -32,30 +32,27 @@ class CaseRunner(AbstractRunner):
     test: 'TestCase'
 
     def run(self):
-        if self.test.is_async:
-            return self.__run_async()
-
         with CaseCTX(self) as c:
             ts = self.test.run_test()
             c.finish(ts)
             return ts
 
-    async def __run_async(self):
-        with CaseCTX(self) as c:
-            ts = await self.test.run_test()
-            c.finish(ts)
-            return ts
-
     def bench(self, iterations: int):
-        if self.test.is_async:
-            return self.__bench_async(iterations)
-
         with CaseCTX(self) as c:
             ts = self.test.run_bench(iterations)
             c.finish(ts[0])
             return ts
 
-    async def __bench_async(self, iterations: int):
+
+class AsyncCaseRunner(CaseRunner):
+
+    async def run(self):
+        with CaseCTX(self) as c:
+            ts = await self.test.run_test()
+            c.finish(ts)
+            return ts
+
+    async def bench(self, iterations: int):
         with CaseCTX(self) as c:
             ts = await self.test.run_bench(iterations)
             c.finish(ts[0])

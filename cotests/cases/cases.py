@@ -3,14 +3,13 @@ from typing import TYPE_CHECKING, List, Optional
 from .abstract import AbstractTestCase
 from .utils.progress_bar import ProgressBarPrinter
 from .utils.case_ext import TestCaseExt
-from .runner.case import CaseRunner
+from .runner.case import CaseRunner, AsyncCaseRunner
 
 if TYPE_CHECKING:
     from cotests.typ import CoArgsList
 
 
 class TestCase(AbstractTestCase):
-    _RUNNER = CaseRunner
     def __init__(self,
                  test,
                  *,
@@ -27,6 +26,7 @@ class TestCase(AbstractTestCase):
 
 class FunctionTestCase(TestCase):
     is_async = False
+    _RUNNER = CaseRunner
 
     def _bench_single(self) -> float:
         return sum(
@@ -44,6 +44,7 @@ class FunctionTestCase(TestCase):
 
 class AsyncTestCase(TestCase):
     is_async = True
+    _RUNNER = AsyncCaseRunner
 
     async def _run(self, *args, **kwargs):
         await self._f(*args, **kwargs)
