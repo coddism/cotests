@@ -65,9 +65,7 @@ class GroupTestCTX:
 
         if any(exc):
             self._runner.add_error(exc[1])
-
-        # if self.__errors:
-        #     raise CoException(self.__errors, self.test.name)
+        self._runner.raise_errors()
 
     def _final_print(self):
         self.logger.info(f'⌎-- Full time: {format_sec_metrix(self.__finish)}')
@@ -126,14 +124,15 @@ class GroupRunner(AbstractRunner):
     def add_error(self, e: Exception):
         self.__errors.append(e)
 
+    def raise_errors(self):
+        if self.__errors:
+            raise CoException(self.__errors, self.test.name)
+
     def run(self):
         with GroupTestCTX(self) as c:
             for test in self.test.tests:
                 with c.ctx():
                     test.get_runner(self).run()
-
-        if self.__errors:
-            raise CoException(self.__errors, self.test.name)
 
     def bench(self, iterations: int):
         ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
@@ -143,9 +142,6 @@ class GroupRunner(AbstractRunner):
                 with c.ctx():
                     s = test.get_runner(self).bench(iterations)
                     c.add_exp(test.name, s)
-
-        if self.__errors:
-            raise CoException(self.__errors, self.test.name)
 
 
 class RootGroupRunner(GroupRunner):
