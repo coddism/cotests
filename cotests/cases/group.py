@@ -13,7 +13,8 @@ from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
 from .utils.ctx import TestCTX, BenchCTX
 from .utils.group_go_decorator import GoDecor
-from ..logger import create_logger
+from ..logger import logger
+from .runner import RootGroupRunner
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
@@ -46,9 +47,7 @@ class CoTestGroup(AbstractTestGroup):
         self.name = name or self.NAME
         self._init_errors = []
 
-        # LOGGING
-        self.logger = create_logger('TGroup')
-        self.logger.debug(f'CoTestGroup "{self.name}" INIT')
+        self.logger = logger
 
         if cotest_args:
             if any((global_args, global_kwargs, personal_args, personal_kwargs)):
@@ -117,6 +116,10 @@ class CoTestGroup(AbstractTestGroup):
     def init_errors(self):
         return self._init_errors
 
+    @property
+    def tests(self):
+        return iter(self.__tests)
+
     def __get_function_test_case(self, test: 'InTest') -> Optional[Type['TestCase']]:
         if inspect.iscoroutine(test):
             return CoroutineTestCase
@@ -179,13 +182,16 @@ class CoTestGroup(AbstractTestGroup):
         return GoDecor(self, self.run_bench)(iterations)
 
     def run_test(self, *, level: int = 0):
-        if self.is_async:
-            return self.run_test_async(level=level)
+        RootGroupRunner(self).run()
 
-        with TestCTX(self, level) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    test_.run_test(level=level + 1)
+        # if self.is_async:
+        #     return self.run_test_async(level=level)
+
+        # with TestCTX(self, level) as m:
+        #     # m.run_tests(self.__tests)
+        #     for test_ in self.__tests:
+        #         with m.ctx():
+        #             test_.run_test(level=level + 1)
 
     async def run_test_async(self, *, level: int = 0):
 

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
-    from logging import Logger
+    from cotests.logger import CoLogger
 
 
 
@@ -18,6 +18,7 @@ class AbstractTestCase:
 class AbstractTestGroup(AbstractTestCase):
     is_empty: bool
     init_errors: List[Exception]
-    logger: 'Logger'
+    logger: 'CoLogger'
+    tests: List[AbstractTestCase]
     def constructor(self): ...
     def destructor(self): ...

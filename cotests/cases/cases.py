@@ -33,7 +33,7 @@ class FunctionTestCase(TestCase):
             for p in self._params
         )
 
-    @SyncDecoratorFactory()
+    # @SyncDecoratorFactory()
     def run_test(self, **__) -> float:
         return self._bench_single()
 

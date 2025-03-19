@@ -56,13 +56,12 @@ class TestCTX:
             self.add_error(e_)
 
     def __pre(self):
-        self.logger.debug('PRE!')
-        self.logger.info(self.__pref)
-        self.logger.info(
+        self.logger.log(self.__pref)
+        self.logger.log(
             f'{self.__pref}⌌{START_LINE} Start {self._GREETINGS} {self._group.name} {START_LINE}'
         )
         if self._group.is_empty:
-            self.logger.error(f'{self.__pref}⌎ Tests not found')
+            self.logger.log(f'{self.__pref}⌎ Tests not found')
             raise CoException(
                 [Exception('Tests not found')],
                 where=self._group.name

@@ -1,56 +1,42 @@
-import logging
-import sys
-from typing import Optional
+from typing import Iterable
+
+class CoLogger:
+    CHR = '¦ '
+
+    def __init__(self, level: int = 0):
+        self.__pref = ''
+        self.level = level
+
+    @property
+    def level(self):
+        return self.__level
+
+    @level.setter
+    def level(self, val: int):
+        assert val >= 0
+        self.__level = val
+        if val > 0:
+            self.__pref = self.CHR * val
+
+    def __call__(self, msg: str):
+        self.log(msg)
+
+    def log(self, msg: str):
+        print(self.__pref + msg)
+
+    def log_iter(self, msgs: Iterable[str]):
+        print(self.__pref, end='')
+        try:
+            for msg in msgs:
+                print(msg, end='')
+        finally:
+            print()
+
+    def debug(self, *args, **kwargs): self.log(*args, **kwargs)
+    def info(self, *args, **kwargs): self.log(*args, **kwargs)
 
 
-FORMAT = '%(levelname)-7s:: %(name)s: %(message)s'
-DEFAULT_FORMATTER = logging.Formatter(FORMAT)
+logger = CoLogger()
+logger.log('LOGGER INIT')
 
-DEFAULT_HANDLER = logging.StreamHandler(sys.stdout)
-DEFAULT_HANDLER.setFormatter(DEFAULT_FORMATTER)
-
-
-def create_logger(
-        name: str,
-        handler: Optional[logging.Handler] = None,
-):
-    logger = logging.Logger(name, level=logging.NOTSET)
-    logger.addHandler(handler or DEFAULT_HANDLER)
-    return logger
-
-
-def logging_init():
-    # print('LOGGER')
-    # logger = logging.Logger('base', level=logging.NOTSET)
-    # formatter = logging.Formatter('%(levelname)-10s:: %(name)s: %(message)s')
-    # handler = logging.StreamHandler(sys.stdout)
-    # handler.setFormatter(formatter)
-    # logger.addHandler(handler)
-    #
-    # logger.info('LOGGER INIT')
-    # print(logger.handlers)
-    # handler.formatter = formatter
-    # handler.setFormatter(formatter)
-    # handler.setLevel(logging.NOTSET)
-    # logger.setLevel(logging.INFO)
-    # logging.getLogger("aiormq").setLevel(logging.INFO)
-
-    # logging.Manager.getLogger()
-    # logging.getLogger()
-
-    logging.basicConfig(
-        level=logging.NOTSET,
-        format=FORMAT,
-        stream=sys.stdout,
-        # handlers=handlers,
-        # force=True
-    )
-
-    # print('INIT')
-    # print(type(logging.Manager))
-    # print(logging.Manager.loggerDict)
-    logging.info('LOGGER INIT')
-
-logging_init()
-
-__all__  = ('logging_init', 'DEFAULT_FORMATTER', 'DEFAULT_HANDLER', 'create_logger')
+__all__  = ('logger', 'CoLogger', )
