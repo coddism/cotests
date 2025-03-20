@@ -14,9 +14,6 @@ __METRIX = (
     (.1 ** 15, 'fs'),
 )
 
-def get_level_prefix(level: int, char: str = '¦ ') -> str:
-    return char * level
-
 
 def get_sec_metrix(sec: float) -> Tuple[float, str]:
     for deci, metr in __METRIX:
