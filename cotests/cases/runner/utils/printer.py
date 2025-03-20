@@ -2,7 +2,7 @@ from math import log10
 from typing import TYPE_CHECKING, Tuple, Optional, List
 
 if TYPE_CHECKING:
-    from cotests import CoLogger
+    from cotests.logger import CoLogger
 
 __METRIX = (
     (60, 'min'),
