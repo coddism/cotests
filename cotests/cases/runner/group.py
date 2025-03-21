@@ -178,7 +178,13 @@ class GoDec:
 
     def __exit__(self, *exc):
         if exc[1] and isinstance(exc[1], CoException):
-            exc[1].print_errors()
+            logger_ = self.__runner.logger.child
+            logger_.log('ERRORS:')
+            for ep, e in exc[1].errors:
+                logger_.log('* ' + ' / '.join(ep))
+                logger_.log(f'  {type(e).__name__} : {e}')
+
+            self.__runner.logger.log('⌎' + '-' * 28)
             return True
 
 
