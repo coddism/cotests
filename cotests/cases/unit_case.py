@@ -1,5 +1,5 @@
 import unittest
-from typing import Type, Tuple
+from typing import Type, TextIO
 from .abstract import AbstractTestCase
 from .runner.unit import UnitCaseRunner
 
@@ -15,17 +15,9 @@ class UnitTestCase(AbstractTestCase):
             loader.loadTestsFromTestCase(test)
         )
 
-    def __prints(self) -> Tuple[str, str]:
-        p_len = 50
-        block_name = f'UnitTest {self.name} block'
-        s_len = (p_len - len(block_name)) // 2
-        s_pp = '~'*s_len
-        start = f'{s_pp} {block_name} {s_pp}'
-        return start, '~'*len(start)
-
-    def run_test(self):
-        pp = self.__prints()
-        print(pp[0])
-        runner = unittest.TextTestRunner(verbosity=2)
+    def run(self, stream: TextIO):
+        runner = unittest.TextTestRunner(
+            verbosity=2,
+            stream=stream,
+        )
         runner.run(self.__suite)
-        print(pp[1])

@@ -76,7 +76,7 @@ class GroupTestCTX:
         self._runner.raise_errors()
 
     def _final_print(self):
-        self.logger.info(f'⌎-- Full time: {format_sec_metrix(self.__finish)}')
+        self.logger.log(f'⌎-- Full time: {format_sec_metrix(self.__finish)}')
 
 
 class GroupBenchCTX(GroupTestCTX):

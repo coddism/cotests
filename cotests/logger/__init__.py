@@ -1,3 +1,4 @@
+import io
 from typing import Iterable
 
 
@@ -7,6 +8,25 @@ class CoLoggerLine:
 
     @staticmethod
     def finish(msg: str = ''): print(msg)
+
+
+class CoLoggerStream(io.StringIO):
+    CHR = '¦ '
+
+    def __init__(self, level: int = 0):
+        super().__init__()
+        self.__prefix = self.CHR * level
+        self.__new_line = True
+
+    def write(self, msg: str):
+        if self.__new_line:
+            print(self.__prefix, end='')
+            self.__new_line = False
+        print(msg, end='')
+        if msg == '\n':
+            self.__new_line = True
+    def flush(self):
+        print('', end='', flush=True)
 
 
 class CoLogger:
@@ -24,6 +44,10 @@ class CoLogger:
     @property
     def child(self):
         return CoLogger(self.level+1)
+
+    @property
+    def stream(self):
+        return CoLoggerStream(self.level)
 
     @level.setter
     def level(self, val: int):

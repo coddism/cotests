@@ -10,4 +10,14 @@ class UnitCaseRunner(AbstractRunner):
     test: 'UnitTestCase'
 
     def run(self):
-        self.test.run_test()
+        start_line = '-' * 14
+        block_header = f'{start_line} UnitTest {self.test.name} {start_line}'
+
+        self.logger.log('')
+        self.logger.log(
+            f'⌌{block_header}'
+        )
+
+        self.test.run(self.logger.child.stream)
+
+        self.logger.log('⌎' + '-'*len(block_header))
