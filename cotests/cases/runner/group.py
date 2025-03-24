@@ -3,6 +3,7 @@ from time import perf_counter
 from typing import TYPE_CHECKING, List, Tuple, Type, Coroutine, Callable
 
 from cotests.exceptions import CoException, InitGroupErrors
+from cotests.logger import logger
 from .abstract import AbstractRunner
 from .utils.printer import format_sec_metrix, print_test_results
 from ..utils.ttr import run_fun, try_to_run
@@ -192,6 +193,9 @@ class RootGroupRunner(GroupRunner):
     def __init__(self, test: 'AbstractTestCase'):
         super().__init__(test, None)
         self.deci: Callable[[Callable], Callable] = self.__do_async if self.is_async else self.__do
+
+    @property
+    def logger(self): return logger
 
     @property
     def level(self): return 0

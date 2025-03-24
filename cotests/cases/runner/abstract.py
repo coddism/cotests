@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Optional
-from cotests.logger import CoLogger
 
 if TYPE_CHECKING:
     from ..abstract import AbstractTestCase
+    from cotests.logger import CoLogger
 
 
 class AbstractRunner:
@@ -12,11 +12,14 @@ class AbstractRunner:
                  ):
         self.test = test
         self.parent = parent
-        self.logger = CoLogger(self.level)
 
     @property
     def level(self):
         return self.parent.level + 1
+
+    @property
+    def logger(self) -> 'CoLogger':
+        return self.parent.logger.child
 
     @property
     def is_async(self): return self.test.is_async

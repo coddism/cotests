@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, List, Type
 from .runner.group import GroupRunner
 
 if TYPE_CHECKING:
-    from cotests.logger import CoLogger
     from .runner.abstract import AbstractRunner
 
 
@@ -22,7 +21,6 @@ class AbstractTestCase:
 class AbstractTestGroup(AbstractTestCase):
     is_empty: bool
     init_errors: List[Exception]
-    logger: 'CoLogger'
     tests: List[AbstractTestCase]
     _RUNNER = GroupRunner
     def constructor(self): ...

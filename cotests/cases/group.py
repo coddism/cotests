@@ -12,7 +12,6 @@ from .runner import RootGroupRunner
 from .unit_case import UnitTestCase
 from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
-from ..logger import logger
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
@@ -44,8 +43,6 @@ class CoTestGroup(AbstractTestGroup):
         self.__has_coroutines = False
         self.name = name or self.NAME
         self._init_errors = []
-
-        self.logger = logger
 
         if cotest_args:
             if any((global_args, global_kwargs, personal_args, personal_kwargs)):
