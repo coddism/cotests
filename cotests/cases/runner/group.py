@@ -197,9 +197,6 @@ class RootGroupRunner(GroupRunner):
     @property
     def logger(self): return logger
 
-    @property
-    def level(self): return 0
-
     def __do(self, fun):
         def wr(*args, **kwargs):
             with GoDec(self): fun(*args, **kwargs)

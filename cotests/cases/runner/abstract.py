@@ -14,10 +14,6 @@ class AbstractRunner:
         self.parent = parent
 
     @property
-    def level(self):
-        return self.parent.level + 1
-
-    @property
     def logger(self) -> 'CoLogger':
         return self.parent.logger.child
 
