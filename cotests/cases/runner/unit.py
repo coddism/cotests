@@ -18,6 +18,6 @@ class UnitCaseRunner(AbstractRunner):
             f'⌌{block_header}'
         )
 
-        self.test.run(self.logger.child.stream)
+        self.test.run(self.logger.child)
 
         self.logger.log('⌎' + '-'*len(block_header))

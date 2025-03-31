@@ -13,11 +13,11 @@ if TYPE_CHECKING:
 class CaseCTX:
     def __init__(self, runner: 'CaseRunner'):
         self.__runner = runner
-        self.__stream = runner.logger.stream
+        self.__logger = runner.logger
         self.__start = .0
 
     @property
-    def logger(self): return self.__stream
+    def logger(self): return self.__logger
 
     def __enter__(self):
         self.logger.write(f'* {self.__runner.test.name}:')
