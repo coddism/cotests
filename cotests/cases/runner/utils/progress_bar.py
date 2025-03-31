@@ -1,7 +1,4 @@
-from typing import TYPE_CHECKING, Iterator
-
-if TYPE_CHECKING:
-    from cotests.logger import CoLogger
+from typing import Iterator, TextIO
 
 
 class ProgressBarPrinter:
@@ -10,7 +7,7 @@ class ProgressBarPrinter:
     def __init__(self,
                  iterations_count: int,
                  *,
-                 logger: 'CoLogger',
+                 logger: TextIO,
                  max_width: int = 50,
                  ):
         self.__ic = iterations_count
@@ -18,7 +15,7 @@ class ProgressBarPrinter:
         self.__logger = logger
 
     def __print(self):
-        self.__logger.log(self.PRINT_CHAR)
+        self.__logger.write(self.PRINT_CHAR)
 
     def __counter(self) -> Iterator[None]:
         print_every_val = self.__ic / self.__max_width

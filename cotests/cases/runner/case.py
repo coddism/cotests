@@ -13,24 +13,24 @@ if TYPE_CHECKING:
 class CaseCTX:
     def __init__(self, runner: 'CaseRunner'):
         self.__runner = runner
-        self.__logger = runner.logger.line
+        self.__stream = runner.logger.stream
         self.__start = .0
 
     @property
-    def logger(self): return self.__logger
+    def logger(self): return self.__stream
 
     def __enter__(self):
-        self.__logger.log(f'* {self.__runner.test.name}:')
+        self.logger.write(f'* {self.__runner.test.name}:')
         self.__start = perf_counter()
         return self
 
     def __exit__(self, *exc):
         finish = perf_counter()
         if any(exc):
-            self.__logger.finish(f'error: {exc[1]}')
+            self.logger.writeln(f'error: {exc[1]}')
             raise CoException([exc[1]], self.__runner.test.name)
         else:
-            self.__logger.finish(f'ok - {format_sec_metrix(finish - self.__start)}')
+            self.logger.writeln(f'ok - {format_sec_metrix(finish - self.__start)}')
 
 
 class CaseRunner(AbstractRunner):

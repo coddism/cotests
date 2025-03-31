@@ -1,22 +1,16 @@
 import io
-from typing import Iterable
-
-
-class CoLoggerLine:
-    @staticmethod
-    def log(msg: str): print(msg, end='', flush=True)
-
-    @staticmethod
-    def finish(msg: str = ''): print(msg)
+import sys
 
 
 class CoLoggerStream(io.StringIO):
     CHR = '¦ '
+    # terminator = '\n'
 
     def __init__(self, level: int = 0):
         super().__init__()
         self.__prefix = self.CHR * level
         self.__new_line = True
+        self.__stream = sys.stdout
 
     def write(self, msg: str):
         if self.__new_line:
@@ -25,16 +19,21 @@ class CoLoggerStream(io.StringIO):
         print(msg, end='')
         if msg == '\n':
             self.__new_line = True
+
+    def writeln(self, msg: str):
+        self.write(msg + '\n')
+        self.__new_line = True
+
     def flush(self):
         print('', end='', flush=True)
 
 
 class CoLogger:
     CHR = '¦ '
-    # terminator = '\n'
 
     def __init__(self, level: int = 0):
         self.__prefix = ''
+        self.__stream = CoLoggerStream(level)
         self.level = level
 
     @property
@@ -47,7 +46,7 @@ class CoLogger:
 
     @property
     def stream(self):
-        return CoLoggerStream(self.level)
+        return self.__stream
 
     @level.setter
     def level(self, val: int):
@@ -55,21 +54,8 @@ class CoLogger:
         self.__level = val
         self.__prefix = self.CHR * val
 
-    @property
-    def line(self):
-        print(self.__prefix, end='')
-        return CoLoggerLine
-
     def log(self, msg: str):
-        print(self.__prefix + msg)
-
-    def log_iter(self, msgs: Iterable[str]):
-        print(self.__prefix, end='')
-        try:
-            for msg in msgs:
-                print(msg, end='', flush=True)
-        finally:
-            print()
+        self.stream.writeln(msg)
 
     def __call__(self, *args, **kwargs): self.log(*args, **kwargs)
     def debug(self, *args, **kwargs): self.log(*args, **kwargs)
