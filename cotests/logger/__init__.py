@@ -1,30 +1,33 @@
 import io
 import sys
 
+from typing import Optional
+
 
 class CoLogger(io.StringIO):
     CHR = '¦ '
     TERMINATOR = '\n'
 
-    def __init__(self, level: int = 0):
-        assert level >= 0
+    def __init__(self, parent: Optional['CoLogger'] = None):
         super().__init__()
-        self.__level = level
-        self.__prefix = self.CHR * level
+        if parent:
+            self.__prefix = parent.__prefix + self.CHR
+            self.__stream = parent.__stream
+        else:
+            self.__prefix = ''
+            self.__stream = sys.stdout
+
         self.__new_line = True
-        self.__stream = sys.stdout
 
     @property
     def child(self):
-        return CoLogger(self.__level+1)
+        return CoLogger(self)
 
     def write(self, msg: str):
         if self.__new_line:
             self.__stream.write(self.__prefix)
-            self.__new_line = False
         self.__stream.write(msg)
-        if msg.endswith(self.TERMINATOR):
-            self.__new_line = True
+        self.__new_line = msg.endswith(self.TERMINATOR)
 
     def writeln(self, msg: str):
         self.write(msg + self.TERMINATOR)
