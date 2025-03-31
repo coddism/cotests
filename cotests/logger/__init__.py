@@ -4,7 +4,7 @@ import sys
 
 class CoLoggerStream(io.StringIO):
     CHR = '¦ '
-    # terminator = '\n'
+    TERMINATOR = '\n'
 
     def __init__(self, level: int = 0):
         super().__init__()
@@ -14,45 +14,34 @@ class CoLoggerStream(io.StringIO):
 
     def write(self, msg: str):
         if self.__new_line:
-            print(self.__prefix, end='')
+            self.__stream.write(self.__prefix)
             self.__new_line = False
-        print(msg, end='')
-        if msg == '\n':
+        self.__stream.write(msg)
+        if msg == self.TERMINATOR:
             self.__new_line = True
 
     def writeln(self, msg: str):
-        self.write(msg + '\n')
+        self.write(msg + self.TERMINATOR)
         self.__new_line = True
 
     def flush(self):
-        print('', end='', flush=True)
+        self.__stream.flush()
 
 
 class CoLogger:
-    CHR = '¦ '
 
     def __init__(self, level: int = 0):
-        self.__prefix = ''
+        assert level >= 0
         self.__stream = CoLoggerStream(level)
-        self.level = level
-
-    @property
-    def level(self):
-        return self.__level
+        self.__level = level
 
     @property
     def child(self):
-        return CoLogger(self.level+1)
+        return CoLogger(self.__level+1)
 
     @property
     def stream(self):
         return self.__stream
-
-    @level.setter
-    def level(self, val: int):
-        assert val >= 0
-        self.__level = val
-        self.__prefix = self.CHR * val
 
     def log(self, msg: str):
         self.stream.writeln(msg)

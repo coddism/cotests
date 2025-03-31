@@ -16,6 +16,7 @@ class ProgressBarPrinter:
 
     def __print(self):
         self.__logger.write(self.PRINT_CHAR)
+        self.__logger.flush()
 
     def __counter(self) -> Iterator[None]:
         print_every_val = self.__ic / self.__max_width

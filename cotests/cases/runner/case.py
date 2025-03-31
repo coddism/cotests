@@ -21,6 +21,7 @@ class CaseCTX:
 
     def __enter__(self):
         self.logger.write(f'* {self.__runner.test.name}:')
+        self.logger.flush()
         self.__start = perf_counter()
         return self
 
