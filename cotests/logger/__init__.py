@@ -23,15 +23,18 @@ class CoLogger(io.StringIO):
     def child(self):
         return CoLogger(self)
 
+    def write_1l(self, line: str):  # no-multiline
+        if self.__new_line:
+            self.__stream.write(self.__prefix)
+        self.__stream.write(line)
+        self.__new_line = line.endswith(self.TERMINATOR)
+
     def write(self, msg: str):
         for line in msg.splitlines(True):
-            if self.__new_line:
-                self.__stream.write(self.__prefix)
-            self.__stream.write(line)
-            self.__new_line = line.endswith(self.TERMINATOR)
+            self.write_1l(line)
 
     def writeln(self, msg: str):
-        self.write(msg + self.TERMINATOR)
+        self.write_1l(msg + self.TERMINATOR)
 
     def flush(self):
         self.__stream.flush()
