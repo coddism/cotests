@@ -20,7 +20,7 @@ class CaseCTX:
     def logger(self): return self.__logger
 
     def __enter__(self):
-        self.logger.write(f'* {self.__runner.test.name}:')
+        self.logger.new_line(f'* {self.__runner.test.name}:')
         self.logger.flush()
         self.__start = perf_counter()
         return self
@@ -28,10 +28,10 @@ class CaseCTX:
     def __exit__(self, *exc):
         finish = perf_counter()
         if any(exc):
-            self.logger.writeln(f'error: {exc[1]}')
+            self.logger.writeln_raw(f'error: {exc[1]}')
             raise CoException([exc[1]], self.__runner.test.name)
         else:
-            self.logger.writeln(f'ok - {format_sec_metrix(finish - self.__start)}')
+            self.logger.writeln_raw(f'ok - {format_sec_metrix(finish - self.__start)}')
 
 
 class CaseRunner(AbstractRunner):

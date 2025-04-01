@@ -6,6 +6,7 @@ from typing import Optional
 
 _STREAM = sys.stdout
 
+
 class CoLogger(io.StringIO):
     CHR = '¦ '
     TERMINATOR = '\n'
@@ -26,21 +27,42 @@ class CoLogger(io.StringIO):
             self.__child = CoLogger(self)
         return self.__child
 
+    # STD
+
     def write(self, msg: str):
-        for line in msg.splitlines(True):
-            self.__write_1line(line)
+        if self.__new_line:
+            _STREAM.write(self.__prefix)
+        lines = iter(msg.splitlines(True))
+
+        line = next(lines)
+        _STREAM.write(line)
+
+        for line in lines:
+            _STREAM.write(self.__prefix + line)
+
+        self.__new_line = line.endswith(self.TERMINATOR)
 
     def flush(self):
         _STREAM.flush()
 
-    def __write_1line(self, line: str):  # no-multiline
-        if self.__new_line:
-            _STREAM.write(self.__prefix)
-        _STREAM.write(line)
-        self.__new_line = line.endswith(self.TERMINATOR)
+    # CUSTOM
 
     def writeln(self, msg: str):
         self.write(msg + self.TERMINATOR)
+
+    # RAW
+
+    @staticmethod
+    def write_raw(msg: str):
+        _STREAM.write(msg)
+
+    def writeln_raw(self, msg: str):
+        _STREAM.write(msg + '\n')
+        self.__new_line = True
+
+    def new_line(self, msg: str):
+        _STREAM.write(self.__prefix + msg)
+        self.__new_line = False
 
 
 logger = CoLogger()
