@@ -42,13 +42,6 @@ class CoLogger(io.StringIO):
     def writeln(self, msg: str):
         self.write(msg + self.TERMINATOR)
 
-    def log(self, msg: str):
-        self.writeln(msg)
-
-    # def __call__(self, *args, **kwargs): self.log(*args, **kwargs)
-    # def debug(self, *args, **kwargs): self.log(*args, **kwargs)
-    # def info(self, *args, **kwargs): self.log(*args, **kwargs)
-
 
 logger = CoLogger()
 

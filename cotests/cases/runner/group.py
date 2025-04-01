@@ -55,12 +55,12 @@ class GroupTestCTX:
             self._runner.add_error(e_)
 
     def __pre(self):
-        self.logger.log('')
-        self.logger.log(
+        self.logger.writeln('')
+        self.logger.writeln(
             f'⌌{self.START_LINE} Start {self._GREETINGS} {self.test.name} {self.START_LINE}'
         )
         if self.test.is_empty:
-            self.logger.log(f'⌎ Tests not found')
+            self.logger.writeln(f'⌎ Tests not found')
             raise CoException(
                 [Exception('Tests not found')],
                 where=self.test.name
@@ -77,7 +77,7 @@ class GroupTestCTX:
         self._runner.raise_errors()
 
     def _final_print(self):
-        self.logger.log(f'⌎-- Full time: {format_sec_metrix(self.__finish)}')
+        self.logger.writeln(f'⌎-- Full time: {format_sec_metrix(self.__finish)}')
 
 
 class GroupBenchCTX(GroupTestCTX):
@@ -180,12 +180,12 @@ class GoDec:
     def __exit__(self, *exc):
         if exc[1] and isinstance(exc[1], CoException):
             logger_ = self.__runner.logger.child
-            logger_.log('ERRORS:')
+            logger_.writeln('ERRORS:')
             for ep, e in exc[1].errors:
-                logger_.log('* ' + ' / '.join(ep))
-                logger_.log(f'  {type(e).__name__} : {e}')
+                logger_.writeln('* ' + ' / '.join(ep))
+                logger_.writeln(f'  {type(e).__name__} : {e}')
 
-            self.__runner.logger.log('⌎' + '-' * 28)
+            self.__runner.logger.writeln('⌎' + '-' * 28)
             return True
 
 

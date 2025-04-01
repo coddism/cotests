@@ -83,11 +83,11 @@ def print_test_results(
     lens.extend([max_fn_len, 5])
 
     fr = '+' + '-' * (sum(lens) + len(lens) * 3 - 1) + '+'
-    logger.log(fr)
+    logger.writeln(fr)
     if headers:
-        logger.log('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
+        logger.writeln('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
 
     for item in exp:
-        logger.log(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
+        logger.writeln(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
 
-    logger.log(fr)
+    logger.writeln(fr)
