@@ -20,6 +20,7 @@ class GroupTestCTX:
         self._runner = cls
         self.__start: float = .0
         self.__finish: float = .0
+        self._runners = [test.get_runner(cls) for test in self.test.tests]
 
     @property
     def test(self):
@@ -32,6 +33,7 @@ class GroupTestCTX:
     def __enter__(self):
         self.test.constructor()
         self.__pre()
+        self.run()
         return self
 
     def __exit__(self, *args):
@@ -41,11 +43,22 @@ class GroupTestCTX:
     async def __aenter__(self):
         await run_fun(self.test.constructor())
         self.__pre()
+        await self.run_async()
         return self
 
     async def __aexit__(self, *args):
         self.__post(*args)
         await run_fun(self.test.destructor())
+
+    def run(self):
+        for runner in self._runners:
+            with self.ctx():
+                runner.run()
+
+    async def run_async(self):
+        for runner in self._runners:
+            with self.ctx():
+                await run_fun(runner.run())
 
     @contextmanager
     def ctx(self):
@@ -84,9 +97,10 @@ class GroupBenchCTX(GroupTestCTX):
     _GREETINGS = 'CoBench'
     _HEADERS: Tuple[str] = ('full', 'max', 'min', 'avg')
 
-    def __init__(self, cls: 'GroupRunner'):
+    def __init__(self, cls: 'GroupRunner', iterations: int):
         super().__init__(cls)
         self._exp = []
+        self.__iterations = iterations
 
     def _final_print(self):
         print_test_results(
@@ -110,6 +124,18 @@ class GroupBenchCTX(GroupTestCTX):
         # assert len(benches) == self.__iterations
         if benches:
             self._exp.append((test_name, *self._calc(benches)))
+
+    def run(self):
+        for runner in self._runners:
+            with self.ctx():
+                s = runner.bench(self.__iterations)
+                self.add_exp(runner.test.name, s)
+
+    async def run_async(self):
+        for runner in self._runners:
+            with self.ctx():
+                s = await run_fun(runner.bench(self.__iterations))
+                self.add_exp(runner.test.name, s)
 
 
 class GroupSingleBenchCTX(GroupBenchCTX):
@@ -139,39 +165,25 @@ class GroupRunner(AbstractRunner):
         if self.test.is_async:
             return self.__run_async()
 
-        runners = [test.get_runner(self) for test in self.test.tests]
-        with GroupTestCTX(self) as c:
-            for runner in runners:
-                with c.ctx():
-                    runner.run()
+        with GroupTestCTX(self):
+            ...
 
     async def __run_async(self):
-        runners = [test.get_runner(self) for test in self.test.tests]
-        async with GroupTestCTX(self) as c:
-            for runner in runners:
-                with c.ctx():
-                    await run_fun(runner.run())
+        async with GroupTestCTX(self):
+            ...
 
     def bench(self, iterations: int):
         if self.test.is_async:
             return self.__bench_async(iterations)
 
-        runners = [test.get_runner(self) for test in self.test.tests]
         ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
-        with ctx(self) as c:
-            for runner in runners:
-                with c.ctx():
-                    s = runner.bench(iterations)
-                    c.add_exp(runner.test.name, s)
+        with ctx(self, iterations):
+            ...
 
     async def __bench_async(self, iterations: int):
-        runners = [test.get_runner(self) for test in self.test.tests]
         ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
-        async with ctx(self) as c:
-            for runner in runners:
-                with c.ctx():
-                    s = await run_fun(runner.bench(iterations))
-                    c.add_exp(runner.test.name, s)
+        async with ctx(self, iterations):
+            ...
 
 
 class GoDec:
