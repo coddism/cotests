@@ -24,10 +24,11 @@ class CoLogger(io.StringIO):
         return CoLogger(self)
 
     def write(self, msg: str):
-        if self.__new_line:
-            self.__stream.write(self.__prefix)
-        self.__stream.write(msg)
-        self.__new_line = msg.endswith(self.TERMINATOR)
+        for line in msg.splitlines(True):
+            if self.__new_line:
+                self.__stream.write(self.__prefix)
+            self.__stream.write(line)
+            self.__new_line = line.endswith(self.TERMINATOR)
 
     def writeln(self, msg: str):
         self.write(msg + self.TERMINATOR)
