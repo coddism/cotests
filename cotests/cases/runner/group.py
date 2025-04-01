@@ -139,35 +139,39 @@ class GroupRunner(AbstractRunner):
         if self.test.is_async:
             return self.__run_async()
 
+        runners = [test.get_runner(self) for test in self.test.tests]
         with GroupTestCTX(self) as c:
-            for test in self.test.tests:
+            for runner in runners:
                 with c.ctx():
-                    test.get_runner(self).run()
+                    runner.run()
 
     async def __run_async(self):
+        runners = [test.get_runner(self) for test in self.test.tests]
         async with GroupTestCTX(self) as c:
-            for test in self.test.tests:
+            for runner in runners:
                 with c.ctx():
-                    await run_fun(test.get_runner(self).run())
+                    await run_fun(runner.run())
 
     def bench(self, iterations: int):
         if self.test.is_async:
             return self.__bench_async(iterations)
 
+        runners = [test.get_runner(self) for test in self.test.tests]
         ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
         with ctx(self) as c:
-            for test in self.test.tests:
+            for runner in runners:
                 with c.ctx():
-                    s = test.get_runner(self).bench(iterations)
-                    c.add_exp(test.name, s)
+                    s = runner.bench(iterations)
+                    c.add_exp(runner.test.name, s)
 
     async def __bench_async(self, iterations: int):
+        runners = [test.get_runner(self) for test in self.test.tests]
         ctx: Type[GroupBenchCTX] = GroupSingleBenchCTX if iterations == 1 else GroupBenchCTX
-        with ctx(self) as c:
-            for test in self.test.tests:
+        async with ctx(self) as c:
+            for runner in runners:
                 with c.ctx():
-                    s = await run_fun(test.get_runner(self).bench(iterations))
-                    c.add_exp(test.name, s)
+                    s = await run_fun(runner.bench(iterations))
+                    c.add_exp(runner.test.name, s)
 
 
 class GoDec:
