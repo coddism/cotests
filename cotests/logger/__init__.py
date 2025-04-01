@@ -4,6 +4,8 @@ import sys
 from typing import Optional
 
 
+_STREAM = sys.stdout
+
 class CoLogger(io.StringIO):
     CHR = '¦ '
     TERMINATOR = '\n'
@@ -12,32 +14,33 @@ class CoLogger(io.StringIO):
         super().__init__()
         if parent:
             self.__prefix = parent.__prefix + self.CHR
-            self.__stream = parent.__stream
         else:
             self.__prefix = ''
-            self.__stream = sys.stdout
 
         self.__new_line = True
+        self.__child = None
 
     @property
-    def child(self):
-        return CoLogger(self)
-
-    def write_1l(self, line: str):  # no-multiline
-        if self.__new_line:
-            self.__stream.write(self.__prefix)
-        self.__stream.write(line)
-        self.__new_line = line.endswith(self.TERMINATOR)
+    def child(self) -> 'CoLogger':
+        if self.__child is None:
+            self.__child = CoLogger(self)
+        return self.__child
 
     def write(self, msg: str):
         for line in msg.splitlines(True):
-            self.write_1l(line)
-
-    def writeln(self, msg: str):
-        self.write_1l(msg + self.TERMINATOR)
+            self.__write_1line(line)
 
     def flush(self):
-        self.__stream.flush()
+        _STREAM.flush()
+
+    def __write_1line(self, line: str):  # no-multiline
+        if self.__new_line:
+            _STREAM.write(self.__prefix)
+        _STREAM.write(line)
+        self.__new_line = line.endswith(self.TERMINATOR)
+
+    def writeln(self, msg: str):
+        self.write(msg + self.TERMINATOR)
 
     def log(self, msg: str):
         self.writeln(msg)
