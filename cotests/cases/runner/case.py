@@ -13,11 +13,10 @@ if TYPE_CHECKING:
 class CaseCTX:
     def __init__(self, runner: 'CaseRunner'):
         self.__runner = runner
-        self.__logger = runner.logger
         self.__start = .0
 
     @property
-    def logger(self): return self.__logger
+    def logger(self): return self.__runner.logger
 
     def __enter__(self):
         self.logger.new_line(f'* {self.__runner.test.name}:')
@@ -42,11 +41,9 @@ class CaseRunner(AbstractRunner):
             return self.test.run_test()
 
     def bench(self, iterations: int) -> List[float]:
-        with CaseCTX(self) as c:
-            return [
-                self.test.run_test()
-                for _ in ProgressBarPrinter(iterations, logger=c.logger)
-            ]
+        pb = ProgressBarPrinter(iterations, logger=self.logger)
+        with CaseCTX(self):
+            return [self.test.run_test() for _ in pb]
 
 
 class AsyncCaseRunner(CaseRunner):
@@ -56,8 +53,6 @@ class AsyncCaseRunner(CaseRunner):
             return await self.test.run_test()
 
     async def bench(self, iterations: int) -> List[float]:
-        with CaseCTX(self) as c:
-            return [
-                await self.test.run_test()
-                for _ in ProgressBarPrinter(iterations, logger=c.logger)
-            ]
+        pb = ProgressBarPrinter(iterations, logger=self.logger)
+        with CaseCTX(self):
+            return [await self.test.run_test() for _ in pb]
