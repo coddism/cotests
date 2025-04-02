@@ -30,6 +30,7 @@ class CoLogger(io.StringIO):
     # STD
 
     def write(self, msg: str):
+        # support multi-line messages
         if self.__new_line:
             _STREAM.write(self.__prefix)
         lines = iter(msg.splitlines(True))
@@ -48,7 +49,9 @@ class CoLogger(io.StringIO):
     # CUSTOM
 
     def writeln(self, msg: str):
-        self.write(msg + self.TERMINATOR)
+        # self.write(msg + self.TERMINATOR)
+        _STREAM.write(self.__prefix + msg + self.TERMINATOR)
+        self.__new_line = True
 
     # RAW
 
@@ -56,8 +59,8 @@ class CoLogger(io.StringIO):
     def write_raw(msg: str):
         _STREAM.write(msg)
 
-    def writeln_raw(self, msg: str):
-        _STREAM.write(msg + '\n')
+    def end_line(self, msg: str):
+        _STREAM.write(msg + self.TERMINATOR)
         self.__new_line = True
 
     def new_line(self, msg: str):
