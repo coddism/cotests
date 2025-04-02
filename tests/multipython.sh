@@ -1,4 +1,3 @@
-#pwd
 cd ..
 
 mapfile -t PYTHON_PACKAGES < <(ls -v /usr/bin/python3.* | grep '.*\(.[0-9]\+\)$')

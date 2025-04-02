@@ -8,11 +8,10 @@ from .abstract import AbstractTestCase, AbstractTestGroup
 from .cases import (
     CoroutineTestCase, CoroutineFunctionTestCase, FunctionTestCase, FunctionTestCaseWithAsyncPrePost
 )
+from .runner import RootGroupRunner
 from .unit_case import UnitTestCase
 from .utils.args import CoTestArgs
 from .utils.case_ext import TestCaseExt
-from .utils.ctx import TestCTX, BenchCTX
-from .utils.group_go_decorator import GoDecor
 
 if TYPE_CHECKING:
     from cotests.typ import InTest, TestArgs, TestKwargs, TestCallable
@@ -112,6 +111,10 @@ class CoTestGroup(AbstractTestGroup):
     def init_errors(self):
         return self._init_errors
 
+    @property
+    def tests(self):
+        return iter(self.__tests)
+
     def __get_function_test_case(self, test: 'InTest') -> Optional[Type['TestCase']]:
         if inspect.iscoroutine(test):
             return CoroutineTestCase
@@ -166,57 +169,14 @@ class CoTestGroup(AbstractTestGroup):
             self.__has_coroutines = True
         self.__tests.append(case)
 
-    def go(self):
-        return GoDecor(self, self.run_test)()
+    def run_test(self):
+        return RootGroupRunner(self).run()
 
-    def go_bench(self, iterations: int):
+    def run_bench(self, iterations: int):
         assert iterations >= 1, 'Incorrect iterations count'
-        return GoDecor(self, self.run_bench)(iterations)
-
-    def run_test(self, *, level: int = 0):
-        if self.is_async:
-            return self.run_test_async(level=level)
-
-        with TestCTX(self, level) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    test_.run_test(level=level + 1)
-
-    async def run_test_async(self, *, level: int = 0):
-
-        async with TestCTX(self, level) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    if test_.is_async:
-                        await test_.run_test(level=level+1)
-                    else:
-                        test_.run_test(level=level+1)
-
-    def run_bench(self, iterations: int, *, level: int = 0):
-        if self.is_async:
-            return self.run_bench_async(iterations, level=level)
-
-        with BenchCTX(self, level, iterations=iterations) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    s = test_.run_bench(iterations, level=level+1)
-                    if s:
-                        m.add_exp(test_.name, s)
-
-    async def run_bench_async(self, iterations: int, *, level: int = 0):
-
-        async with BenchCTX(self, level, iterations=iterations) as m:
-            for test_ in self.__tests:
-                with m.ctx():
-                    if test_.is_async:
-                        s = await test_.run_bench(iterations, level=level + 1)
-                    else:
-                        s = test_.run_bench(iterations, level=level + 1)
-
-                    if s:
-                        m.add_exp(test_.name, s)
+        return RootGroupRunner(self).bench(iterations)
 
 
 def test_groups(*groups: CoTestGroup, name='__main__'):
     g = CoTestGroup(*groups, name=name)
-    return g.go()
+    return g.run_test()

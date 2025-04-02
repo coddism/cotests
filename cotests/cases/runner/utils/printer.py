@@ -1,6 +1,8 @@
 from math import log10
-from typing import Tuple, Optional, List
+from typing import TYPE_CHECKING, Tuple, Optional, List
 
+if TYPE_CHECKING:
+    from cotests.logger import CoLogger
 
 __METRIX = (
     (60, 'min'),
@@ -11,9 +13,6 @@ __METRIX = (
     (.1 ** 12, 'ps'),
     (.1 ** 15, 'fs'),
 )
-
-def get_level_prefix(level: int, char: str = '¦ ') -> str:
-    return char * level
 
 
 def get_sec_metrix(sec: float) -> Tuple[float, str]:
@@ -35,10 +34,11 @@ def __float_len(x: float) -> int:
 def print_test_results(
         exp: List[Tuple[str, float]],
         *,
+        logger: 'CoLogger',
         headers: Optional[Tuple] = None,
-) -> List[str]:
+) -> None:
     if not exp:
-        return []
+        return
         # return ['! No results.']
         # print('No results.')
         # return
@@ -50,8 +50,6 @@ def print_test_results(
 
     if headers:
         assert len(headers) + 1 == len(first)
-
-    res = []
 
     for i in iter_:
         if len(i[0]) > max_fn_len:
@@ -85,12 +83,11 @@ def print_test_results(
     lens.extend([max_fn_len, 5])
 
     fr = '+' + '-' * (sum(lens) + len(lens) * 3 - 1) + '+'
-    res.append(fr)
+    logger.writeln(fr)
     if headers:
-        res.append('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
+        logger.writeln('| ' + ' | '.join(h.center(lens[i]) for i, h in enumerate((*headers, 'f', '%'))) + ' |')
 
     for item in exp:
-        res.append(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
+        logger.writeln(row_format % (*(i_sec / multi[i] for i, i_sec in enumerate(item[1:])), item[0], get_percent(item[1])))
 
-    res.append(fr)
-    return res
+    logger.writeln(fr)

@@ -28,7 +28,7 @@ g_async = CoTestGroup(test_a0, test_a1, name='ASYNC')
 g_all = CoTestGroup(test_0, test_1, test_a0, test_a1, Case0, name='ALL')
 
 # Example 3.1 - single group
-g_sync.go()
+g_sync.run_test()
 # Example 3.2 - multiple
 test_groups(g_sync, g_async, g_all)
 

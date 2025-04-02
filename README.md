@@ -44,7 +44,7 @@ It has methods (without `name` parameter; name taken from class name):
 ### CoTestGroup
 
 The main entity - a class for group of tests. It can use all types of tests, as `bench_batch()`.
-It has `go()` for test and `go_bench(int)` for benchmark.
+It has `run_test()` for test and `run_bench(int)` for benchmark.
 
 ### test_groups()
 
@@ -101,7 +101,7 @@ g_async = CoTestGroup(test_a0, test_a1, name='ASYNC')
 g_all = CoTestGroup(test_0, test_1, test_a0, test_a1, Case0, name='ALL')
 
 # Example 3.1 - single group
-g_sync.go()
+g_sync.run_test()
 # Example 3.2 - multiple
 test_groups(g_sync, g_async, g_all)
 

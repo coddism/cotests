@@ -5,6 +5,7 @@ import unittest
 from typing import List, Optional, Collection
 from .case import CoTestCase
 from .cases import CoTestGroup, test_groups
+from cotests.logger import logger
 
 
 def test_module(
@@ -13,7 +14,7 @@ def test_module(
         file_prefix: str = 't_',
         ignore_files: Optional[Collection[str]] = None,
 ):
-    print(f'Search tests in {dir_path}..')
+    logger.writeln(f'Search tests in {dir_path}..')
     tests: List[CoTestGroup] = []
 
     for sd in os.scandir(dir_path):
@@ -25,7 +26,7 @@ def test_module(
                     continue
                 module_name = sd.name
                 file_path = sd.path
-                print('*' * 10, module_name)
+                logger.writeln(f'{"*" * 10} {module_name}')
 
                 spec = importlib.util.spec_from_file_location(module_name, file_path)
                 module = importlib.util.module_from_spec(spec)
@@ -52,7 +53,7 @@ def test_module(
                             continue
                     else:
                         continue
-                    print(' *', k, type(v))
+                    logger.writeln(f' * {k} : {type(v)}')
 
                 # tests.append(CoTestGroup(*tmp_groups, *tmp_tests, name=module_name))
                 if tmp_groups:
@@ -63,9 +64,9 @@ def test_module(
                 if tmp_unittests:
                     tests.append(CoTestGroup(*tmp_unittests, name=module_name))
         else:
-            print('o_O', sd)
+            logger.writeln(f'o_O {sd}')
 
-    print("""
+    logger.writeln("""
     +---------------------+
     |    Start CoTests    |
     +---------------------+

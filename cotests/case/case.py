@@ -51,10 +51,10 @@ class CoTestCase(AbstractCoCase):
         return kwargs
 
     def run_test(self, **kwargs: Unpack[TestParamsCase]):
-        return self.create_group(**kwargs).go()
+        return self.create_group(**kwargs).run_test()
 
     def run_bench(self,
                   iterations: int = 1,
                   **kwargs: Unpack[TestParamsCase],
                   ):
-        return self.create_group(**kwargs).go_bench(iterations)
+        return self.create_group(**kwargs).run_bench(iterations)

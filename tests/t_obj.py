@@ -15,7 +15,6 @@ class TObj(CoTestCase):
     @classmethod
     def test_2(cls, t: float = .3): time.sleep(t)
 
-    def test_3(self): ...
 
 class TObjA(CoTestCase):
     async def test_a0(self, t: float = .1): await asyncio.sleep(t)
@@ -26,7 +25,6 @@ class TObjA(CoTestCase):
     @staticmethod
     async def test_a2(t: float = .15): await asyncio.sleep(t)
 
-    async def test_a3(self): ...
     async def test_a4(self, t: float): await asyncio.sleep(t)
 
 

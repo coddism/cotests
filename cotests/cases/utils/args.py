@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Tuple, Sequence, Dict, List, Set
+from typing import TYPE_CHECKING, Optional, Tuple, Sequence, Dict
 
 if TYPE_CHECKING:
     from cotests.typ import CoArgsList, TestArgs, TestKwargs
@@ -20,8 +20,8 @@ class CoTestArgs:
         self.ha = bool(pa or ga)
         self.hkw = bool(pkw or gkw)
 
-        if ga and not isinstance(ga, (List, Tuple, Set)):
-            print('Better to use for args: list, tuple, set')
+        # if ga and not isinstance(ga, (List, Tuple, Set)):
+        #     print('Better to use for args: list, tuple, set')
 
         ga = ga or ()
         gkw = gkw or {}

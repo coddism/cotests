@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from .abstract import AbstractTestCase
-from .utils.decorators import SyncDecoratorFactory, AsyncDecoratorFactory
-from .utils.progress_bar import ProgressBarPrinter
+from .runner.case import CaseRunner, AsyncCaseRunner
 from .utils.case_ext import TestCaseExt
 
 if TYPE_CHECKING:
@@ -26,24 +25,18 @@ class TestCase(AbstractTestCase):
 
 class FunctionTestCase(TestCase):
     is_async = False
+    _RUNNER = CaseRunner
 
-    def _bench_single(self) -> float:
+    def run_test(self) -> float:
         return sum(
             self._ext.decor(self._f)(*p[0], **p[1])
             for p in self._params
         )
 
-    @SyncDecoratorFactory()
-    def run_test(self, **__) -> float:
-        return self._bench_single()
-
-    @SyncDecoratorFactory(True)
-    def run_bench(self, iterations: int, **__) -> List[float]:
-        return [self._bench_single() for _ in ProgressBarPrinter(iterations)]
-
 
 class AsyncTestCase(TestCase):
     is_async = True
+    _RUNNER = AsyncCaseRunner
 
     async def _run(self, *args, **kwargs):
         await self._f(*args, **kwargs)
@@ -54,13 +47,8 @@ class AsyncTestCase(TestCase):
             for p in self._params
         ])
 
-    @AsyncDecoratorFactory()
-    async def run_test(self, **__) -> float:
+    async def run_test(self) -> float:
         return await self._bench_single()
-
-    @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, **__) -> List[float]:
-        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class FunctionTestCaseWithAsyncPrePost(AsyncTestCase):
@@ -78,12 +66,6 @@ class CoroutineTestCase(AsyncTestCase):
 
     def _run(self, *_, **__):
         return self._f
-
-    @AsyncDecoratorFactory(True)
-    async def run_bench(self, iterations: int, **__) -> List[float]:
-        if iterations > 1:
-            raise NotImplementedError('cannot reuse coroutines')
-        return [await self._bench_single() for _ in ProgressBarPrinter(iterations)]
 
 
 class CoroutineFunctionTestCase(AsyncTestCase):

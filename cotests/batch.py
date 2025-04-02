@@ -12,14 +12,14 @@ def test_batch(
         *funcs: 'InTest',
         **kwargs: Unpack[TestParamsName],
 ):
-    return CoTestGroup(*funcs, **kwargs).go()
+    return CoTestGroup(*funcs, **kwargs).run_test()
 
 def bench_batch(
         *funcs: 'InTest',
         iterations: int = 1,
         **kwargs: Unpack[TestParamsName],
 ):
-    return CoTestGroup(*funcs, **kwargs).go_bench(iterations)
+    return CoTestGroup(*funcs, **kwargs).run_bench(iterations)
 
 
 __all__ = ('test_batch', 'bench_batch',)

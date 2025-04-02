@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Iterator
 
 
 class CoException(Exception):
@@ -9,19 +9,20 @@ class CoException(Exception):
         self.__errors = errors
         self.__where = where
 
-    def print_errors(self):
-        if self.__errors:
-            print('! Errors:')
-            self._r_print(())
-            print('⌎' + '-' * 28)
+    @property
+    def errors(self):
+        return self.__errors_iter(())
 
-    def _r_print(self,
-                 parents: Tuple[str, ...]):
-        for e in self.__errors:
-            if isinstance(e, CoException):
-                e._r_print((*parents, e.__where))
-            else:
-                print('! *', ' / '.join(parents), '\n!  ', type(e).__name__, ':', e)
+    def __errors_iter(
+            self,
+            parents: Tuple[str, ...]
+    ) -> Iterator[Tuple[Tuple[str, ...], Exception]]:
+        if self.__errors:
+            for e in self.__errors:
+                if isinstance(e, CoException):
+                    yield from e.__errors_iter((*parents, e.__where))
+                else:
+                    yield parents, e
 
 
 class InitGroupErrors(CoException):
