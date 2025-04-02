@@ -22,9 +22,9 @@ if __name__ == '__main__':
         global_args=(4,),
         name='lambda1',
     )
-    # gl.go()
-    # gl.go_bench(1)
-    # gl.go_bench(10)
+    # gl.run_test()
+    # gl.run_bench(1)
+    # gl.run_bench(10)
 
     g = CoTestGroup(
         TObj,
@@ -38,6 +38,6 @@ if __name__ == '__main__':
         gl0,
         name='ROOT',
     )
-    # g.go()
-    # g.go_bench(1)
-    g.go_bench(2)
+    # g.run_test()
+    # g.run_bench(1)
+    g.run_bench(2)

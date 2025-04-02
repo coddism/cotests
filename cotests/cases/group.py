@@ -169,14 +169,14 @@ class CoTestGroup(AbstractTestGroup):
             self.__has_coroutines = True
         self.__tests.append(case)
 
-    def go(self):
+    def run_test(self):
         return RootGroupRunner(self).run()
 
-    def go_bench(self, iterations: int):
+    def run_bench(self, iterations: int):
         assert iterations >= 1, 'Incorrect iterations count'
         return RootGroupRunner(self).bench(iterations)
 
 
 def test_groups(*groups: CoTestGroup, name='__main__'):
     g = CoTestGroup(*groups, name=name)
-    return g.go()
+    return g.run_test()

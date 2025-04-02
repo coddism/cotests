@@ -62,4 +62,4 @@ if __name__ == '__main__':
         MyTestCase,
         EmptyTC,
         name='UNITS',
-    ).go()
+    ).run_test()
